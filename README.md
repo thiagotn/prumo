@@ -8,9 +8,10 @@ Prontuário, agenda, ficha de atendimento, financeiro, estoque, relatórios, ter
 lembretes por WhatsApp e portal da paciente — com dados sensíveis de saúde, o que define quase todas
 as decisões de arquitetura abaixo.
 
-> **Etapa 1 de 8 concluída.** Login, perfis de acesso e resolução de tenant por hostname estão de pé.
-> As telas dos outros módulos são placeholders que já passam por guard, tenant e auditoria, e dizem
-> qual etapa as entrega. Ver [Estado](#estado).
+> **Etapas 1 e 2 de 8 concluídas.** Login com perfis, tenant por hostname, cadastro de pacientes e
+> configurações da clínica (identidade, parâmetros de preço, módulos) estão de pé. As telas dos
+> outros módulos são placeholders que já passam por guard, tenant e auditoria, e dizem qual etapa as
+> entrega. Ver [Estado](#estado).
 
 ---
 
@@ -179,11 +180,21 @@ código precisa dele está transcrito em [`docs/regras-de-negocio.md`](docs/regr
   sensível.
 - Validação de contraste ≥ 3:1 da cor de acento, pronta para a tela de Configurações (etapa 2).
 
+**Etapa 2 concluída** — cadastros e precificação:
+
+- Motor de precificação em `src/lib/pricing.ts`, com as fórmulas da planilha e o caso de referência
+  (Restylane Kysse / Tatuapé → R$ 1.142,02 à vista, R$ 1.386,73 parcelado) coberto por teste.
+- Parâmetros versionados: salvar cria uma versão nova, então um preço antigo continua explicável.
+- Cadastros de salas, procedimentos, produtos e pacientes, todos sob RLS.
+- Tela de Configurações: identidade com prévia do login e validação de contraste ao vivo, parâmetros
+  de preço com rateio recalculado na hora, feature flags e a matriz de permissões.
+- Tela de Pacientes: filtros, busca, e painel lateral com o alerta clínico em destaque.
+- `scripts/import-catalog.ts` importa o catálogo real da planilha, que fica fora do git.
+
 ### Ordem das próximas etapas
 
 | Etapa | Entrega |
 |---|---|
-| 2 | Cadastros: parâmetros, materiais, salas (seed da planilha), pacientes, Configurações |
 | 3 | Agenda (dia / semana / lista) |
 | 4 | Ficha de atendimento + estoque com baixa por lote + fechamento financeiro |
 | 5 | Termos com assinatura e PDF |

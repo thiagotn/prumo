@@ -84,6 +84,11 @@ model Tenant {
   sessions      Session[]
   auditLogs     AuditLog[]
   loginAttempts LoginAttempt[]
+  pricingParams PricingParams[]
+  rooms         Room[]
+  procedures    Procedure[]
+  products      Product[]
+  patients      Patient[]
 
   @@map("tenants")
 }
@@ -223,4 +228,149 @@ model LoginAttempt {
   @@index([email, createdAt])
   @@index([ip, createdAt])
   @@map("login_attempts")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Stage 2 — registrations: pricing parameters, rooms, procedures, products, patients
+// ─────────────────────────────────────────────────────────────────────────────
+// Money is stored as Decimal, never float: a float drifts once you start summing
+// charges. Percentages are stored as fractions (0.06 = 6%), matching the spreadsheet.
+
+/// Pricing parameters, versioned. A new row supersedes the previous one from its
+/// `validFrom`; nothing is updated in place, so an old appointment can still be
+/// re-explained with the numbers that were in force when it was priced.
+model PricingParams {
+  id       String @id @default(uuid()) @db.Uuid
+  tenantId String @map("tenant_id") @db.Uuid
+
+  /// Tax on revenue, as a fraction (0.06 = 6%).
+  taxRate Decimal @map("tax_rate") @db.Decimal(6, 4)
+  /// Card fee for a single payment, as a fraction.
+  cardFeeUpfront Decimal @map("card_fee_upfront") @db.Decimal(6, 4)
+  /// Card fee for instalments, as a fraction.
+  cardFeeInstallment Decimal @map("card_fee_installment") @db.Decimal(6, 4)
+  /// Everything the clinic pays with an empty diary. Room rent by the hour is NOT
+  /// here — it belongs to Room, because it scales with appointments.
+  fixedMonthlyCosts Decimal @map("fixed_monthly_costs") @db.Decimal(12, 2)
+  /// Realistic appointments per month, used to spread the fixed costs.
+  expectedAppointments Int @map("expected_appointments")
+  /// Default net margin, as a fraction.
+  defaultMargin Decimal @map("default_margin") @db.Decimal(6, 4)
+
+  validFrom DateTime @default(now()) @map("valid_from")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, validFrom])
+  @@map("pricing_params")
+}
+
+/// A room the clinic rents by the hour. Its cost scales with the appointment, which is
+/// why it is not part of the fixed monthly costs.
+model Room {
+  id       String @id @default(uuid()) @db.Uuid
+  tenantId String @map("tenant_id") @db.Uuid
+
+  name       String
+  hourlyRate Decimal @map("hourly_rate") @db.Decimal(12, 2)
+  notes      String?
+  active     Boolean @default(true)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  products Product[]
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@map("rooms")
+}
+
+/// A procedure the clinic offers. `disposablesCost` covers needles, cannulas, gloves,
+/// topical anaesthetic and gauze — it varies by procedure, not by brand.
+model Procedure {
+  id       String @id @default(uuid()) @db.Uuid
+  tenantId String @map("tenant_id") @db.Uuid
+
+  name            String
+  disposablesCost Decimal @map("disposables_cost") @db.Decimal(12, 2)
+  /// Typical chair time, in hours. Drives the room cost and the profit-per-hour figure.
+  defaultDurationHours Decimal @map("default_duration_hours") @db.Decimal(5, 2)
+  active               Boolean @default(true)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  products Product[]
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@map("procedures")
+}
+
+/// A brand the clinic buys for a procedure. The same procedure usually has several, at
+/// different costs — which is the whole point of the pricing sheet.
+model Product {
+  id          String  @id @default(uuid()) @db.Uuid
+  tenantId    String  @map("tenant_id") @db.Uuid
+  procedureId String  @map("procedure_id") @db.Uuid
+  /// Optional: the room this brand is usually applied in, for the suggested price.
+  roomId      String? @map("room_id") @db.Uuid
+
+  brand String
+  /// What the clinic pays for one purchased unit.
+  purchaseCost Decimal @map("purchase_cost") @db.Decimal(12, 2)
+  /// How many appointments one purchased unit serves. Botulinum toxin yields 1.5:
+  /// one vial covers one patient and a half, the rest going to a touch-up.
+  yieldPerUnit Decimal @map("yield_per_unit") @db.Decimal(10, 4)
+  /// What is bought, in the supplier's words: "Frasco 100U", "Seringa 1ml".
+  purchaseUnit String  @map("purchase_unit")
+  active       Boolean @default(true)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  procedure Procedure @relation(fields: [procedureId], references: [id], onDelete: Cascade)
+  room      Room?     @relation(fields: [roomId], references: [id], onDelete: SetNull)
+
+  @@unique([tenantId, procedureId, brand])
+  @@index([tenantId])
+  @@index([procedureId])
+  @@map("products")
+}
+
+/// A patient. Health data proper (anamnesis, photos, encounters) arrives in stage 4 and
+/// hangs off this record; what is here is the registration data the front desk handles.
+model Patient {
+  id       String @id @default(uuid()) @db.Uuid
+  tenantId String @map("tenant_id") @db.Uuid
+
+  name      String
+  birthDate DateTime? @map("birth_date") @db.Date
+  /// Stored as typed; formatting for display is the UI's job.
+  phone String?
+  email String?
+  /// CPF. Optional: a first appointment is often booked without it.
+  document String?
+
+  /// A short, high-visibility warning shown before any procedure — an allergy, an
+  /// anticoagulant, a previous reaction. Not the medical record: this is the line the
+  /// practitioner must not miss.
+  clinicalAlert String? @map("clinical_alert")
+  notes         String?
+
+  active Boolean @default(true)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, document])
+  @@index([tenantId, name])
+  @@map("patients")
 }

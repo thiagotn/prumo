@@ -1,0 +1,263 @@
+/* Settings — stacked sections, each a card with its own form. */
+
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  max-width: 68em;
+}
+
+.section {
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.sectionTitle {
+  font-family: var(--font-heading);
+  font-weight: 500;
+  font-size: 19px;
+  line-height: 1.2;
+  margin: var(--space-1) 0 var(--space-2);
+}
+
+.sectionNote {
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--color-neutral-600);
+  margin: 0 0 var(--space-4);
+  max-width: 62em;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3) var(--space-4);
+}
+
+.gridThree {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3) var(--space-4);
+}
+
+.wide {
+  grid-column: 1 / -1;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.feedback {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-accent-800);
+  border-left: 2px solid var(--color-accent);
+  padding-left: var(--space-2);
+}
+
+/* Live preview of the sign-in screen, so the colour is judged where it is used. */
+.preview {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  min-height: 190px;
+}
+
+.previewBrand {
+  background: var(--color-neutral-900);
+  color: var(--color-bg);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.previewTop {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.previewMonogram {
+  width: 30px;
+  height: 30px;
+  font-size: 12px;
+}
+
+.previewName {
+  font-family: var(--font-heading);
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.previewSubtitle {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  margin-top: 2px;
+  color: color-mix(in srgb, var(--color-bg) 50%, transparent);
+}
+
+.previewHeadline {
+  font-family: var(--font-heading);
+  font-weight: 300;
+  font-size: 22px;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.previewRule {
+  width: 42px;
+  height: 1px;
+  margin-top: var(--space-2);
+}
+
+.previewForm {
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.previewLabel {
+  font-size: 10px;
+  color: var(--color-neutral-600);
+}
+
+.previewInput {
+  height: 26px;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+}
+
+/* The primary button is an outline, never a fill — which is exactly why the accent
+   needs contrast against the background. */
+.previewButton {
+  margin-top: var(--space-2);
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 1px solid;
+  border-radius: var(--radius-md);
+  font-family: var(--font-heading);
+  font-size: 12px;
+}
+
+.colorRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.colorRow input[type='color'] {
+  width: 40px;
+  height: 36px;
+  padding: 2px;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  background: transparent;
+}
+
+.contrast {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--color-neutral-600);
+}
+
+.contrastBad {
+  color: var(--color-accent-700);
+}
+
+.derived {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px dashed var(--color-divider);
+  border-radius: var(--radius-md);
+  margin-top: var(--space-3);
+}
+
+.derivedValue {
+  font-family: var(--font-heading);
+  font-weight: 500;
+  font-size: 22px;
+}
+
+.flags {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2) var(--space-4);
+}
+
+.flag {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: 13px;
+  line-height: 1.5;
+  cursor: pointer;
+  padding: var(--space-1) 0;
+}
+
+.flag input {
+  accent-color: var(--color-accent);
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  flex: none;
+}
+
+.matrix {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.matrix th,
+.matrix td {
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--color-divider);
+  text-align: left;
+}
+
+.matrix th {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-neutral-600);
+}
+
+.matrix td + td,
+.matrix th + th {
+  text-align: center;
+}
+
+.levelNone {
+  color: var(--color-neutral-400);
+}
+
+.levelFull {
+  color: var(--color-accent-800);
+}
+
+@media (max-width: 900px) {
+  .grid,
+  .gridThree,
+  .flags,
+  .preview {
+    grid-template-columns: 1fr;
+  }
+
+  .matrixWrap {
+    overflow-x: auto;
+  }
+}

@@ -3,10 +3,11 @@
 Perguntas na linguagem de quem opera a clínica. Se algo aqui não corresponde ao que você vê na
 tela, o sistema está errado, não o texto — avise.
 
-> **Onde estamos:** a etapa 1 está pronta (entrar no sistema, perfis de acesso, uma instância por
-> clínica). As telas de agenda, pacientes, ficha de atendimento, financeiro, estoque, relatórios,
-> mensagens e termos ainda estão sendo construídas — ao abrir, cada uma informa em qual etapa
-> entra. As perguntas sobre essas telas estão marcadas com **(em breve)**.
+> **Onde estamos:** etapas 1 e 2 prontas — entrar no sistema, perfis de acesso, uma instância por
+> clínica, **cadastro de pacientes** e **configurações da clínica** (identidade, parâmetros de preço
+> e módulos). As telas de agenda, ficha de atendimento, financeiro, estoque, relatórios, mensagens e
+> termos ainda estão sendo construídas — ao abrir, cada uma informa em qual etapa entra. As
+> perguntas sobre essas telas estão marcadas com **(em breve)**.
 
 ---
 
@@ -169,15 +170,90 @@ consultar fora da clínica. A edição fica no computador.
 
 ---
 
+## Pacientes
+
+### Como encontro uma paciente?
+
+Em **Pacientes**. A lista vem em ordem alfabética e a busca aceita nome, telefone ou e-mail — digite
+e clique em Buscar. Os filtros no topo mostram todas, só as ativas, ou só as que têm alerta clínico.
+
+### O que é o "alerta clínico"?
+
+A linha que não pode passar batido antes de um procedimento: uma alergia, um anticoagulante em uso,
+uma reação anterior. Ela aparece destacada no painel lateral e como etiqueta na lista. **Não é o
+prontuário** — é o aviso curto que precisa saltar aos olhos.
+
+### Onde está o prontuário da paciente?
+
+Entra na etapa 4, junto com a ficha de atendimento. Quando entrar, abrir prontuário, anamnese ou
+fotos vai exigir 2FA e ficar registrado no log de auditoria.
+
+### Sou profissional convidado e não vejo todas as pacientes
+
+Você vê as suas. É o perfil funcionando como previsto.
+
+---
+
+## Configurações da clínica
+
+Só a doutora (perfil owner) abre esta tela.
+
+### Mudei a cor e ela avisou que o contraste é baixo
+
+A cor de acento precisa de contraste de pelo menos 3:1 contra o fundo claro do sistema. Abaixo
+disso, o contorno dos botões desaparece no papel e quem tem baixa visão não consegue usar. A tela
+mostra o contraste enquanto você digita e bloqueia o salvamento até ficar dentro — escolha um tom
+mais escuro da mesma cor.
+
+### O que é a prévia do login?
+
+O quadro que mostra como a tela de entrada vai ficar com o nome, o monograma e a cor que você está
+escolhendo. Ele muda enquanto você digita, antes de salvar.
+
+### O que significa "a margem é líquida"?
+
+Que a margem definida nos parâmetros é o que **sobra de verdade** no caixa. Os dois preços — à vista
+e parcelado — já embutem os impostos e a taxa correspondente da maquininha. Quem parcela paga a
+diferença da taxa, não a clínica.
+
+Em Pix e dinheiro não há maquininha, então a margem sai ainda maior que a definida.
+
+### O que é o "rateio por atendimento"?
+
+Seus custos fixos do mês divididos pelos atendimentos previstos. É quanto cada atendimento precisa
+cobrir de despesa que existe mesmo com a agenda vazia. A tela recalcula na hora quando você muda
+qualquer um dos dois números.
+
+Mexer nele muda **todos** os preços sugeridos — é o número com mais efeito na tabela.
+
+### Salvei os parâmetros. E os preços antigos?
+
+Cada salvamento cria uma versão nova; a anterior fica guardada. Um atendimento cobrado mês passado
+continua explicável com os parâmetros daquele mês.
+
+### "Impostos, taxa e margem somam mais de 100%"
+
+Não existe preço que feche essa margem: se os três já consomem o preço inteiro, não sobra nada para
+pagar o custo. A tela bloqueia antes de salvar. Reduza a margem ou confira se alguma taxa foi
+digitada errada.
+
+### Desliguei um módulo sem querer
+
+Religue na mesma tela, em **Módulos**. Nada é apagado — o módulo some do menu de todo mundo enquanto
+está desligado e volta com os dados intactos.
+
+### Posso mudar quem enxerga o quê?
+
+A matriz de permissões é fixa no sistema e aparece em Configurações só para consulta. Ela é conferida
+no servidor a cada acesso — não é questão de esconder item de menu.
+
+---
+
 ## Telas em construção
 
 ### Agenda **(em breve, etapa 3)**
 Três visões — dia, semana e lista —, filtro por sala, e os status Confirmado, Aguardando e Atendido.
 No celular, cards com "WhatsApp" e "Atender".
-
-### Pacientes **(em breve, etapa 2)**
-Filtros por ativa, retorno vencido e sem termo assinado; painel lateral com dados, alerta clínico,
-termo vigente e antes e depois.
 
 ### Ficha de atendimento **(em breve, etapa 4)**
 Cinco passos: anamnese, procedimento, fotos, fechamento e termo. Ao registrar o procedimento, o lote

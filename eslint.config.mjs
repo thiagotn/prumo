@@ -17,6 +17,12 @@ const config = [
   ...next,
   ...nextCoreWebVitals,
   ...nextTypescript,
+  {
+    // Playwright fixtures take a callback parameter named `use`, which the React Hooks
+    // rule mistakes for a hook call. There is no React in the e2e suite.
+    files: ['e2e/**/*.ts'],
+    rules: { 'react-hooks/rules-of-hooks': 'off' },
+  },
 ];
 
 export default config;
