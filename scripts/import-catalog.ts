@@ -165,11 +165,40 @@ async function main() {
     }
   });
 
+  // ── disposables and chair time, from the pricing tab ───────────────────────
+  // The "Materiais" tab has no disposables column: the sheet applies that cost per
+  // appointment, on the pricing tab, where it varies by procedure rather than by brand.
+  // Reading it here is what makes an imported procedure ready to price.
+  const disposablesByProcedure = new Map<string, number>();
+  const hoursByProcedure = new Map<string, number>();
+  const pricingSheet = workbook.getWorksheet('Precificação');
+  if (pricingSheet) {
+    const cols = headerMap(pricingSheet, ['procedimento', 'tempo do atendimento', 'descartáveis']);
+    pricingSheet.eachRow((row) => {
+      const procedure = text(row.getCell(cols.get('procedimento')!).value);
+      const disposables = num(row.getCell(cols.get('descartáveis')!).value);
+      const hours = num(row.getCell(cols.get('tempo do atendimento')!).value);
+      if (!procedure || disposables === null) return;
+      // First occurrence wins: the tab lists one row per brand, and the disposables cost
+      // is a property of the procedure.
+      if (!disposablesByProcedure.has(procedure)) disposablesByProcedure.set(procedure, disposables);
+      if (hours !== null && !hoursByProcedure.has(procedure)) hoursByProcedure.set(procedure, hours);
+    });
+  }
+
   console.log(`\nClinic: ${tenant.name} (${tenant.domain})`);
   console.log(`Spreadsheet: ${values.file}`);
   console.log(`  parameters: tax ${taxRate}, fees ${feeUpfront}/${feeInstallment}, fixed ${fixedCosts} over ${appointments} appointments`);
   console.log(`  rooms: ${rooms.length}`);
   console.log(`  products: ${products.length} across ${new Set(products.map((p) => p.procedure)).size} procedures`);
+  console.log(`  disposables read for ${disposablesByProcedure.size} procedure(s)`);
+  const missingDisposables = [...new Set(products.map((p) => p.procedure))].filter(
+    (name) => !disposablesByProcedure.has(name),
+  );
+  if (missingDisposables.length > 0) {
+    console.log(`  ⚠ no disposables cost found for: ${missingDisposables.join(', ')}`);
+    console.log('    those come in at 0.00 and need filling in under Settings.');
+  }
 
   if (DRY_RUN) {
     console.log('\n--dry-run: nothing was written.\n');
@@ -201,14 +230,18 @@ async function main() {
     }
 
     for (const product of products) {
+      const disposables = (disposablesByProcedure.get(product.procedure) ?? 0).toFixed(2);
+      const hours = (hoursByProcedure.get(product.procedure) ?? 1).toFixed(2);
       const procedure = await tx.procedure.upsert({
         where: { tenantId_name: { tenantId: tenant.id, name: product.procedure } },
+        // An existing procedure keeps whatever was configured in the application: the
+        // spreadsheet seeds a clinic, it does not overrule someone who has since tuned it.
         update: {},
         create: {
           tenantId: tenant.id,
           name: product.procedure,
-          disposablesCost: '0.00',
-          defaultDurationHours: '1.00',
+          disposablesCost: disposables,
+          defaultDurationHours: hours,
         },
       });
       await tx.product.upsert({
@@ -236,9 +269,7 @@ async function main() {
     }
   });
 
-  console.log('\n✅ Catalogue imported.');
-  console.log('   Check the disposables cost of each procedure under Settings — the sheet');
-  console.log('   applies it per appointment rather than storing it with the procedure.\n');
+  console.log('\n✅ Catalogue imported.\n');
 }
 
 main()

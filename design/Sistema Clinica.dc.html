@@ -1215,17 +1215,17 @@ class Component extends DCLogic {
     ].map(r => Object.assign({}, r, { tagClass: tagFor(r.status) }));
 
     const stockSeed = [
-      ['Xeomin®','Toxina botulínica','Frasco 100U',599,'1,5',399,2,'XM-8821 · 04/2027','OK'],
-      ['Letybo®','Toxina botulínica','Frasco 100U',570,'1,5',380,1,'LB-3390 · 11/2026','Baixo'],
-      ['Nabota®','Toxina botulínica','Frasco 100U',549,'1,5',366,3,'NB-1174 · 06/2027','OK'],
-      ['Belotero®','Labial 1ml','Seringa 1ml',270,'1,0',270,4,'BL-5520 · 09/2027','OK'],
-      ['Restylane® Kysse','Labial 1ml','Seringa 1ml',435,'1,0',435,2,'RK-4471 · 08/2027','OK'],
-      ['Rennova® Lips','Labial 1ml','Seringa 1ml',265,'1,0',265,1,'RN-9004 · 12/2026','Baixo'],
-      ['Sculptra®','Bioestimulador','Frasco',940,'1,0',940,2,'SC-2218 · 03/2027','OK'],
-      ['Radiesse®','Bioestimulador','Seringa 1,5ml',760,'1,0',760,1,'RD-7781 · 10/2026','Vence'],
-      ['Profhilo®','Skinbooster','Seringa 2ml',879,'1,0',879,0,'—','Repor'],
-      ['Belotero® Volume','Mandíbula/mento','Seringa 1ml',549,'1,0',549,2,'BV-6612 · 05/2027','OK'],
-      ['Rennova® Ultra Volume','Mandíbula/mento','Seringa 1,25ml',247,'1,0',247,3,'RU-4408 · 07/2027','OK']
+      ['Xeomin®','Toxina botulínica','Frasco 100U',600,'1,5',400,2,'XM-8821 · 04/2027','OK'],
+      ['Letybo®','Toxina botulínica','Frasco 100U',575,'1,5',383,1,'LB-3390 · 11/2026','Baixo'],
+      ['Nabota®','Toxina botulínica','Frasco 100U',540,'1,5',360,3,'NB-1174 · 06/2027','OK'],
+      ['Belotero®','Labial 1ml','Seringa 1ml',280,'1,0',280,4,'BL-5520 · 09/2027','OK'],
+      ['Restylane® Kysse','Labial 1ml','Seringa 1ml',440,'1,0',440,2,'RK-4471 · 08/2027','OK'],
+      ['Rennova® Lips','Labial 1ml','Seringa 1ml',260,'1,0',260,1,'RN-9004 · 12/2026','Baixo'],
+      ['Sculptra®','Bioestimulador','Frasco',950,'1,0',950,2,'SC-2218 · 03/2027','OK'],
+      ['Radiesse®','Bioestimulador','Seringa 1,5ml',750,'1,0',750,1,'RD-7781 · 10/2026','Vence'],
+      ['Profhilo®','Skinbooster','Seringa 2ml',880,'1,0',880,0,'—','Repor'],
+      ['Belotero® Volume','Mandíbula/mento','Seringa 1ml',550,'1,0',550,2,'BV-6612 · 05/2027','OK'],
+      ['Rennova® Ultra Volume','Mandíbula/mento','Seringa 1,25ml',250,'1,0',250,3,'RU-4408 · 07/2027','OK']
     ];
     const stock = stockSeed.map(s => ({
       marca:s[0], proc:s[1], unid:s[2], custo:money(s[3]), rend:s[4], unit:money(s[5]), qtd:s[6], lote:s[7],

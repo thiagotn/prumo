@@ -1,12 +1,15 @@
 // Loads the tenant's pricing parameters and hands them to the pricing engine as plain
 // numbers.
 //
+// Deliberately not marked `server-only`: it holds no secret, and the operational scripts
+// (import-catalog, verification) legitimately read parameters outside a request. That
+// guard belongs to the auth modules, where a leak into a client bundle would matter.
+//
 // The boundary matters: money and rates are stored as Decimal, because a float drifts
 // once you start summing charges. The formulas, on the other hand, divide by
 // (1 - tax - fee - margin), which has no exact decimal form — so the engine works in
 // `number` and rounds once, at the edge. This module is where that conversion happens,
 // in one place, rather than scattered through the screens.
-import 'server-only';
 import type { Prisma } from '@prisma/client';
 import { withTenant, type Tx } from './db';
 import { overheadPerAppointment, type PricingParameters } from './pricing';
