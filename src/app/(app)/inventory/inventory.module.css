@@ -1,0 +1,42 @@
+/* Inventory — product rows with the lot that would be used next. */
+
+.summary {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-6);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  background: var(--color-neutral-100);
+  margin-bottom: var(--space-4);
+}
+
+.summaryValue {
+  font-family: var(--font-heading);
+  font-weight: 500;
+  font-size: 26px;
+  line-height: 1.1;
+  margin-top: 5px;
+}
+
+.summaryNote {
+  margin: 0;
+  max-width: 44em;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--color-neutral-600);
+  align-self: center;
+}
+
+.tableWrap {
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+}
+
+@media (max-width: 900px) {
+  .summary {
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+}

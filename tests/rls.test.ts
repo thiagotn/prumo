@@ -193,3 +193,63 @@ describe('deleting a clinic', () => {
     expect(left).toBeNull();
   });
 });
+
+describe('every business table is protected', () => {
+  // This exists because a migration once shipped four tables — encounters, payments and
+  // the two stock tables — with RLS off. Nothing failed: queries simply returned other
+  // tenants' rows. Enumerating the tables here means the next one cannot be forgotten
+  // quietly; it has to be listed as deliberately public instead.
+  const PLATFORM_REGISTRY = ['tenants', 'tenant_domains'];
+  const NOT_BUSINESS_DATA = ['_prisma_migrations'];
+
+  it('has RLS enabled and forced on every table except the platform registry', async () => {
+    const rows = await withPlatformScope(
+      (tx) => tx.$queryRaw<Array<{ table: string; rls: boolean; forced: boolean }>>`
+        SELECT relname AS "table", relrowsecurity AS rls, relforcerowsecurity AS forced
+          FROM pg_class
+         WHERE relnamespace = 'public'::regnamespace
+           AND relkind = 'r'
+         ORDER BY relname
+      `,
+    );
+
+    const unprotected = rows
+      .filter((r) => !PLATFORM_REGISTRY.includes(r.table) && !NOT_BUSINESS_DATA.includes(r.table))
+      .filter((r) => !r.rls || !r.forced)
+      .map((r) => r.table);
+
+    expect(unprotected, `tables without RLS + FORCE: ${unprotected.join(', ')}`).toEqual([]);
+  });
+
+  it('the platform registry is deliberately outside RLS', async () => {
+    // tenants and tenant_domains have to be readable before a tenant is known — that is
+    // how a hostname resolves to a clinic in the first place.
+    const rows = await withPlatformScope(
+      (tx) => tx.$queryRaw<Array<{ table: string; rls: boolean }>>`
+        SELECT relname AS "table", relrowsecurity AS rls
+          FROM pg_class
+         WHERE relnamespace = 'public'::regnamespace
+           AND relname IN ('tenants', 'tenant_domains')
+      `,
+    );
+    expect(rows.every((r) => !r.rls)).toBe(true);
+  });
+
+  it('every protected table denies reads with no scope set', async () => {
+    // The policies could exist and still be wrong. This asserts the actual behaviour:
+    // outside withTenant/withPlatformScope, a business table returns nothing.
+    const counts = await Promise.all([
+      prisma.appointment.count(),
+      prisma.patient.count(),
+      prisma.product.count(),
+      prisma.room.count(),
+      prisma.procedure.count(),
+      prisma.pricingParams.count(),
+      prisma.stockLot.count(),
+      prisma.stockMovement.count(),
+      prisma.encounter.count(),
+      prisma.payment.count(),
+    ]);
+    expect(counts).toEqual(counts.map(() => 0));
+  });
+});

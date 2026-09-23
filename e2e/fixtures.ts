@@ -15,6 +15,7 @@ export const USERS = {
   // so specs that need an owner take different ones rather than fighting over the state:
   // two-factor.spec.ts owns Tati's, settings.spec.ts owns Vértice's.
   verticeOwner: { email: 'ivan@verticesaude.com.br', name: 'Dr. Ivan Bertoldo' },
+  auroraOwner: { email: 'helena@clinicaaurora.com.br', name: 'Dra. Helena Prado' },
 } as const;
 
 /** Seeded clinics and the dev hostname each answers on. */

@@ -3,10 +3,10 @@
 Perguntas na linguagem de quem opera a clínica. Se algo aqui não corresponde ao que você vê na
 tela, o sistema está errado, não o texto — avise.
 
-> **Onde estamos:** etapas 1, 2 e 3 prontas — entrar no sistema, perfis de acesso, uma instância por
-> clínica, cadastro de pacientes, configurações da clínica e a **agenda** (dia, semana e lista). As
-> telas de ficha de atendimento, financeiro, estoque, relatórios, mensagens e termos ainda estão
-> sendo construídas — ao abrir, cada uma informa em qual etapa entra. As
+> **Onde estamos:** etapas 1 a 4 prontas — entrar no sistema, perfis de acesso, uma instância por
+> clínica, pacientes, configurações, agenda, **estoque por lote** e a **ficha de atendimento com
+> fechamento financeiro**. Ainda em construção: anamnese versionada, fotos clínicas, termos,
+> relatórios e mensagens — ao abrir, cada uma informa em qual etapa entra. As
 > perguntas sobre essas telas estão marcadas com **(em breve)**.
 
 ---
@@ -292,21 +292,79 @@ grandes o suficiente para o dedo.
 
 ---
 
-## Telas em construção
+## Atendimento e fechamento
 
-### Ficha de atendimento **(em breve, etapa 4)**
-Cinco passos: anamnese, procedimento, fotos, fechamento e termo. Ao registrar o procedimento, o lote
-usado baixa do estoque. As fotos seguem quatro enquadramentos fixos, com o contorno da foto anterior
-como guia.
+### Como abro a ficha de uma paciente?
+
+Pela **Agenda**: clique no nome dela. A ficha mostra o horário, a sala, o procedimento e — se
+houver — o alerta clínico em destaque.
+
+### O que o "preço sugerido" leva em conta?
+
+Tudo: o custo do produto dividido pelo rendimento, a sala pelas horas do atendimento, os
+descartáveis do procedimento e o rateio dos custos fixos. Sobre esse custo aplica a margem, já
+líquida de impostos e maquininha. O painel lateral mostra a conta aberta, parcela por parcela.
+
+### Preciso escolher o lote?
+
+Não. O sistema escolhe sozinho o lote que **vence primeiro**, para não perder produto na validade.
+A ficha registra qual lote foi usado, e isso fica guardado — é o que permite rastrear se um dia
+houver recall ou reação.
+
+### Posso cobrar menos que o sugerido?
+
+Pode. Desconto sai da margem, não do custo. Mas se o valor ficar **abaixo do custo total**, o
+sistema avisa e só fecha depois que você confirmar — nunca deixa passar sem você ver.
+
+### O que acontece quando eu fecho?
+
+Três coisas de uma vez: grava o pagamento com a decomposição de custos, **baixa uma unidade do
+lote** no estoque, e marca o atendimento como Atendido na agenda. Ou tudo acontece, ou nada — não
+existe meio-fechamento.
+
+### Fechei errado. E agora?
+
+Um atendimento fechado não fecha de novo — a tela passa a mostrar o resultado. Correção de
+lançamento entra com o financeiro (etapa 6).
+
+### Por que no Pix a margem sai maior?
+
+Porque não há taxa de maquininha. O preço sugerido embute a taxa; se a paciente paga em Pix ou
+dinheiro, essa taxa não é cobrada de você e vira margem.
+
+---
+
+## Estoque
+
+### O que significam os status?
+
+- **OK** — quantidade confortável e validade distante.
+- **Baixo** — 2 unidades ou menos.
+- **Vence** — algum lote vence nos próximos 90 dias.
+- **Repor** — sem unidade utilizável, ou tudo vencido.
+
+### Um lote venceu e ainda tem unidades. Ele aparece como estoque?
+
+Não. Lote vencido não conta como disponível e nunca é escolhido num fechamento — ele precisa ser
+baixado como perda, não usado.
+
+### Quem vê o custo dos produtos?
+
+Só a doutora. Recepção e financeiro veem quantidade, lote, validade e status — não o que a clínica
+paga no produto.
+
+### Como dou entrada de nota?
+
+Entra junto com o financeiro (etapa 6). Hoje os lotes chegam pelo cadastro inicial.
+
+---
+
+## Telas em construção
 
 ### Financeiro **(em breve, etapa 6)**
 Lançamentos com valor cobrado, custos, imposto e taxa da maquininha, lucro e margem. Margem abaixo
 de 28% fica destacada. Reserva automática: 10% para recompra, 5% para emergência, o restante para
 retirada.
-
-### Estoque **(em breve, etapa 4)**
-Produto, rendimento, custo por atendimento, quantidade, lote e validade, com status OK, Baixo, Vence
-e Repor. Entrada por nota e baixa automática no fechamento.
 
 ### Relatórios **(em breve, etapa 6)**
 Seis meses de faturamento e lucro, mix por linha de procedimento, guia de margem e exportação em CSV

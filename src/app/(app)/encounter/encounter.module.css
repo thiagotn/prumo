@@ -1,0 +1,43 @@
+/* Encounter — the record and the financial close. */
+
+.layout { display: grid; grid-template-columns: 1fr 340px; gap: 26px; align-items: start; }
+.panel { border: 1px solid var(--color-divider); border-radius: var(--radius-md); padding: var(--space-4); }
+.sidePanel { border: 1px solid var(--color-divider); border-radius: var(--radius-md); padding: var(--space-4); position: sticky; top: 26px; }
+
+.patientName { font-family: var(--font-heading); font-weight: 500; font-size: 21px; line-height: 1.2; margin: var(--space-1) 0 var(--space-2); }
+.meta { font-size: 13px; color: var(--color-neutral-700); margin: 0 0 var(--space-4); }
+
+.alert {
+  margin-bottom: var(--space-4);
+  padding: var(--space-3);
+  border: 1px solid var(--color-accent-400);
+  border-left: 3px solid var(--color-accent-700);
+  border-radius: var(--radius-md);
+  background: var(--color-accent-100);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-accent-800);
+}
+
+.form { display: flex; flex-direction: column; gap: var(--space-3); }
+.row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--space-3); }
+.hint { font-size: 11px; line-height: 1.5; color: var(--color-neutral-600); margin: 4px 0 0; }
+.hintWarn { color: var(--color-accent-700); }
+.actions { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-2); }
+.confirm { display: flex; align-items: center; gap: var(--space-2); font-size: 13px; color: var(--color-accent-800); }
+.confirm input { accent-color: var(--color-accent); width: 16px; height: 16px; }
+.saved { font-size: 12px; line-height: 1.5; color: var(--color-accent-800); border-left: 2px solid var(--color-accent); padding-left: var(--space-2); }
+
+.costs { display: grid; grid-template-columns: 1fr auto; gap: var(--space-2) var(--space-3); font-size: 13px; margin: 0; }
+.costs dt { color: var(--color-neutral-700); }
+.costs dd { margin: 0; text-align: right; }
+.costTotal { border-top: 1px solid var(--color-divider); padding-top: var(--space-2); font-weight: 600; }
+
+.priceBox { margin-top: var(--space-4); padding-top: var(--space-3); border-top: 1px solid var(--color-divider); }
+.priceValue { font-family: var(--font-heading); font-weight: 500; font-size: 24px; line-height: 1.2; }
+.priceLabel { font-size: 11px; color: var(--color-neutral-600); }
+
+@media (max-width: 1000px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidePanel { position: static; }
+}

@@ -10,7 +10,7 @@ import { hashPassword } from '../src/lib/auth/password';
 import { validateAccentColor } from '../src/lib/color';
 import { prisma, withPlatformScope } from '../src/lib/db';
 import type { Flags } from '../src/lib/flags';
-import { seedAppointments, seedCatalog } from './seed-catalog';
+import { seedAppointments, seedCatalog, seedStockLots } from './seed-catalog';
 
 const DEV_PASSWORD = 'prumo1234';
 
@@ -131,7 +131,16 @@ async function main() {
       for (const user of seed.users) {
         await tx.user.upsert({
           where: { tenantId_email: { tenantId: tenant.id, email: user.email } },
-          update: { name: user.name, role: user.role, active: true },
+          // The TOTP secret is cleared on purpose: a development database has to come up
+          // in a known state, and "half enrolled" is not one. It is also what keeps the
+          // e2e suite repeatable, since enrolment is otherwise a one-way step.
+          update: {
+            name: user.name,
+            role: user.role,
+            active: true,
+            totpSecret: null,
+            totpConfirmedAt: null,
+          },
           create: {
             tenantId: tenant.id,
             name: user.name,
@@ -147,7 +156,11 @@ async function main() {
       await seedCatalog(tx, tenant.id, seed.domain !== 'verticesaude.com.br');
       // Only the first clinic gets a diary: the others exist to prove isolation, and an
       // empty schedule is what proves it.
-      if (seed.domain === 'dratatimayumi.com.br') await seedAppointments(tx, tenant.id);
+      // Vértice stays without a diary: an empty schedule is what proves the isolation.
+      if (seed.domain !== 'verticesaude.com.br') {
+        await seedStockLots(tx, tenant.id);
+        await seedAppointments(tx, tenant.id);
+      }
 
       const counts = await Promise.all([
         tx.room.count({ where: { tenantId: tenant.id } }),
@@ -155,11 +168,12 @@ async function main() {
         tx.product.count({ where: { tenantId: tenant.id } }),
         tx.patient.count({ where: { tenantId: tenant.id } }),
         tx.appointment.count({ where: { tenantId: tenant.id } }),
+        tx.stockLot.count({ where: { tenantId: tenant.id } }),
       ]);
       console.log(
         `✅ ${seed.name} — ${seed.hosts.length} host(s), ${seed.users.length} user(s), ` +
           `${counts[0]} room(s), ${counts[1]} procedure(s), ${counts[2]} product(s), ` +
-          `${counts[3]} patient(s), ${counts[4]} appointment(s)`,
+          `${counts[3]} patient(s), ${counts[4]} appointment(s), ${counts[5]} lot(s)`,
       );
     }
 

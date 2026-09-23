@@ -90,6 +90,10 @@ model Tenant {
   products      Product[]
   patients      Patient[]
   appointments  Appointment[]
+  stockLots     StockLot[]
+  stockMovements StockMovement[]
+  encounters    Encounter[]
+  payments      Payment[]
 
   @@map("tenants")
 }
@@ -341,6 +345,8 @@ model Product {
   procedure    Procedure     @relation(fields: [procedureId], references: [id], onDelete: Cascade)
   room         Room?         @relation(fields: [roomId], references: [id], onDelete: SetNull)
   appointments Appointment[]
+  stockLots    StockLot[]
+  encounters   Encounter[]
 
   @@unique([tenantId, procedureId, brand])
   @@index([tenantId])
@@ -375,6 +381,7 @@ model Patient {
 
   tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   appointments Appointment[]
+  encounters   Encounter[]
 
   @@unique([tenantId, document])
   @@index([tenantId, name])
@@ -432,6 +439,7 @@ model Appointment {
   procedure    Procedure? @relation(fields: [procedureId], references: [id], onDelete: SetNull)
   product      Product?   @relation(fields: [productId], references: [id], onDelete: SetNull)
   practitioner User?      @relation("AppointmentPractitioner", fields: [practitionerId], references: [id], onDelete: SetNull)
+  encounter    Encounter?
 
   // The day view reads a date range for one tenant; the patient panel reads one patient's
   // history. Both are covered here.
@@ -439,4 +447,166 @@ model Appointment {
   @@index([patientId, startsAt])
   @@index([roomId, startsAt])
   @@map("appointments")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Stage 4 — encounter, stock by lot, and the financial close
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// A purchased batch of a product. Stock is tracked per lot rather than as a single
+/// quantity because the clinic has to know which lot went into which patient: an expiry,
+/// a recall or a reaction all start from that question.
+model StockLot {
+  id        String @id @default(uuid()) @db.Uuid
+  tenantId  String @map("tenant_id") @db.Uuid
+  productId String @map("product_id") @db.Uuid
+
+  /// The supplier's batch number, as printed on the box.
+  lotNumber String    @map("lot_number")
+  expiresAt DateTime? @map("expires_at") @db.Date
+  /// What the clinic paid for this batch, which can differ from the product's current
+  /// purchase cost — prices move between orders.
+  unitCost Decimal @map("unit_cost") @db.Decimal(12, 2)
+
+  /// Units received and units left. Kept as a running figure, with stock_movements as the
+  /// ledger that explains how it got there.
+  quantityReceived  Int @map("quantity_received")
+  quantityRemaining Int @map("quantity_remaining")
+
+  receivedAt DateTime @default(now()) @map("received_at")
+  /// Supplier invoice, for tracing an entry back to its paperwork.
+  invoiceRef String? @map("invoice_ref")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tenant    Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  product   Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  movements StockMovement[]
+  encounters Encounter[]
+
+  @@unique([tenantId, productId, lotNumber])
+  @@index([tenantId, expiresAt])
+  @@map("stock_lots")
+}
+
+enum StockMovementKind {
+  ENTRY // an invoice arrived
+  CONSUMPTION // used in an encounter
+  ADJUSTMENT // a count correction, a loss, a breakage
+  RETURN // given back to the supplier
+
+  @@map("stock_movement_kind")
+}
+
+/// The ledger behind every change to a lot's remaining quantity. Append-only in practice:
+/// a mistake is corrected with an ADJUSTMENT, not by rewriting history.
+model StockMovement {
+  id       String @id @default(uuid()) @db.Uuid
+  tenantId String @map("tenant_id") @db.Uuid
+  lotId    String @map("lot_id") @db.Uuid
+
+  kind StockMovementKind
+  /// Positive on an entry, negative on a consumption.
+  quantity Int
+  reason   String?
+
+  /// The encounter that consumed it, when that is the reason.
+  encounterId String? @map("encounter_id") @db.Uuid
+  userId      String? @map("user_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  tenant Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  lot    StockLot @relation(fields: [lotId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
+  @@index([lotId])
+  @@map("stock_movements")
+}
+
+/// What actually happened at the chair. The appointment is the plan; this is the record.
+/// Health data proper — it is behind 2FA and every read lands in audit_log.
+model Encounter {
+  id            String  @id @default(uuid()) @db.Uuid
+  tenantId      String  @map("tenant_id") @db.Uuid
+  appointmentId String  @unique @map("appointment_id") @db.Uuid
+  patientId     String  @map("patient_id") @db.Uuid
+
+  /// What was used, which can differ from what was planned.
+  productId String? @map("product_id") @db.Uuid
+  lotId     String? @map("lot_id") @db.Uuid
+  /// Volume applied, in the product's own unit (ml, U).
+  volume    Decimal? @db.Decimal(10, 3)
+  technique String?
+  /// Free-text clinical evolution.
+  evolution String?
+
+  performedAt DateTime  @default(now()) @map("performed_at")
+  closedAt    DateTime? @map("closed_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  appointment Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  patient     Patient     @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  product     Product?    @relation(fields: [productId], references: [id], onDelete: SetNull)
+  lot         StockLot?   @relation(fields: [lotId], references: [id], onDelete: SetNull)
+  payment     Payment?
+
+  @@index([tenantId, performedAt])
+  @@index([patientId, performedAt])
+  @@map("encounters")
+}
+
+enum PaymentMethod {
+  CASH
+  PIX
+  DEBIT
+  CREDIT_UPFRONT
+  CREDIT_INSTALLMENT
+
+  @@map("payment_method")
+}
+
+/// The financial close of an encounter. The cost breakdown is stored rather than
+/// recomputed: parameters and purchase costs move, and a past charge has to stay
+/// explainable with the numbers that produced it.
+model Payment {
+  id          String @id @default(uuid()) @db.Uuid
+  tenantId    String @map("tenant_id") @db.Uuid
+  encounterId String @unique @map("encounter_id") @db.Uuid
+
+  method     PaymentMethod
+  /// Instalments, when paid that way.
+  installments Int? @db.SmallInt
+
+  /// What the patient was charged.
+  charged Decimal @db.Decimal(12, 2)
+
+  /// The cost as it stood at closing time.
+  materialCost    Decimal @map("material_cost") @db.Decimal(12, 2)
+  roomCost        Decimal @map("room_cost") @db.Decimal(12, 2)
+  disposablesCost Decimal @map("disposables_cost") @db.Decimal(12, 2)
+  overheadCost    Decimal @map("overhead_cost") @db.Decimal(12, 2)
+  totalCost       Decimal @map("total_cost") @db.Decimal(12, 2)
+
+  /// Tax and card fee actually applied, and what was left.
+  taxAmount     Decimal @map("tax_amount") @db.Decimal(12, 2)
+  cardFeeAmount Decimal @map("card_fee_amount") @db.Decimal(12, 2)
+  netProfit     Decimal @map("net_profit") @db.Decimal(12, 2)
+  /// Realised margin as a fraction. Negative when charged below cost.
+  margin Decimal @db.Decimal(7, 4)
+
+  /// The parameters in force at closing, for re-explaining the figures later.
+  pricingParamsId String? @map("pricing_params_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  encounter Encounter @relation(fields: [encounterId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
+  @@map("payments")
 }

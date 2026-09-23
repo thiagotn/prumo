@@ -10,6 +10,9 @@ const BASE_URL = `http://localhost:${PORT}`;
 
 export default defineConfig({
   testDir: './e2e',
+  // Reseeds before every run: the suite enrols second factors, which is a one-way step
+  // per account, so a known starting state is what makes it repeatable.
+  globalSetup: './e2e/global-setup.ts',
   // The suite shares one seeded database, and sign-in throttling counts per email+IP:
   // running files in parallel would trip the throttle and make tests flaky.
   workers: 1,

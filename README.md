@@ -8,9 +8,9 @@ Prontuário, agenda, ficha de atendimento, financeiro, estoque, relatórios, ter
 lembretes por WhatsApp e portal da paciente — com dados sensíveis de saúde, o que define quase todas
 as decisões de arquitetura abaixo.
 
-> **Etapas 1, 2 e 3 de 8 concluídas.** Login com perfis, tenant por hostname, cadastro de pacientes,
-> configurações da clínica (identidade, parâmetros de preço, módulos) e a agenda (dia, semana e
-> lista) estão de pé. As telas dos
+> **Etapas 1 a 4 de 8 concluídas.** Login com perfis, tenant por hostname, cadastro de pacientes,
+> configurações, agenda, estoque por lote e a ficha de atendimento com fechamento financeiro estão
+> de pé. As telas dos
 > outros módulos são placeholders que já passam por guard, tenant e auditoria, e dizem qual etapa as
 > entrega. Ver [Estado](#estado).
 
@@ -202,11 +202,20 @@ código precisa dele está transcrito em [`docs/regras-de-negocio.md`](docs/regr
   horário de verão e a virada de dia.
 - Detecção de conflito de sala pronta (`clashesIn`), coberta por teste, para o agendamento da etapa 4.
 
+**Etapa 4 concluída** — atendimento, estoque e fechamento:
+
+- Fechar um atendimento é uma transação só: grava o pagamento com a decomposição de custos, baixa o
+  lote no estoque com o movimento correspondente, e marca o atendimento como atendido.
+- O lote consumido é o que vence primeiro, e um lote vencido nunca é escolhido (`src/lib/stock.ts`).
+- Cobrar abaixo do custo exige confirmação explícita; a decomposição fica gravada, não recalculada,
+  para que um lançamento antigo continue explicável.
+- Restrições no banco seguram o resto: estoque não fica negativo, parcelas só existem em crédito
+  parcelado, e cobrança não é negativa.
+
 ### Ordem das próximas etapas
 
 | Etapa | Entrega |
 |---|---|
-| 4 | Ficha de atendimento + estoque com baixa por lote + fechamento financeiro |
 | 5 | Termos com assinatura e PDF |
 | 6 | Financeiro e relatórios |
 | 7 | WhatsApp e portal da paciente |

@@ -246,3 +246,37 @@ export async function seedAppointments(tx: Tx, tenantId: string) {
   }
   return created;
 }
+
+/** Stock lots for development: one or two batches per product, with mixed statuses. */
+export async function seedStockLots(tx: Tx, tenantId: string) {
+  const existing = await tx.stockLot.count({ where: { tenantId } });
+  if (existing > 0) return existing;
+
+  const products = await tx.product.findMany({ where: { tenantId }, orderBy: { brand: 'asc' } });
+  const now = Date.now();
+  const inDays = (days: number) => new Date(now + days * 86_400_000);
+
+  let created = 0;
+  for (const [i, product] of products.entries()) {
+    // A spread of states, so the stock screen shows every status without hand-editing:
+    // healthy, running low, expiring soon, and one that needs restocking.
+    const shape = i % 4;
+    const quantity = shape === 3 ? 0 : shape === 1 ? 1 : 4;
+    const expiresAt = shape === 2 ? inDays(45) : inDays(400 + i * 10);
+
+    await tx.stockLot.create({
+      data: {
+        tenantId,
+        productId: product.id,
+        lotNumber: `${product.brand.replace(/[^A-Za-z]/g, '').slice(0, 2).toUpperCase()}-${4000 + i * 137}`,
+        expiresAt,
+        unitCost: product.purchaseCost,
+        quantityReceived: Math.max(quantity, 1),
+        quantityRemaining: quantity,
+        invoiceRef: `NF-${9000 + i}`,
+      },
+    });
+    created++;
+  }
+  return created;
+}
