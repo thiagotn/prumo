@@ -1,0 +1,81 @@
+# Publica a imagem no GHCR e grava a tag no repo homelab — o Argo CD reconcilia a
+# partir dali (ver helm/argocd/README.md, "Fluxo de deploy"). O cluster continua
+# read-only para o CI: a credencial de escrita vive só nos secrets deste repo.
+name: build-image
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'design/**'
+      - 'docs/**'
+  workflow_dispatch:
+
+concurrency:
+  group: build-image
+  cancel-in-progress: false
+
+env:
+  IMAGEM: ghcr.io/thiagotn/prumo
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - id: meta
+        run: echo "tag=sha-${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGEM }}:${{ steps.meta.outputs.tag }}
+            ${{ env.IMAGEM }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  bump-homelab-tag:
+    needs: build-push
+    runs-on: ubuntu-latest
+
+    steps:
+      # Deploy key SSH de ESCRITA do repo homelab (secret deste repo, nunca no cluster).
+      - uses: actions/checkout@v5
+        with:
+          repository: thiagotn/homelab
+          ssh-key: ${{ secrets.HOMELAB_DEPLOY_KEY }}
+          ref: main
+
+      - name: Apontar o kustomization para a imagem nova
+        env:
+          TAG: ${{ needs.build-push.outputs.tag }}
+        run: |
+          set -euo pipefail
+          arquivo=helm/apps/prumo/kustomization.yaml
+          # Troca só o newTag da imagem do prumo, preservando o resto do arquivo.
+          sed -i "/name: ghcr.io\/thiagotn\/prumo$/{n;s|newTag: .*|newTag: ${TAG}|}" "$arquivo"
+          git diff --exit-code "$arquivo" && echo "tag já era ${TAG}, nada a fazer" && exit 0 || true
+
+          git config user.name  'prumo-ci'
+          git config user.email 'prumo-ci@users.noreply.github.com'
+          git add "$arquivo"
+          git commit -m "prumo: imagem ${TAG} [skip ci]"
+          git push

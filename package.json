@@ -1,0 +1,57 @@
+{
+  "name": "prumo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sistema de gest\u00e3o cl\u00ednica white-label \u2014 multi-tenant",
+  "scripts": {
+    "dev": "next dev --port 3100",
+    "build": "prisma generate && next build",
+    "start": "next start --port 3100",
+    "lint": "eslint .",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:up": "docker compose --profile db up -d",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:reset": "prisma migrate reset --force",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:all": "vitest run && playwright test",
+    "db:down": "docker compose --profile db down",
+    "docker:up": "docker compose --profile app up -d --build",
+    "docker:down": "docker compose --profile app down",
+    "docker:logs": "docker compose --profile app logs -f app"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.10.0",
+    "@prisma/client": "^7.10.0",
+    "lucide-react": "^1.47.0",
+    "next": "^16.3.6",
+    "pg": "^8.23.0",
+    "qrcode": "^1.5.4",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "server-only": "^0.0.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^26.6.2",
+    "@types/pg": "^8.23.1",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "dotenv": "^18.0.3",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.3.6",
+    "prisma": "^7.10.0",
+    "tsx": "^4.23.15",
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.1"
+  }
+}

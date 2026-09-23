@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/classical-58556b6a-114d-481b-b9a4-3fc1c494ccb7/styles.css">
+<script src="_ds/classical-58556b6a-114d-481b-b9a4-3fc1c494ccb7/_ds_bundle.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+body{margin:0;background:#201f1d;font-family:"Lora",Georgia,serif;-webkit-font-smoothing:antialiased}
+a{color:var(--brand,#b68235);text-decoration:none}
+a:hover{color:var(--color-accent-700)}
+.num{font-variant-numeric:tabular-nums}
+.ck::-webkit-scrollbar{width:7px;height:7px}
+.ck::-webkit-scrollbar-thumb{background:rgba(32,31,29,.22);border-radius:9px}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:#201f1d;padding:0 0 64px">
+
+<div style="position:sticky;top:0;z-index:40;background:#171614;border-bottom:1px solid rgba(255,255,255,.1);padding:14px 26px;display:flex;flex-wrap:wrap;gap:26px;align-items:flex-end">
+<div style="margin-right:auto">
+<div style="font:400 10px/1 'Lora',serif;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.42)">Mockups de interface</div>
+<div style="font:400 21px/1.25 'Cormorant Garamond',serif;color:#f3f2f2;margin-top:6px">Sistema de gestão clínica <span style="color:rgba(255,255,255,.4)">· white-label</span></div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:7px">
+<div style="font:400 9px/1 'Lora',serif;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.38)">Marca (tenant)</div>
+<div style="display:flex;gap:7px">
+<sc-for list="{{ brands }}" as="b" hint-placeholder-count="3">
+<button onClick="{{ b.pick }}" style="display:flex;align-items:center;gap:7px;padding:6px 11px 6px 7px;border-radius:4px;cursor:pointer;font:400 12px/1 'Lora',serif;background:{{ b.bg }};border:1px solid {{ b.bd }};color:{{ b.fg }}">
+<span style="width:16px;height:16px;border-radius:50%;background:{{ b.accent }};display:inline-block"></span>{{ b.name }}</button>
+</sc-for>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:7px">
+<div style="font:400 9px/1 'Lora',serif;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.38)">Perfil de acesso</div>
+<select onChange="{{ setRole }}" value="{{ role }}" style="font:400 12px/1 'Lora',serif;padding:7px 10px;border-radius:4px;background:#241f1b;color:#f3f2f2;border:1px solid rgba(255,255,255,.2)">
+<sc-for list="{{ roles }}" as="r" hint-placeholder-count="6"><option value="{{ r.id }}">{{ r.label }}</option></sc-for>
+</select>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:7px">
+<div style="font:400 9px/1 'Lora',serif;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.38)">Variações</div>
+<div style="display:flex;gap:16px;flex-wrap:wrap">
+<sc-for list="{{ toggles }}" as="t" hint-placeholder-count="3">
+<div style="display:flex;flex-direction:column;gap:4px">
+<div style="font:400 10px/1 'Lora',serif;color:rgba(255,255,255,.5)">{{ t.label }}</div>
+<div style="display:flex;border:1px solid rgba(255,255,255,.18);border-radius:4px;overflow:hidden">
+<sc-for list="{{ t.opts }}" as="o" hint-placeholder-count="2">
+<button onClick="{{ o.pick }}" style="font:400 11px/1 'Lora',serif;padding:6px 10px;cursor:pointer;border:0;border-left:1px solid rgba(255,255,255,.12);background:{{ o.bg }};color:{{ o.fg }}">{{ o.label }}</button>
+</sc-for>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+
+<div style="display:flex;gap:30px;align-items:flex-start;padding:30px 26px;overflow-x:auto">
+
+<div style="flex:none;width:1280px;border-radius:9px;overflow:hidden;background:var(--color-bg);box-shadow:0 26px 70px rgba(0,0,0,.5)">
+<div style="display:flex;align-items:center;gap:9px;padding:10px 14px;background:#e3e1e0;border-bottom:1px solid rgba(32,31,29,.12)">
+<span style="width:10px;height:10px;border-radius:50%;background:#c9c5c3"></span>
+<span style="width:10px;height:10px;border-radius:50%;background:#c9c5c3"></span>
+<span style="width:10px;height:10px;border-radius:50%;background:#c9c5c3"></span>
+<div style="flex:1;margin-left:10px;background:#f3f2f2;border:1px solid rgba(32,31,29,.1);border-radius:4px;padding:5px 11px;font:400 11px/1.4 'Lora',serif;color:#605d5d" class="num">app.{{ domain }}/{{ screen }}</div>
+</div>
+
+<sc-if value="{{ sLogin }}">
+<div style="height:800px;display:grid;grid-template-columns:1.05fr .95fr">
+<div style="background:var(--color-neutral-900);padding:60px 56px;display:flex;flex-direction:column;justify-content:space-between;color:#f3f2f2">
+<div style="display:flex;align-items:center;gap:13px">
+<div style="width:40px;height:40px;border:1px solid var(--brand);border-radius:50%;display:grid;place-items:center;font:400 15px 'Cormorant Garamond',serif;color:var(--brand)">{{ mono }}</div>
+<div>
+<div style="font:400 16px/1.2 'Cormorant Garamond',serif">{{ brandName }}</div>
+<div style="font:400 10px/1.2 'Lora',serif;color:rgba(243,242,242,.5);letter-spacing:.1em;margin-top:3px">{{ brandSub }}</div>
+</div>
+</div>
+<div>
+<div style="font:400 11px/1 'Lora',serif;letter-spacing:.24em;text-transform:uppercase;color:var(--brand)">Acesso restrito</div>
+<h1 style="font:300 54px/1.08 'Cormorant Garamond',serif;margin:20px 0 0;max-width:12em">Prontuário, agenda e caixa em um só lugar.</h1>
+<div style="width:62px;height:1px;background:var(--brand);margin:30px 0"></div>
+<p style="font:400 14px/1.75 'Lora',serif;color:rgba(243,242,242,.66);max-width:34em;text-align:justify;margin:0">Cada acesso é individual e registrado. Dados de saúde são sigilosos: o que você vê depende do seu perfil, e toda visualização de prontuário fica em log de auditoria.</p>
+</div>
+<div style="font:400 11px/1.6 'Lora',serif;color:rgba(243,242,242,.38)">LGPD · Dados sensíveis de saúde · Logs de auditoria por 5 anos</div>
+</div>
+<div style="padding:60px 60px;display:flex;flex-direction:column;justify-content:center">
+<h2 style="font:400 34px/1.1 'Cormorant Garamond',serif;margin:0 0 6px">Entrar</h2>
+<p style="font:400 13px/1.7 'Lora',serif;color:var(--color-neutral-700);margin:0 0 30px">Use o e-mail cadastrado pela administração da clínica.</p>
+<div style="display:flex;flex-direction:column;gap:18px;max-width:380px">
+<div class="field"><label>E-mail</label><input class="input" type="email" value="tati@dratatimayumi.com.br" readonly></div>
+<div class="field"><label>Senha</label><input class="input" type="password" value="............" readonly></div>
+<div style="display:flex;align-items:center;justify-content:space-between;font:400 12px/1 'Lora',serif">
+<label style="display:flex;align-items:center;gap:8px;color:var(--color-neutral-700)"><input type="checkbox" checked>Manter conectado neste dispositivo</label>
+<a href="#">Esqueci a senha</a>
+</div>
+<button onClick="{{ doLogin }}" class="btn btn-primary btn-block">Entrar</button>
+<div style="display:flex;align-items:center;gap:12px;color:var(--color-neutral-500);font:400 11px/1 'Lora',serif"><span style="flex:1;height:1px;background:var(--color-divider)"></span>ou<span style="flex:1;height:1px;background:var(--color-divider)"></span></div>
+<button onClick="{{ doLogin }}" class="btn btn-secondary btn-block">Entrar com verificação em 2 etapas</button>
+<p style="font:400 11px/1.7 'Lora',serif;color:var(--color-neutral-600);margin:10px 0 0">Perfis com acesso a prontuário exigem 2FA por SMS. A recepção entra sem 2FA, mas não vê anamnese nem fotos clínicas.</p>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sApp }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:{{ shellDir }};height:800px;background:var(--color-bg)">
+
+<div style="{{ navStyle }}">
+<div style="display:flex;align-items:center;gap:11px;padding:{{ navBrandPad }};border-bottom:1px solid var(--color-divider)">
+<div style="width:30px;height:30px;flex:none;border:1px solid var(--brand);border-radius:50%;display:grid;place-items:center;font:400 12px 'Cormorant Garamond',serif;color:var(--brand)">{{ mono }}</div>
+<div style="min-width:0">
+<div style="font:400 14px/1.15 'Cormorant Garamond',serif;color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ brandName }}</div>
+<div style="font:400 9px/1.2 'Lora',serif;letter-spacing:.14em;text-transform:uppercase;color:var(--color-neutral-600);margin-top:2px">{{ unitName }}</div>
+</div>
+</div>
+<div style="{{ navListStyle }}" class="ck">
+<sc-for list="{{ navGroups }}" as="g" hint-placeholder-count="4">
+<div style="{{ g.wrap }}">
+<div style="{{ g.head }}">{{ g.label }}</div>
+<sc-for list="{{ g.items }}" as="it" hint-placeholder-count="3">
+<button onClick="{{ it.pick }}" style="{{ it.style }}"><span>{{ it.label }}</span><span class="num" style="font-size:10px;color:{{ it.badgeColor }}">{{ it.badge }}</span></button>
+</sc-for>
+</div>
+</sc-for>
+</div>
+<div style="{{ navFootStyle }}">
+<div style="display:flex;align-items:center;gap:9px">
+<div style="width:26px;height:26px;border-radius:50%;background:var(--color-neutral-300);display:grid;place-items:center;font:400 11px 'Cormorant Garamond',serif;color:var(--color-neutral-800)">{{ userMono }}</div>
+<div style="min-width:0">
+<div style="font:400 12px/1.2 'Lora',serif;color:var(--color-text);white-space:nowrap">{{ userName }}</div>
+<div style="font:400 10px/1.2 'Lora',serif;color:var(--color-neutral-600);white-space:nowrap">{{ roleLabel }}</div>
+</div>
+</div>
+<button onClick="{{ doLogout }}" class="btn btn-ghost" style="font-size:11px;padding:5px 9px">Sair</button>
+</div>
+</div>
+
+<div style="flex:1;min-width:0;min-height:0;display:flex;flex-direction:column">
+<div style="display:flex;align-items:center;gap:16px;padding:18px 28px;border-bottom:1px solid var(--color-divider);background:var(--color-bg)">
+<div style="min-width:0">
+<div style="font:400 10px/1 'Lora',serif;letter-spacing:.2em;text-transform:uppercase;color:var(--color-neutral-600)">{{ crumb }}</div>
+<h1 style="font:500 26px/1.2 'Cormorant Garamond',serif;margin:7px 0 0;color:var(--color-text)">{{ title }}</h1>
+</div>
+<div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+<div style="display:flex;align-items:center;gap:7px;border:1px solid var(--color-divider);border-radius:4px;padding:7px 11px;background:var(--color-neutral-100);min-width:230px">
+<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--color-neutral-600)" stroke-width="1.6"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4.3-4.3"></path></svg>
+<span style="font:400 12px/1 'Lora',serif;color:var(--color-neutral-600)">Buscar paciente, CPF, telefone…</span>
+</div>
+<button class="btn btn-secondary" style="font-size:12px">Hoje</button>
+<button onClick="{{ goAtend }}" class="btn btn-primary" style="font-size:12px">{{ primaryAction }}</button>
+</div>
+</div>
+
+<div style="flex:1;overflow:auto;padding:26px 28px 40px" class="ck">
+
+<sc-if value="{{ sDash }}" hint-placeholder-val="{{ true }}">
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--color-divider);border-radius:4px;background:var(--color-neutral-100);overflow:hidden">
+<sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
+<div style="padding:20px 22px;border-left:1px solid var(--color-divider)">
+<div style="font:400 9px/1 'Lora',serif;letter-spacing:.18em;text-transform:uppercase;color:var(--color-neutral-600)">{{ k.label }}</div>
+<div class="num" style="font:400 32px/1.1 'Cormorant Garamond',serif;color:var(--color-text);margin-top:12px">{{ k.value }}</div>
+<div class="num" style="font:400 11px/1.4 'Lora',serif;color:var(--color-neutral-700);margin-top:6px">{{ k.note }}</div>
+</div>
+</sc-for>
+</div>
+
+<div style="display:grid;grid-template-columns:1.35fr 1fr;gap:26px;margin-top:26px">
+<div class="card">
+<div style="display:flex;align-items:baseline;justify-content:space-between">
+<div><div class="card-kicker">Agenda</div><div class="card-title">Próximos atendimentos de hoje</div></div>
+<a href="#" onClick="{{ goAgenda }}" style="font:400 12px/1 'Lora',serif">Ver agenda →</a>
+</div>
+<div style="margin-top:16px;display:flex;flex-direction:column">
+<sc-for list="{{ todayNext }}" as="a" hint-placeholder-count="4">
+<div style="display:flex;align-items:center;gap:15px;padding:13px 0;border-top:1px solid var(--color-divider)">
+<span class="num" style="font:400 15px/1 'Cormorant Garamond',serif;color:var(--brand);width:44px;flex:none">{{ a.hora }}</span>
+<div style="flex:1;min-width:0">
+<div style="font:500 13px/1.3 'Lora',serif;color:var(--color-text)">{{ a.paciente }}</div>
+<div style="font:400 11px/1.4 'Lora',serif;color:var(--color-neutral-700);margin-top:2px">{{ a.proc }} · {{ a.sala }}</div>
+</div>
+<span class="tag {{ a.tagClass }}" style="font-size:10px">{{ a.status }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:22px">
+<div class="card">
+<div class="card-kicker">Lucro por hora</div>
+<div class="card-title">Onde a agenda rende mais</div>
+<div style="margin-top:16px;display:flex;flex-direction:column;gap:11px">
+<sc-for list="{{ profitBars }}" as="p" hint-placeholder-count="5">
+<div>
+<div style="display:flex;justify-content:space-between;font:400 11px/1.3 'Lora',serif;color:var(--color-neutral-800)"><span>{{ p.nome }}</span><span class="num">{{ p.valor }}</span></div>
+<div style="height:5px;background:var(--color-neutral-200);margin-top:5px;border-radius:2px;overflow:hidden"><div style="height:100%;width:{{ p.pct }};background:var(--brand)"></div></div>
+</div>
+</sc-for>
+</div>
+<p style="font:400 11px/1.65 'Lora',serif;color:var(--color-neutral-700);margin:16px 0 0;text-align:justify">Priorizar na agenda o que rende mais por hora — não só o de maior margem percentual.</p>
+</div>
+<div class="card">
+<div class="card-kicker">Atenção</div>
+<div class="card-title">3 pendências</div>
+<div style="margin-top:14px;display:flex;flex-direction:column;gap:11px">
+<sc-for list="{{ alerts }}" as="al" hint-placeholder-count="3">
+<div style="display:flex;gap:10px;padding-left:11px;border-left:2px solid var(--brand)">
+<div><div style="font:500 12px/1.35 'Lora',serif;color:var(--color-text)">{{ al.t }}</div><div style="font:400 11px/1.5 'Lora',serif;color:var(--color-neutral-700);margin-top:2px">{{ al.d }}</div></div>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sAgenda }}">
+<div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+<div style="display:flex;align-items:center;gap:9px">
+<button class="btn btn-icon btn-secondary" style="width:30px;height:30px">‹</button>
+<span class="num" style="font:400 17px/1 'Cormorant Garamond',serif;min-width:230px;text-align:center">{{ agendaRange }}</span>
+<button class="btn btn-icon btn-secondary" style="width:30px;height:30px">›</button>
+</div>
+<div class="seg" style="margin-left:auto">
+<sc-for list="{{ agendaTabs }}" as="t" hint-placeholder-count="3">
+<button onClick="{{ t.pick }}" class="seg-opt" aria-pressed="{{ t.on }}">{{ t.label }}</button>
+</sc-for>
+</div>
+<select style="font:400 12px/1 'Lora',serif;padding:7px 9px;border:1px solid var(--color-divider);border-radius:4px;background:var(--color-neutral-100)"><option>Todas as salas</option><option>Coworking Tatuapé</option><option>Coworking Parque do Carmo</option></select>
+</div>
+
+<sc-if value="{{ agDia }}">
+<div style="display:grid;grid-template-columns:78px 1fr 300px;gap:22px">
+<div style="border:1px solid var(--color-divider);border-radius:4px;overflow:hidden;grid-column:1/3;display:grid;grid-template-columns:78px 1fr">
+<div>
+<sc-for list="{{ daySlots }}" as="s" hint-placeholder-count="9">
+<div class="num" style="height:74px;border-top:1px solid var(--color-divider);border-right:1px solid var(--color-divider);display:flex;justify-content:flex-end;padding:7px 10px 0 0;font:400 12px/1 'Lora',serif;color:var(--color-neutral-600)">{{ s.hora }}</div>
+</sc-for>
+</div>
+<div>
+<sc-for list="{{ daySlots }}" as="s" hint-placeholder-count="9">
+<div style="height:74px;border-top:1px solid var(--color-divider);padding:6px 9px">
+<div style="{{ s.blockStyle }}" onClick="{{ s.open }}">
+<div style="display:flex;align-items:baseline;gap:9px">
+<div style="font:500 13px/1.25 'Lora',serif;color:var(--color-text)">{{ s.paciente }}</div>
+<span class="tag {{ s.tagClass }}" style="font-size:9px;padding:1px 6px">{{ s.status }}</span>
+<span class="num" style="margin-left:auto;font:400 11px/1 'Lora',serif;color:var(--color-neutral-700)">{{ s.valor }}</span>
+</div>
+<div style="font:400 11px/1.45 'Lora',serif;color:var(--color-neutral-700);margin-top:3px">{{ s.detalhe }}</div>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:20px">
+<div class="card">
+<div class="card-kicker">Resumo do dia</div>
+<div class="card-title">6 atendimentos</div>
+<div style="margin-top:14px;display:flex;flex-direction:column;gap:9px;font:400 12px/1.5 'Lora',serif">
+<sc-for list="{{ dayStats }}" as="d" hint-placeholder-count="4">
+<div style="display:flex;justify-content:space-between;border-top:1px solid var(--color-divider);padding-top:9px"><span style="color:var(--color-neutral-700)">{{ d.k }}</span><span class="num" style="color:var(--color-text)">{{ d.v }}</span></div>
+</sc-for>
+</div>
+</div>
+<div class="card">
+<div class="card-kicker">Encaixe rápido</div>
+<div class="card-title">Bloquear ou encaixar</div>
+<p style="font:400 11px/1.65 'Lora',serif;color:var(--color-neutral-700);margin:11px 0 14px;text-align:justify">A sala é alugada por hora — bloqueios avisam o custo de ociosidade antes de confirmar.</p>
+<div style="display:flex;flex-direction:column;gap:8px">
+<button class="btn btn-primary btn-block" style="font-size:12px">Novo agendamento</button>
+<button class="btn btn-secondary btn-block" style="font-size:12px">Bloquear horário</button>
+<button class="btn btn-ghost btn-block" style="font-size:12px">Lista de espera (4)</button>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ agSemana }}">
+<div style="border:1px solid var(--color-divider);border-radius:4px;overflow:hidden">
+<div style="display:grid;grid-template-columns:repeat(6,1fr);background:var(--color-neutral-200)">
+<sc-for list="{{ weekDays }}" as="w" hint-placeholder-count="6">
+<div style="padding:11px 13px;border-left:1px solid var(--color-divider)">
+<div style="font:400 10px/1 'Lora',serif;letter-spacing:.16em;text-transform:uppercase;color:var(--color-neutral-700)">{{ w.dia }}</div>
+<div class="num" style="font:400 20px/1 'Cormorant Garamond',serif;margin-top:6px;color:{{ w.numColor }}">{{ w.num }}</div>
+</div>
+</sc-for>
+</div>
+<div style="display:grid;grid-template-columns:repeat(6,1fr);min-height:520px">
+<sc-for list="{{ weekDays }}" as="w" hint-placeholder-count="6">
+<div style="border-left:1px solid var(--color-divider);padding:10px;display:flex;flex-direction:column;gap:8px;background:{{ w.bg }}">
+<sc-for list="{{ w.items }}" as="i" hint-placeholder-count="3">
+<div style="{{ i.style }}">
+<div class="num" style="font:400 11px/1 'Lora',serif;color:var(--brand)">{{ i.hora }}</div>
+<div style="font:500 11.5px/1.35 'Lora',serif;color:var(--color-text);margin-top:4px">{{ i.paciente }}</div>
+<div style="font:400 10px/1.35 'Lora',serif;color:var(--color-neutral-700);margin-top:2px">{{ i.proc }}</div>
+</div>
+</sc-for>
+<div style="font:400 10px/1 'Lora',serif;color:var(--color-neutral-500);margin-top:auto;text-align:center;padding:6px;border:1px dashed var(--color-neutral-300);border-radius:3px">+ encaixar</div>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="display:flex;gap:26px;margin-top:20px;font:400 11px/1.6 'Lora',serif;color:var(--color-neutral-700)">
+<span>Ocupação da semana: <span class="num" style="color:var(--color-text)">74%</span></span>
+<span>Horas de sala contratadas: <span class="num" style="color:var(--color-text)">22h</span></span>
+<span>Receita prevista: <span class="num" style="color:var(--color-text)">R$ 24.180</span></span>
+</div>
+</sc-if>
+
+<sc-if value="{{ agLista }}">
+<table class="table">
+<thead><tr><th>Data</th><th>Hora</th><th>Paciente</th><th>Procedimento / produto</th><th>Sala</th><th>Status</th><th style="text-align:right">Valor</th><th style="text-align:right">Pagamento</th></tr></thead>
+<tbody>
+<sc-for list="{{ listRows }}" as="r" hint-placeholder-count="8">
+<tr>
+<td class="num">{{ r.data }}</td><td class="num">{{ r.hora }}</td><td>{{ r.paciente }}</td><td>{{ r.proc }}</td><td>{{ r.sala }}</td>
+<td><span class="tag {{ r.tagClass }}" style="font-size:10px">{{ r.status }}</span></td>
+<td class="num" style="text-align:right">{{ r.valor }}</td><td style="text-align:right;font-size:12px;color:var(--color-neutral-700)">{{ r.pag }}</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</sc-if>
+</sc-if>
+
+<sc-if value="{{ sPac }}">
+<div style="display:grid;grid-template-columns:1fr 340px;gap:26px">
+<div>
+<div style="display:flex;gap:9px;margin-bottom:16px">
+<button class="btn btn-secondary" style="font-size:12px">Todos (218)</button>
+<button class="btn btn-ghost" style="font-size:12px">Ativos (146)</button>
+<button class="btn btn-ghost" style="font-size:12px">Retorno vencido (12)</button>
+<button class="btn btn-ghost" style="font-size:12px">Sem termo assinado (3)</button>
+</div>
+<table class="table">
+<thead><tr><th>Paciente</th><th>Nasc.</th><th>Telefone</th><th>Último atendimento</th><th>Próximo</th><th style="text-align:right">LTV</th></tr></thead>
+<tbody>
+<sc-for list="{{ patients }}" as="p" hint-placeholder-count="7">
+<tr onClick="{{ p.open }}" style="cursor:pointer">
+<td><div style="font-weight:500">{{ p.nome }}</div><div style="font-size:11px;color:var(--color-neutral-600)">{{ p.tags }}</div></td>
+<td class="num">{{ p.nasc }}</td><td class="num">{{ p.tel }}</td><td class="num">{{ p.ultimo }}</td>
+<td class="num" style="color:var(--brand)">{{ p.proximo }}</td><td class="num" style="text-align:right">{{ p.ltv }}</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<div style="display:flex;flex-direction:column;gap:20px">
+<div class="card">
+<div style="display:flex;gap:14px;align-items:center">
+<div style="width:52px;height:52px;border-radius:50%;background:var(--color-neutral-200);border:1px solid var(--color-divider);display:grid;place-items:center;font:400 18px 'Cormorant Garamond',serif;color:var(--color-neutral-700)">RY</div>
+<div><div style="font:500 17px/1.2 'Cormorant Garamond',serif">Renata Yamada</div><div class="num" style="font:400 11px/1.4 'Lora',serif;color:var(--color-neutral-700);margin-top:3px">34 anos · desde mar/2024 · 9 atendimentos</div></div>
+</div>
+<div class="hr" style="margin:16px 0"></div>
+<div style="display:flex;flex-direction:column;gap:10px;font:400 12px/1.5 'Lora',serif">
+<sc-for list="{{ patientFacts }}" as="f" hint-placeholder-count="5">
+<div style="display:flex;justify-content:space-between;gap:14px"><span style="color:var(--color-neutral-700)">{{ f.k }}</span><span class="num" style="color:var(--color-text);text-align:right">{{ f.v }}</span></div>
+</sc-for>
+</div>
+<div class="hr" style="margin:16px 0"></div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<button onClick="{{ goAtend }}" class="btn btn-primary btn-block" style="font-size:12px">Abrir ficha de atendimento</button>
+<button class="btn btn-secondary btn-block" style="font-size:12px">Histórico e fotos</button>
+</div>
+</div>
+<div class="card">
+<div class="card-kicker">Antes &amp; depois</div>
+<div class="card-title">Lábios · 3 sessões</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px">
+<div class="plate" style="aspect-ratio:3/4;display:grid;place-items:center;font:400 11px 'Lora',serif;color:var(--color-neutral-600);background:var(--color-neutral-200)">antes · mar/24</div>
+<div class="plate" style="aspect-ratio:3/4;display:grid;place-items:center;font:400 11px 'Lora',serif;color:var(--color-neutral-600);background:var(--color-neutral-200)">depois · set/26</div>
+</div>
+<p style="font:400 11px/1.65 'Lora',serif;color:var(--color-neutral-700);margin:13px 0 0;text-align:justify">Imagens clínicas ficam em armazenamento separado, com marca d'água e consentimento de uso vinculado. Visíveis apenas a perfis clínicos.</p>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sAtend }}">
+<sc-if value="{{ fichaEtapas }}">
+<div style="display:flex;gap:0;border:1px solid var(--color-divider);border-radius:4px;overflow:hidden;margin-bottom:24px">
+<sc-for list="{{ steps }}" as="s" hint-placeholder-count="5">
+<button onClick="{{ s.pick }}" style="{{ s.style }}">
+<span class="num" style="font:400 15px/1 'Cormorant Garamond',serif;color:{{ s.numColor }}">{{ s.n }}</span>
+<span style="font:400 12px/1.3 'Lora',serif">{{ s.label }}</span>
+</button>
+</sc-for>
+</div>
+</sc-if>
+
+<div style="display:grid;grid-template-columns:{{ fichaCols }};gap:26px;align-items:start">
+
+<div style="display:flex;flex-direction:column;gap:22px">
+<sc-if value="{{ showAnamnese }}" hint-placeholder-val="{{ true }}">
+<div class="card">
+<div class="card-kicker">Etapa 1 · Anamnese</div>
+<div class="card-title">Ficha clínica — Renata Yamada</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px">
+<div class="field"><label>Queixa principal</label><input class="input" value="Perda de volume labial" readonly></div>
+<div class="field"><label>Expectativa relatada</label><input class="input" value="Contorno definido, sem aumentar volume" readonly></div>
+<div class="field"><label>Medicamentos em uso</label><input class="input" value="Nenhum" readonly></div>
+<div class="field"><label>Alergias</label><input class="input" value="Nega" readonly></div>
+<div class="field"><label>Gestante / lactante</label><input class="input" value="Não" readonly></div>
+<div class="field"><label>Herpes labial recorrente</label><input class="input" value="Sim — profilaxia indicada" readonly></div>
+</div>
+<div class="field" style="margin-top:16px"><label>Antecedentes e procedimentos anteriores</label>
+<div class="input" style="min-height:70px;font:400 12.5px/1.7 'Lora',serif;color:var(--color-neutral-800);text-align:justify">Preenchimento labial 1ml em mar/2024 (Belotero) e jan/2025 (Restylane Kysse). Toxina full face em nov/2025. Boa resposta, sem intercorrências. Nega doenças autoimunes.</div>
+</div>
+<div style="display:flex;gap:9px;margin-top:16px;flex-wrap:wrap">
+<span class="tag tag-outline" style="font-size:10px">Herpes — aciclovir 24h antes</span>
+<span class="tag tag-accent" style="font-size:10px">Retorno de 14 dias obrigatório</span>
+<span class="tag tag-neutral" style="font-size:10px">Fotos autorizadas para uso clínico</span>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ showProc }}">
+<div class="card">
+<div class="card-kicker">Etapa 2 · Procedimento</div>
+<div class="card-title">Registro técnico e lote</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px">
+<div class="field"><label>Procedimento</label><select class="input"><option>Preenchimento labial 1ml</option><option>Toxina botulínica (full face)</option><option>Bioestimulador de colágeno</option><option>Skinbooster</option><option>Preenchimento mandíbula/mento</option></select></div>
+<div class="field"><label>Produto / marca</label><select class="input"><option>Restylane® Kysse — seringa 1ml</option><option>Belotero®</option><option>Rennova® Lips</option></select></div>
+<div class="field"><label>Lote</label><input class="input" value="RK-4471-B" readonly></div>
+<div class="field"><label>Validade</label><input class="input" value="08/2027" readonly></div>
+<div class="field"><label>Volume aplicado</label><input class="input" value="1,0 ml" readonly></div>
+<div class="field"><label>Técnica / cânula</label><input class="input" value="Cânula 25G — técnica retrógrada" readonly></div>
+</div>
+<div class="field" style="margin-top:16px"><label>Evolução e intercorrências</label>
+<div class="input" style="min-height:58px;font:400 12.5px/1.7 'Lora',serif;color:var(--color-neutral-800);text-align:justify">Aplicação sem intercorrências. Edema leve esperado. Orientações pós entregues por escrito e enviadas por WhatsApp.</div>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:15px;border-top:1px solid var(--color-divider);font:400 11.5px/1.5 'Lora',serif;color:var(--color-neutral-700)">
+<span>Baixa automática no estoque ao salvar</span><span class="num" style="color:var(--color-text)">1 × Restylane® Kysse · restam 2</span>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ showFotos }}">
+<div class="card">
+<div class="card-kicker">Etapa 3 · Documentação</div>
+<div class="card-title">Fotos padronizadas</div>
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-top:18px">
+<sc-for list="{{ photoSlots }}" as="ph" hint-placeholder-count="4">
+<div>
+<div class="plate" style="aspect-ratio:3/4;display:grid;place-items:center;background:var(--color-neutral-200);font:400 10px 'Lora',serif;color:var(--color-neutral-600);text-align:center;padding:8px">{{ ph.label }}</div>
+<div style="font:400 10px/1.4 'Lora',serif;color:var(--color-neutral-600);margin-top:6px;text-align:center">{{ ph.note }}</div>
+</div>
+</sc-for>
+</div>
+<p style="font:400 11.5px/1.7 'Lora',serif;color:var(--color-neutral-700);margin:15px 0 0;text-align:justify">Enquadramentos fixos por procedimento garantem comparação honesta. O sistema sobrepõe a foto anterior como guia fantasma na captura pelo celular.</p>
+</div>
+</sc-if>
+
+<sc-if value="{{ showFin }}">
+<div class="card">
+<div class="card-kicker">Etapa 4 · Fechamento</div>
+<div class="card-title">Cobrança e margem realizada</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px">
+<div class="field"><label>Forma de pagamento</label><select class="input"><option>Crédito parcelado 12×</option><option>Pix</option><option>Débito / crédito à vista</option><option>Dinheiro</option></select></div>
+<div class="field"><label>Valor cobrado</label><input class="input" value="R$ 1.386,73" readonly></div>
+</div>
+<table class="table" style="margin-top:18px">
+<tbody>
+<sc-for list="{{ closeRows }}" as="c" hint-placeholder-count="7">
+<tr><td style="{{ c.tdStyle }}">{{ c.k }}</td><td class="num" style="text-align:right;{{ c.tdStyle }}">{{ c.v }}</td></tr>
+</sc-for>
+</tbody>
+</table>
+<div style="display:flex;gap:9px;margin-top:18px">
+<button class="btn btn-primary" style="font-size:12px">Finalizar atendimento</button>
+<button class="btn btn-secondary" style="font-size:12px">Salvar rascunho</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ showTermo }}">
+<div class="card">
+<div class="card-kicker">Etapa 5 · Termo</div>
+<div class="card-title">Consentimento assinado em tela</div>
+<p style="font:400 12.5px/1.8 'Lora',serif;color:var(--color-neutral-800);text-align:justify;margin:16px 0 0">Termo específico de preenchimento labial, versão 3 (set/2026). Gera PDF com hash, IP, horário e foto do documento — arquivado no prontuário e enviado à paciente.</p>
+<div style="margin-top:16px;border:1px solid var(--color-divider);border-radius:4px;background:var(--color-neutral-100);height:110px;display:grid;place-items:center;font:400 12px 'Lora',serif;color:var(--color-neutral-600)">assinatura a dedo / caneta digital</div>
+<div style="display:flex;gap:9px;margin-top:16px"><button class="btn btn-primary" style="font-size:12px">Coletar assinatura</button><button class="btn btn-ghost" style="font-size:12px">Enviar por link</button></div>
+</div>
+</sc-if>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:20px">
+<div class="card" style="border-color:var(--brand)">
+<div class="card-kicker">Preço sugerido</div>
+<div class="card-title">Restylane® Kysse · 1h · Tatuapé</div>
+<div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:14px">
+<div><div style="font:400 10px/1 'Lora',serif;letter-spacing:.14em;text-transform:uppercase;color:var(--color-neutral-600)">À vista</div><div class="num" style="font:400 25px/1.1 'Cormorant Garamond',serif;margin-top:7px">R$ 1.142</div></div>
+<div><div style="font:400 10px/1 'Lora',serif;letter-spacing:.14em;text-transform:uppercase;color:var(--color-neutral-600)">Parcelado</div><div class="num" style="font:400 25px/1.1 'Cormorant Garamond',serif;margin-top:7px;color:var(--brand)">R$ 1.387</div></div>
+</div>
+<p style="font:400 11px/1.65 'Lora',serif;color:var(--color-neutral-700);margin:14px 0 0;text-align:justify">Margem líquida de 30% preservada nas duas formas — a taxa da maquininha está embutida em cada preço.</p>
+</div>
+<div class="card">
+<div class="card-kicker">Histórico</div>
+<div class="card-title">Linha do tempo</div>
+<div style="margin-top:15px;display:flex;flex-direction:column">
+<sc-for list="{{ timeline }}" as="t" hint-placeholder-count="4">
+<div style="display:flex;gap:12px;padding:11px 0;border-top:1px solid var(--color-divider)">
+<span class="num" style="font:400 11px/1.5 'Lora',serif;color:var(--color-neutral-600);width:56px;flex:none">{{ t.data }}</span>
+<div><div style="font:400 12px/1.4 'Lora',serif;color:var(--color-text)">{{ t.o }}</div><div style="font:400 11px/1.4 'Lora',serif;color:var(--color-neutral-700);margin-top:2px">{{ t.d }}</div></div>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sFin }}">
+<div style="display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--color-divider);border-radius:4px;background:var(--color-neutral-100);overflow:hidden">
+<sc-for list="{{ finKpis }}" as="k" hint-placeholder-count="5">
+<div style="padding:18px 20px;border-left:1px solid var(--color-divider)">
+<div style="font:400 9px/1 'Lora',serif;letter-spacing:.18em;text-transform:uppercase;color:var(--color-neutral-600)">{{ k.label }}</div>
+<div class="num" style="font:400 27px/1.1 'Cormorant Garamond',serif;margin-top:11px;color:{{ k.color }}">{{ k.value }}</div>
+<div class="num" style="font:400 10.5px/1.4 'Lora',serif;color:var(--color-neutral-700);margin-top:5px">{{ k.note }}</div>
+</div>
+</sc-for>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 330px;gap:26px;margin-top:26px;align-items:start">
+<div>
+<div style="display:flex;align-items:baseline;gap:12px;margin-bottom:13px">
+<h2 style="font:500 19px/1 'Cormorant Garamond',serif;margin:0">Lançamentos de setembro</h2>
+<span style="font:400 11px/1 'Lora',serif;color:var(--color-neutral-600)">custo, imposto e maquininha já descontados por linha</span>
+</div>
+<table class="table">
+<thead><tr><th>Data</th><th>Paciente</th><th>Procedimento</th><th>Pagto</th><th style="text-align:right">Cobrado</th><th style="text-align:right">Custos</th><th style="text-align:right">Imp.+taxa</th><th style="text-align:right">Lucro</th><th style="text-align:right">Margem</th></tr></thead>
+<tbody>
+<sc-for list="{{ finRows }}" as="f" hint-placeholder-count="8">
+<tr>
+<td class="num">{{ f.data }}</td><td>{{ f.pac }}</td><td style="font-size:12px">{{ f.proc }}</td><td style="font-size:12px;color:var(--color-neutral-700)">{{ f.pag }}</td>
+<td class="num" style="text-align:right">{{ f.cobrado }}</td><td class="num" style="text-align:right;color:var(--color-neutral-700)">{{ f.custo }}</td>
+<td class="num" style="text-align:right;color:var(--color-neutral-700)">{{ f.taxa }}</td>
+<td class="num" style="text-align:right">{{ f.lucro }}</td><td class="num" style="text-align:right;color:{{ f.mColor }}">{{ f.margem }}</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<div style="display:flex;flex-direction:column;gap:20px">
+<div class="card">
+<div class="card-kicker">Parâmetros</div>
+<div class="card-title">Base de cálculo</div>
+<div style="margin-top:14px;display:flex;flex-direction:column;gap:10px;font:400 12px/1.5 'Lora',serif">
+<sc-for list="{{ params }}" as="p" hint-placeholder-count="5">
+<div style="display:flex;justify-content:space-between;gap:12px;border-top:1px solid var(--color-divider);padding-top:10px"><span style="color:var(--color-neutral-700)">{{ p.k }}</span><span class="num">{{ p.v }}</span></div>
+</sc-for>
+</div>
+<button class="btn btn-ghost btn-block" style="font-size:12px;margin-top:15px">Editar parâmetros</button>
+</div>
+<div class="card">
+<div class="card-kicker">Reservas</div>
+<div class="card-title">Antes da retirada</div>
+<div style="margin-top:14px;display:flex;flex-direction:column;gap:13px">
+<sc-for list="{{ reserves }}" as="r" hint-placeholder-count="3">
+<div>
+<div style="display:flex;justify-content:space-between;font:400 11.5px/1.3 'Lora',serif"><span style="color:var(--color-neutral-800)">{{ r.k }}</span><span class="num">{{ r.v }}</span></div>
+<div style="height:4px;background:var(--color-neutral-200);margin-top:5px;border-radius:2px;overflow:hidden"><div style="height:100%;width:{{ r.pct }};background:var(--brand)"></div></div>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sEst }}">
+<div style="display:flex;gap:9px;margin-bottom:18px">
+<button class="btn btn-secondary" style="font-size:12px">Todos (11)</button>
+<button class="btn btn-ghost" style="font-size:12px">Abaixo do mínimo (3)</button>
+<button class="btn btn-ghost" style="font-size:12px">Vence em 90 dias (2)</button>
+<button class="btn btn-primary" style="font-size:12px;margin-left:auto">Entrada de nota</button>
+</div>
+<table class="table">
+<thead><tr><th>Produto / marca</th><th>Procedimento</th><th>Unidade</th><th style="text-align:right">Custo compra</th><th style="text-align:right">Rend.</th><th style="text-align:right">Custo/atend.</th><th style="text-align:right">Em estoque</th><th>Lote / validade</th><th>Status</th></tr></thead>
+<tbody>
+<sc-for list="{{ stock }}" as="s" hint-placeholder-count="11">
+<tr>
+<td style="font-weight:500">{{ s.marca }}</td><td style="font-size:12px;color:var(--color-neutral-700)">{{ s.proc }}</td><td style="font-size:12px">{{ s.unid }}</td>
+<td class="num" style="text-align:right">{{ s.custo }}</td><td class="num" style="text-align:right">{{ s.rend }}</td><td class="num" style="text-align:right">{{ s.unit }}</td>
+<td class="num" style="text-align:right">{{ s.qtd }}</td><td class="num" style="font-size:12px">{{ s.lote }}</td>
+<td><span class="tag {{ s.tagClass }}" style="font-size:10px">{{ s.status }}</span></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+<p style="font:400 11.5px/1.7 'Lora',serif;color:var(--color-neutral-700);margin:18px 0 0;max-width:62em;text-align:justify">O rendimento é o que liga estoque e preço: um frasco de toxina atende 1,5 paciente, então o custo de material por atendimento é o custo de compra dividido pelo rendimento — e é esse número que entra na precificação, não o preço do frasco.</p>
+</sc-if>
+
+<sc-if value="{{ sRel }}">
+<div style="display:flex;gap:9px;margin-bottom:20px;align-items:center">
+<div class="seg"><button class="seg-opt" aria-pressed="true">Mês</button><button class="seg-opt">Trimestre</button><button class="seg-opt">Ano</button></div>
+<span style="font:400 11px/1 'Lora',serif;color:var(--color-neutral-600);margin-left:6px">comparado ao período anterior</span>
+<button class="btn btn-secondary" style="font-size:12px;margin-left:auto">Exportar CSV</button>
+<button class="btn btn-ghost" style="font-size:12px">PDF para o contador</button>
+</div>
+<div style="display:grid;grid-template-columns:1.3fr 1fr;gap:26px;align-items:start">
+<div class="card">
+<div class="card-kicker">Faturamento e lucro</div>
+<div class="card-title">Últimos 6 meses</div>
+<div style="display:flex;align-items:flex-end;gap:16px;height:250px;margin-top:22px;padding-bottom:26px;border-bottom:1px solid var(--color-divider);position:relative">
+<sc-for list="{{ months }}" as="m" hint-placeholder-count="6">
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end">
+<span class="num" style="font:400 10px/1 'Lora',serif;color:var(--color-neutral-700)">{{ m.fat }}</span>
+<div style="width:100%;display:flex;gap:4px;align-items:flex-end;height:{{ m.h }}">
+<div style="flex:1;height:100%;border:1px solid var(--brand);background:color-mix(in srgb, var(--brand) 12%, transparent)"></div>
+<div style="flex:1;height:{{ m.lh }};background:var(--brand)"></div>
+</div>
+<span style="position:absolute;bottom:6px;font:400 10px/1 'Lora',serif;letter-spacing:.12em;text-transform:uppercase;color:var(--color-neutral-600)">{{ m.nome }}</span>
+</div>
+</sc-for>
+</div>
+<div style="display:flex;gap:20px;margin-top:14px;font:400 11px/1 'Lora',serif;color:var(--color-neutral-700)">
+<span style="display:flex;align-items:center;gap:7px"><span style="width:12px;height:9px;border:1px solid var(--brand);display:inline-block"></span>Faturamento</span>
+<span style="display:flex;align-items:center;gap:7px"><span style="width:12px;height:9px;background:var(--brand);display:inline-block"></span>Lucro líquido</span>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:20px">
+<div class="card">
+<div class="card-kicker">Mix de procedimentos</div>
+<div class="card-title">Receita por linha</div>
+<div style="margin-top:15px;display:flex;flex-direction:column;gap:11px">
+<sc-for list="{{ mix }}" as="m" hint-placeholder-count="5">
+<div>
+<div style="display:flex;justify-content:space-between;font:400 11.5px/1.3 'Lora',serif"><span>{{ m.nome }}</span><span class="num" style="color:var(--color-neutral-700)">{{ m.v }}</span></div>
+<div style="height:4px;background:var(--color-neutral-200);margin-top:5px"><div style="height:100%;width:{{ m.pct }};background:var(--brand)"></div></div>
+</div>
+</sc-for>
+</div>
+</div>
+<div class="card">
+<div class="card-kicker">Guia de margem</div>
+<div class="card-title">Onde a clínica está</div>
+<div style="margin-top:14px;display:flex;flex-direction:column;gap:9px;font:400 11.5px/1.55 'Lora',serif">
+<sc-for list="{{ marginGuide }}" as="g" hint-placeholder-count="4">
+<div style="display:flex;gap:10px;padding-left:10px;border-left:2px solid {{ g.color }}"><span class="num" style="width:62px;flex:none;color:var(--color-neutral-700)">{{ g.faixa }}</span><span style="color:{{ g.textColor }}">{{ g.t }}</span></div>
+</sc-for>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sMsg }}">
+<div style="display:grid;grid-template-columns:1fr 360px;gap:26px;align-items:start">
+<div>
+<div style="display:flex;gap:9px;margin-bottom:16px"><button class="btn btn-secondary" style="font-size:12px">Automações (6)</button><button class="btn btn-ghost" style="font-size:12px">Fila de envio (14)</button><button class="btn btn-ghost" style="font-size:12px">Histórico</button></div>
+<div style="display:flex;flex-direction:column;gap:14px">
+<sc-for list="{{ automations }}" as="a" hint-placeholder-count="6">
+<div class="card" style="display:flex;gap:18px;align-items:center">
+<div style="flex:1">
+<div class="card-kicker">{{ a.gatilho }}</div>
+<div style="font:500 15px/1.25 'Cormorant Garamond',serif;margin-top:5px">{{ a.nome }}</div>
+<p style="font:400 11.5px/1.6 'Lora',serif;color:var(--color-neutral-700);margin:7px 0 0;text-align:justify">{{ a.texto }}</p>
+</div>
+<div style="text-align:right;flex:none">
+<span class="tag {{ a.tagClass }}" style="font-size:10px">{{ a.status }}</span>
+<div class="num" style="font:400 11px/1.4 'Lora',serif;color:var(--color-neutral-700);margin-top:9px">{{ a.stat }}</div>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+<div class="card">
+<div class="card-kicker">Pré-visualização</div>
+<div class="card-title">WhatsApp · lembrete 24h</div>
+<div style="margin-top:16px;background:var(--color-neutral-200);border-radius:4px;padding:16px;display:flex;flex-direction:column;gap:10px">
+<div style="background:var(--color-bg);border:1px solid var(--color-divider);border-radius:4px;padding:12px 14px;font:400 12.5px/1.7 'Lora',serif;color:var(--color-text)">Olá, Renata. Confirmando seu horário amanhã, 23/09, às 14h, no Coworking Tatuapé (R. Emílio Mallet, 1000). Preenchimento labial 1ml.<br><br>Responda <strong>1</strong> para confirmar ou <strong>2</strong> para reagendar.</div>
+<div style="align-self:flex-end;background:color-mix(in srgb, var(--brand) 14%, var(--color-bg));border:1px solid var(--brand);border-radius:4px;padding:9px 13px;font:400 12.5px/1.5 'Lora',serif">1</div>
+</div>
+<p style="font:400 11px/1.65 'Lora',serif;color:var(--color-neutral-700);margin:14px 0 0;text-align:justify">A resposta “1” confirma o agendamento na agenda automaticamente; “2” devolve o horário à lista de espera.</p>
+<div style="display:flex;flex-direction:column;gap:8px;margin-top:15px"><button class="btn btn-primary btn-block" style="font-size:12px">Editar modelo</button><button class="btn btn-ghost btn-block" style="font-size:12px">Variáveis disponíveis</button></div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sTerm }}">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:26px;align-items:start">
+<div>
+<h2 style="font:500 19px/1 'Cormorant Garamond',serif;margin:0 0 14px">Modelos de termo</h2>
+<table class="table">
+<thead><tr><th>Termo</th><th>Versão</th><th>Vigente desde</th><th style="text-align:right">Assinados</th><th>Status</th></tr></thead>
+<tbody>
+<sc-for list="{{ terms }}" as="t" hint-placeholder-count="6">
+<tr><td>{{ t.nome }}</td><td class="num">{{ t.v }}</td><td class="num">{{ t.desde }}</td><td class="num" style="text-align:right">{{ t.qtd }}</td><td><span class="tag {{ t.tagClass }}" style="font-size:10px">{{ t.status }}</span></td></tr>
+</sc-for>
+</tbody>
+</table>
+<p style="font:400 11.5px/1.7 'Lora',serif;color:var(--color-neutral-700);margin:18px 0 0;text-align:justify">Termos são versionados: o PDF arquivado guarda a versão que a paciente realmente assinou, e não a atual. Alterar um modelo cria uma nova versão, nunca sobrescreve.</p>
+</div>
+<div class="card">
+<div class="card-kicker">Pendências</div>
+<div class="card-title">3 assinaturas em falta</div>
+<div style="margin-top:15px;display:flex;flex-direction:column">
+<sc-for list="{{ pendingTerms }}" as="p" hint-placeholder-count="3">
+<div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-top:1px solid var(--color-divider)">
+<div style="flex:1"><div style="font:500 12.5px/1.3 'Lora',serif">{{ p.pac }}</div><div class="num" style="font:400 11px/1.4 'Lora',serif;color:var(--color-neutral-700);margin-top:2px">{{ p.termo }} · {{ p.data }}</div></div>
+<button class="btn btn-secondary" style="font-size:11px;padding:5px 10px">Reenviar link</button>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sCfg }}">
+<div style="display:grid;grid-template-columns:1fr 400px;gap:26px;align-items:start">
+<div style="display:flex;flex-direction:column;gap:22px">
+<div class="card">
+<div class="card-kicker">White-label</div>
+<div class="card-title">Identidade da instância</div>
+<p style="font:400 12px/1.75 'Lora',serif;color:var(--color-neutral-700);margin:11px 0 0;text-align:justify">Tudo nesta tela é por tenant. Trocar a marca no seletor do topo desta página mostra o mesmo sistema como outra clínica veria — é o mesmo mecanismo desta configuração.</p>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px">
+<div class="field"><label>Nome exibido</label><input class="input" value="{{ brandName }}" readonly></div>
+<div class="field"><label>Subtítulo</label><input class="input" value="{{ brandSub }}" readonly></div>
+<div class="field"><label>Domínio do painel</label><input class="input" value="app.{{ domain }}" readonly></div>
+<div class="field"><label>Remetente das mensagens</label><input class="input" value="{{ brandName }}" readonly></div>
+</div>
+<div class="hr" style="margin:20px 0"></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:26px">
+<div>
+<div style="font:400 10px/1 'Lora',serif;letter-spacing:.18em;text-transform:uppercase;color:var(--color-neutral-600)">Cor de acento</div>
+<div style="display:flex;gap:10px;margin-top:12px">
+<sc-for list="{{ brands }}" as="b" hint-placeholder-count="3">
+<button onClick="{{ b.pick }}" style="width:38px;height:38px;border-radius:50%;cursor:pointer;background:{{ b.accent }};border:{{ b.swatchBorder }}"></button>
+</sc-for>
+</div>
+<div class="num" style="font:400 11px/1.4 'Lora',serif;color:var(--color-neutral-700);margin-top:11px">{{ accent }} · contraste 3:1 verificado</div>
+</div>
+<div>
+<div style="font:400 10px/1 'Lora',serif;letter-spacing:.18em;text-transform:uppercase;color:var(--color-neutral-600)">Marca</div>
+<div style="display:flex;align-items:center;gap:12px;margin-top:12px">
+<div style="width:46px;height:46px;border:1px solid var(--brand);border-radius:50%;display:grid;place-items:center;font:400 16px 'Cormorant Garamond',serif;color:var(--brand)">{{ mono }}</div>
+<div style="flex:1;border:1px dashed var(--color-neutral-400);border-radius:4px;padding:11px;font:400 10.5px/1.4 'Lora',serif;color:var(--color-neutral-600);text-align:center">solte o logotipo<br>SVG ou PNG transparente</div>
+</div>
+</div>
+</div>
+</div>
+<div class="card">
+<div class="card-kicker">Operação</div>
+<div class="card-title">Horários, salas e serviços</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px">
+<div class="field"><label>Expediente</label><input class="input" value="Seg–Sex · 9h às 18h" readonly></div>
+<div class="field"><label>Duração padrão</label><input class="input" value="60 minutos" readonly></div>
+<div class="field"><label>Antecedência mínima</label><input class="input" value="12 horas" readonly></div>
+<div class="field"><label>Política de falta</label><input class="input" value="Cobrança de 30% após 2 faltas" readonly></div>
+</div>
+<div class="hr" style="margin:18px 0"></div>
+<div style="display:flex;flex-direction:column;gap:11px;font:400 12px/1.5 'Lora',serif">
+<sc-for list="{{ featureFlags }}" as="f" hint-placeholder-count="6">
+<div style="display:flex;align-items:center;gap:12px;border-top:1px solid var(--color-divider);padding-top:11px">
+<div style="flex:1"><div style="color:var(--color-text)">{{ f.nome }}</div><div style="font-size:11px;color:var(--color-neutral-700);margin-top:2px">{{ f.desc }}</div></div>
+<span style="width:34px;height:19px;border-radius:10px;flex:none;background:{{ f.trackBg }};border:1px solid {{ f.trackBd }};position:relative"><span style="position:absolute;top:2px;left:{{ f.knobLeft }};width:13px;height:13px;border-radius:50%;background:{{ f.knobBg }}"></span></span>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:22px">
+<div class="card">
+<div class="card-kicker">Perfis e permissões</div>
+<div class="card-title">Quem vê o quê</div>
+<table class="table" style="margin-top:14px">
+<thead><tr><th>Módulo</th><th style="text-align:center">Dra.</th><th style="text-align:center">Recep.</th><th style="text-align:center">Fin.</th><th style="text-align:center">Conv.</th></tr></thead>
+<tbody>
+<sc-for list="{{ permMatrix }}" as="m" hint-placeholder-count="8">
+<tr><td style="font-size:12px">{{ m.mod }}</td><td style="text-align:center;color:{{ m.c1 }}">{{ m.v1 }}</td><td style="text-align:center;color:{{ m.c2 }}">{{ m.v2 }}</td><td style="text-align:center;color:{{ m.c3 }}">{{ m.v3 }}</td><td style="text-align:center;color:{{ m.c4 }}">{{ m.v4 }}</td></tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<div class="card">
+<div class="card-kicker">Pré-visualização ao vivo</div>
+<div class="card-title">Login desta marca</div>
+<div style="margin-top:14px;border:1px solid var(--color-divider);border-radius:4px;overflow:hidden">
+<div style="background:var(--color-neutral-900);padding:20px;display:flex;align-items:center;gap:11px">
+<div style="width:28px;height:28px;border:1px solid var(--brand);border-radius:50%;display:grid;place-items:center;font:400 11px 'Cormorant Garamond',serif;color:var(--brand)">{{ mono }}</div>
+<div><div style="font:400 13px/1.2 'Cormorant Garamond',serif;color:#f3f2f2">{{ brandName }}</div><div style="font:400 9px/1.2 'Lora',serif;color:rgba(243,242,242,.5);margin-top:2px">{{ brandSub }}</div></div>
+</div>
+<div style="padding:18px;display:flex;flex-direction:column;gap:11px">
+<div style="height:32px;border:1px solid var(--color-divider);border-radius:3px;background:var(--color-neutral-100)"></div>
+<div style="height:32px;border:1px solid var(--color-divider);border-radius:3px;background:var(--color-neutral-100)"></div>
+<button onClick="{{ goLogin }}" class="btn btn-primary btn-block" style="font-size:12px">Entrar</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sTen }}">
+<div style="display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--color-divider);border-radius:4px;background:var(--color-neutral-100);overflow:hidden">
+<sc-for list="{{ tenantKpis }}" as="k" hint-placeholder-count="4">
+<div style="padding:19px 21px;border-left:1px solid var(--color-divider)">
+<div style="font:400 9px/1 'Lora',serif;letter-spacing:.18em;text-transform:uppercase;color:var(--color-neutral-600)">{{ k.label }}</div>
+<div class="num" style="font:400 29px/1.1 'Cormorant Garamond',serif;margin-top:11px">{{ k.value }}</div>
+<div class="num" style="font:400 10.5px/1.4 'Lora',serif;color:var(--color-neutral-700);margin-top:5px">{{ k.note }}</div>
+</div>
+</sc-for>
+</div>
+<div style="display:flex;align-items:baseline;gap:12px;margin:26px 0 13px">
+<h2 style="font:500 19px/1 'Cormorant Garamond',serif;margin:0">Clínicas na plataforma</h2>
+<span style="font:400 11px/1 'Lora',serif;color:var(--color-neutral-600)">painel do revendedor — invisível para as clínicas</span>
+<button class="btn btn-primary" style="font-size:12px;margin-left:auto">Nova clínica</button>
+</div>
+<table class="table">
+<thead><tr><th>Clínica</th><th>Domínio</th><th>Plano</th><th style="text-align:right">Usuários</th><th style="text-align:right">Atend./mês</th><th>Módulos</th><th>Cobrança</th><th></th></tr></thead>
+<tbody>
+<sc-for list="{{ tenants }}" as="t" hint-placeholder-count="6">
+<tr>
+<td><div style="display:flex;align-items:center;gap:10px"><span style="width:20px;height:20px;border-radius:50%;flex:none;border:1px solid {{ t.accent }};background:color-mix(in srgb, {{ t.accent }} 18%, transparent)"></span><div><div style="font-weight:500">{{ t.nome }}</div><div style="font-size:11px;color:var(--color-neutral-600)">{{ t.cidade }}</div></div></div></td>
+<td class="num" style="font-size:12px">{{ t.dominio }}</td>
+<td><span class="tag {{ t.planTag }}" style="font-size:10px">{{ t.plano }}</span></td>
+<td class="num" style="text-align:right">{{ t.users }}</td>
+<td class="num" style="text-align:right">{{ t.atend }}</td>
+<td style="font-size:11.5px;color:var(--color-neutral-700)">{{ t.modulos }}</td>
+<td><span class="tag {{ t.billTag }}" style="font-size:10px">{{ t.cobranca }}</span></td>
+<td style="text-align:right"><button onClick="{{ t.impersonate }}" class="btn btn-ghost" style="font-size:11px;padding:4px 9px">Entrar como</button></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+<p style="font:400 11.5px/1.7 'Lora',serif;color:var(--color-neutral-700);margin:20px 0 0;max-width:64em;text-align:justify">“Entrar como” abre a instância da clínica com uma faixa de sessão assumida e registra o acesso no log — suporte sem quebrar o sigilo: dados de prontuário aparecem mascarados salvo autorização expressa do responsável técnico.</p>
+</sc-if>
+
+<sc-if value="{{ sPortal }}">
+<div style="max-width:880px;margin:0 auto">
+<div style="text-align:center;padding:10px 0 34px">
+<div style="font:400 10px/1 'Lora',serif;letter-spacing:.24em;text-transform:uppercase;color:var(--brand)">Área da paciente</div>
+<h2 style="font:300 38px/1.15 'Cormorant Garamond',serif;margin:16px 0 0">Olá, Renata</h2>
+<p style="font:400 13px/1.8 'Lora',serif;color:var(--color-neutral-700);margin:12px auto 0;max-width:38em">Seu próximo horário, suas orientações de pós-procedimento e seus termos assinados.</p>
+</div>
+<div class="card" style="border-color:var(--brand)">
+<div style="display:flex;align-items:center;gap:22px;flex-wrap:wrap">
+<div>
+<div class="card-kicker">Próximo atendimento</div>
+<div style="font:400 24px/1.2 'Cormorant Garamond',serif;margin-top:7px">Quarta, 23 de setembro · 14h</div>
+<div class="num" style="font:400 12px/1.6 'Lora',serif;color:var(--color-neutral-700);margin-top:5px">Preenchimento labial 1ml · Coworking Tatuapé · R. Emílio Mallet, 1000</div>
+</div>
+<div style="margin-left:auto;display:flex;gap:9px"><button class="btn btn-primary" style="font-size:12px">Confirmar</button><button class="btn btn-ghost" style="font-size:12px">Reagendar</button></div>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:22px">
+<div class="card"><div class="card-kicker">Orientações</div><div class="card-title">Antes do procedimento</div>
+<ul style="font:400 12.5px/1.85 'Lora',serif;color:var(--color-neutral-800);margin:13px 0 0;padding-left:19px"><li>Iniciar aciclovir 24h antes (receita no portal).</li><li>Evitar álcool e anti-inflamatórios por 48h.</li><li>Chegar sem maquiagem nos lábios.</li></ul>
+</div>
+<div class="card"><div class="card-kicker">Documentos</div><div class="card-title">Termos e recibos</div>
+<div style="margin-top:13px;display:flex;flex-direction:column">
+<sc-for list="{{ portalDocs }}" as="d" hint-placeholder-count="4">
+<div style="display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-top:1px solid var(--color-divider);font:400 12px/1.4 'Lora',serif"><span>{{ d.nome }}</span><a href="#" class="num" style="font-size:11px">{{ d.data }}</a></div>
+</sc-for>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+</div>
+</div>
+</div>
+</sc-if>
+</div>
+
+<div style="flex:none;width:400px;display:flex;flex-direction:column;gap:14px;position:sticky;top:120px">
+<div style="font:400 10px/1 'Lora',serif;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4)">Mesma tela no celular</div>
+<div style="width:390px;height:812px;border-radius:44px;background:#0d0c0b;padding:11px;box-shadow:0 26px 70px rgba(0,0,0,.55)">
+<div style="width:100%;height:100%;border-radius:34px;overflow:hidden;background:var(--color-bg);display:flex;flex-direction:column">
+<div class="num" style="flex:none;height:42px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font:400 12px/1 'Lora',serif;color:var(--color-text);background:var(--color-bg)">
+<span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="width:16px;height:9px;border:1px solid var(--color-neutral-700);border-radius:2px;display:inline-block"></span></span>
+</div>
+
+<sc-if value="{{ sLogin }}">
+<div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:30px 26px;gap:22px">
+<div style="text-align:center">
+<div style="width:52px;height:52px;margin:0 auto;border:1px solid var(--brand);border-radius:50%;display:grid;place-items:center;font:400 19px 'Cormorant Garamond',serif;color:var(--brand)">{{ mono }}</div>
+<div style="font:400 21px/1.2 'Cormorant Garamond',serif;margin-top:16px">{{ brandName }}</div>
+<div style="font:400 10px/1.3 'Lora',serif;letter-spacing:.14em;text-transform:uppercase;color:var(--color-neutral-600);margin-top:6px">{{ brandSub }}</div>
+</div>
+<div class="field"><label>E-mail</label><input class="input" value="tati@dratatimayumi.com.br" readonly></div>
+<div class="field"><label>Senha</label><input class="input" type="password" value="........." readonly></div>
+<button onClick="{{ doLogin }}" class="btn btn-primary btn-block" style="min-height:46px">Entrar</button>
+<button class="btn btn-ghost btn-block" style="min-height:46px">Entrar com biometria</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ sApp }}" hint-placeholder-val="{{ true }}">
+<div style="flex:none;display:flex;align-items:center;gap:10px;padding:9px 18px 13px;border-bottom:1px solid var(--color-divider)">
+<div style="width:26px;height:26px;border:1px solid var(--brand);border-radius:50%;display:grid;place-items:center;font:400 10px 'Cormorant Garamond',serif;color:var(--brand)">{{ mono }}</div>
+<div style="min-width:0;flex:1"><div style="font:500 14px/1.2 'Cormorant Garamond',serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ title }}</div><div style="font:400 9.5px/1.2 'Lora',serif;color:var(--color-neutral-600);margin-top:2px">{{ brandName }}</div></div>
+<div style="width:32px;height:32px;border:1px solid var(--color-divider);border-radius:50%;display:grid;place-items:center;font:400 11px 'Cormorant Garamond',serif;color:var(--color-neutral-700)">{{ userMono }}</div>
+</div>
+
+<div style="flex:1;overflow:auto;padding:18px" class="ck">
+<sc-if value="{{ sDash }}" hint-placeholder-val="{{ true }}">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+<sc-for list="{{ kpisMobile }}" as="k" hint-placeholder-count="4">
+<div style="border:1px solid var(--color-divider);border-radius:4px;padding:14px;background:var(--color-neutral-100)">
+<div style="font:400 8.5px/1.2 'Lora',serif;letter-spacing:.14em;text-transform:uppercase;color:var(--color-neutral-600)">{{ k.label }}</div>
+<div class="num" style="font:400 24px/1.1 'Cormorant Garamond',serif;margin-top:8px">{{ k.value }}</div>
+</div>
+</sc-for>
+</div>
+<div style="font:400 10px/1 'Lora',serif;letter-spacing:.18em;text-transform:uppercase;color:var(--color-neutral-600);margin:22px 0 11px">Hoje</div>
+<div style="display:flex;flex-direction:column">
+<sc-for list="{{ todayNext }}" as="a" hint-placeholder-count="4">
+<div style="display:flex;gap:13px;align-items:center;padding:13px 0;border-top:1px solid var(--color-divider)">
+<span class="num" style="font:400 14px/1 'Cormorant Garamond',serif;color:var(--brand);width:38px;flex:none">{{ a.hora }}</span>
+<div style="flex:1;min-width:0"><div style="font:500 12.5px/1.3 'Lora',serif">{{ a.paciente }}</div><div style="font:400 10.5px/1.4 'Lora',serif;color:var(--color-neutral-700);margin-top:2px">{{ a.proc }}</div></div>
+<span class="tag {{ a.tagClass }}" style="font-size:9px">{{ a.status }}</span>
+</div>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{ sAgenda }}">
+<div class="num" style="display:flex;gap:7px;margin-bottom:16px">
+<sc-for list="{{ weekDays }}" as="w" hint-placeholder-count="6">
+<div style="flex:1;text-align:center;padding:9px 0;border-radius:4px;border:1px solid {{ w.mBd }};background:{{ w.mBg }};color:{{ w.mFg }}">
+<div style="font:400 8.5px/1 'Lora',serif;letter-spacing:.1em;text-transform:uppercase;opacity:.75">{{ w.dia }}</div>
+<div style="font:400 16px/1 'Cormorant Garamond',serif;margin-top:5px">{{ w.num }}</div>
+</div>
+</sc-for>
+</div>
+<div style="display:flex;flex-direction:column;gap:11px">
+<sc-for list="{{ mobileAgenda }}" as="a" hint-placeholder-count="6">
+<div style="border:1px solid var(--color-divider);border-left:2px solid {{ a.edge }};border-radius:4px;padding:13px 14px;background:var(--color-neutral-100)">
+<div style="display:flex;align-items:baseline;gap:9px">
+<span class="num" style="font:400 15px/1 'Cormorant Garamond',serif;color:var(--brand)">{{ a.hora }}</span>
+<span class="tag {{ a.tagClass }}" style="font-size:9px;margin-left:auto">{{ a.status }}</span>
+</div>
+<div style="font:500 13px/1.3 'Lora',serif;margin-top:8px">{{ a.paciente }}</div>
+<div style="font:400 11px/1.5 'Lora',serif;color:var(--color-neutral-700);margin-top:3px">{{ a.proc }} · {{ a.sala }}</div>
+<div style="display:flex;gap:8px;margin-top:12px">
+<button class="btn btn-secondary" style="font-size:11px;min-height:38px;flex:1">WhatsApp</button>
+<button onClick="{{ goAtend }}" class="btn btn-primary" style="font-size:11px;min-height:38px;flex:1">Atender</button>
+</div>
+</div>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{ sAtend }}">
+<div style="display:flex;gap:6px;margin-bottom:16px">
+<sc-for list="{{ steps }}" as="s" hint-placeholder-count="5">
+<div style="flex:1;height:3px;border-radius:2px;background:{{ s.mobileBg }}"></div>
+</sc-for>
+</div>
+<div style="font:400 10px/1 'Lora',serif;letter-spacing:.18em;text-transform:uppercase;color:var(--brand)">{{ stepKicker }}</div>
+<div style="font:500 19px/1.2 'Cormorant Garamond',serif;margin-top:9px">Renata Yamada</div>
+<div class="num" style="font:400 11px/1.5 'Lora',serif;color:var(--color-neutral-700);margin-top:4px">14h · Preenchimento labial 1ml · Tatuapé</div>
+<div class="hr" style="margin:16px 0"></div>
+<div style="display:flex;flex-direction:column;gap:14px">
+<sc-for list="{{ mobileFicha }}" as="f" hint-placeholder-count="5">
+<div class="field"><label>{{ f.k }}</label><input class="input" value="{{ f.v }}" readonly style="min-height:44px"></div>
+</sc-for>
+</div>
+<div style="display:flex;gap:9px;margin-top:20px">
+<button class="btn btn-secondary" style="font-size:12px;min-height:46px;flex:1">Voltar</button>
+<button onClick="{{ nextStep }}" class="btn btn-primary" style="font-size:12px;min-height:46px;flex:1.4">{{ nextLabel }}</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ sPortal }}">
+<div style="text-align:center;padding:6px 0 20px">
+<div style="font:400 9.5px/1 'Lora',serif;letter-spacing:.2em;text-transform:uppercase;color:var(--brand)">Área da paciente</div>
+<div style="font:300 26px/1.2 'Cormorant Garamond',serif;margin-top:12px">Olá, Renata</div>
+</div>
+<div class="card" style="border-color:var(--brand)">
+<div class="card-kicker">Próximo atendimento</div>
+<div style="font:400 19px/1.25 'Cormorant Garamond',serif;margin-top:7px">Qua, 23/09 · 14h</div>
+<div class="num" style="font:400 11px/1.6 'Lora',serif;color:var(--color-neutral-700);margin-top:5px">Preenchimento labial 1ml<br>Coworking Tatuapé</div>
+<div style="display:flex;gap:8px;margin-top:15px"><button class="btn btn-primary" style="font-size:12px;min-height:44px;flex:1">Confirmar</button><button class="btn btn-ghost" style="font-size:12px;min-height:44px;flex:1">Reagendar</button></div>
+</div>
+<div style="font:400 10px/1 'Lora',serif;letter-spacing:.18em;text-transform:uppercase;color:var(--color-neutral-600);margin:22px 0 11px">Orientações</div>
+<ul style="font:400 12px/1.85 'Lora',serif;color:var(--color-neutral-800);margin:0;padding-left:19px"><li>Aciclovir 24h antes.</li><li>Sem álcool por 48h.</li><li>Lábios sem maquiagem.</li></ul>
+</sc-if>
+
+<sc-if value="{{ sGeneric }}">
+<div style="border:1px solid var(--color-divider);border-radius:4px;padding:16px;background:var(--color-neutral-100)">
+<div class="card-kicker">{{ crumb }}</div>
+<div style="font:500 17px/1.25 'Cormorant Garamond',serif;margin-top:6px">{{ title }}</div>
+<p style="font:400 11.5px/1.7 'Lora',serif;color:var(--color-neutral-700);margin:9px 0 0;text-align:justify">{{ genericNote }}</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:11px;margin-top:16px">
+<sc-for list="{{ genericRows }}" as="g" hint-placeholder-count="6">
+<div style="display:flex;align-items:center;gap:12px;padding:13px 2px;border-bottom:1px solid var(--color-divider)">
+<div style="flex:1;min-width:0"><div style="font:500 12.5px/1.3 'Lora',serif">{{ g.t }}</div><div class="num" style="font:400 10.5px/1.45 'Lora',serif;color:var(--color-neutral-700);margin-top:3px">{{ g.d }}</div></div>
+<span class="num" style="font:400 12px/1 'Cormorant Garamond',serif;color:{{ g.vColor }}">{{ g.v }}</span>
+</div>
+</sc-for>
+</div>
+</sc-if>
+</div>
+
+<div style="flex:none;display:flex;border-top:1px solid var(--color-divider);background:var(--color-neutral-100)">
+<sc-for list="{{ tabBar }}" as="t" hint-placeholder-count="5">
+<button onClick="{{ t.pick }}" style="flex:1;min-height:56px;border:0;background:transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font:400 9.5px/1 'Lora',serif;color:{{ t.fg }}">
+<span style="width:5px;height:5px;border-radius:50%;background:{{ t.dot }}"></span>{{ t.label }}
+</button>
+</sc-for>
+</div>
+</sc-if>
+</div>
+</div>
+<p style="font:400 11.5px/1.7 'Lora',serif;color:rgba(243,242,242,.5);margin:0;text-align:justify">O celular é o turno de atendimento: agenda do dia, ficha em etapas com campos de toque grande e captura de fotos. Relatórios e financeiro moram no desktop e no celular aparecem em leitura.</p>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;navMode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;sidebar&quot;,&quot;topbar&quot;],&quot;default&quot;:&quot;sidebar&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Variações&quot;},&quot;agendaView&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dia&quot;,&quot;semana&quot;,&quot;lista&quot;],&quot;default&quot;:&quot;dia&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Variações&quot;},&quot;fichaMode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;etapas&quot;,&quot;unica&quot;],&quot;default&quot;:&quot;etapas&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Variações&quot;}}">
+const BRANDS = [
+  {id:'tati', name:'Dra. Tati Mayumi', sub:'Estética Avançada · Tatuapé, SP', mono:'TM', accent:'#b68235', domain:'dratatimayumi.com.br', unit:'Coworking Tatuapé'},
+  {id:'aurora', name:'Clínica Aurora', sub:'Harmonização Facial · Moema, SP', mono:'CA', accent:'#7d5411', domain:'clinicaaurora.com.br', unit:'Unidade Moema'},
+  {id:'vertice', name:'Vértice Saúde', sub:'Rede de clínicas · 6 unidades', mono:'VS', accent:'#444141', domain:'verticesaude.com.br', unit:'Unidade Jardins'}
+];
+
+const ROLES = [
+  {id:'dra', label:'Doutora (owner)', user:'Dra. Tati Mayumi', mono:'TM', allow:'*'},
+  {id:'recep', label:'Recepção / secretária', user:'Aline Souza', mono:'AS', allow:['dash','agenda','pacientes','mensagens','termos']},
+  {id:'conv', label:'Profissional convidado', user:'Dr. Pedro Lemos', mono:'PL', allow:['dash','agenda','atendimento','pacientes']},
+  {id:'fin', label:'Financeiro', user:'Marcos Ribeiro', mono:'MR', allow:['dash','financeiro','estoque','relatorios']},
+  {id:'admin', label:'Super-admin da revenda', user:'Suporte Ateliê', mono:'SA', allow:['tenants','config','dash']},
+  {id:'pac', label:'Paciente (portal)', user:'Renata Yamada', mono:'RY', allow:['portal']}
+];
+
+const SCREENS = {
+  dash:{title:'Painel da clínica', crumb:'Visão geral', group:'Clínica', label:'Painel', badge:'', action:'Novo agendamento'},
+  agenda:{title:'Agenda', crumb:'Clínica', group:'Clínica', label:'Agenda', badge:'6', action:'Novo agendamento'},
+  pacientes:{title:'Pacientes', crumb:'Clínica', group:'Clínica', label:'Pacientes', badge:'218', action:'Nova paciente'},
+  atendimento:{title:'Ficha de atendimento', crumb:'Clínica · Renata Yamada', group:'Clínica', label:'Atendimento', badge:'1', action:'Finalizar'},
+  financeiro:{title:'Financeiro e caixa', crumb:'Gestão', group:'Gestão', label:'Financeiro', badge:'', action:'Lançar entrada'},
+  estoque:{title:'Estoque de insumos', crumb:'Gestão', group:'Gestão', label:'Estoque', badge:'3', action:'Entrada de nota'},
+  relatorios:{title:'Relatórios', crumb:'Gestão', group:'Gestão', label:'Relatórios', badge:'', action:'Exportar'},
+  mensagens:{title:'Mensagens e lembretes', crumb:'Comunicação', group:'Comunicação', label:'Mensagens', badge:'14', action:'Nova automação'},
+  termos:{title:'Termos de consentimento', crumb:'Comunicação', group:'Comunicação', label:'Termos', badge:'3', action:'Novo modelo'},
+  config:{title:'Configurações da instância', crumb:'Sistema', group:'Sistema', label:'Configurações', badge:'', action:'Salvar'},
+  tenants:{title:'Clínicas na plataforma', crumb:'Plataforma Ateliê', group:'Sistema', label:'Tenants', badge:'6', action:'Nova clínica'},
+  portal:{title:'Minha área', crumb:'Portal da paciente', group:'Clínica', label:'Meu portal', badge:'', action:'Confirmar horário'}
+};
+const GROUPS = ['Clínica','Gestão','Comunicação','Sistema'];
+const STEPS = [
+  {k:'anamnese', label:'Anamnese'}, {k:'proc', label:'Procedimento'},
+  {k:'fotos', label:'Fotos'}, {k:'fin', label:'Fechamento'}, {k:'termo', label:'Termo'}
+];
+
+class Component extends DCLogic {
+  state = {
+    brand: 0, role: 'dra', screen: 'dash', logged: true,
+    nav: null, agenda: null, ficha: null, step: 0
+  };
+
+  componentDidMount() { this.applyBrand(); }
+  componentDidUpdate() { this.applyBrand(); }
+
+  applyBrand() {
+    const b = BRANDS[this.state.brand];
+    const r = document.documentElement.style;
+    r.setProperty('--brand', b.accent);
+    r.setProperty('--color-accent', b.accent);
+  }
+
+  get navMode() { return this.state.nav || this.props.navMode || 'sidebar'; }
+  get agendaView() { return this.state.agenda || this.props.agendaView || 'dia'; }
+  get fichaMode() { return this.state.ficha || this.props.fichaMode || 'etapas'; }
+
+  allowed(k) {
+    const r = ROLES.find(x => x.id === this.state.role);
+    return r.allow === '*' ? true : r.allow.indexOf(k) > -1;
+  }
+
+  go = (k) => () => {
+    if (k === 'atendimento') this.setState({ screen: k, step: 0 });
+    else this.setState({ screen: k });
+  };
+
+  setRole = (e) => {
+    const id = e.target.value;
+    const r = ROLES.find(x => x.id === id);
+    const first = r.allow === '*' ? 'dash' : r.allow[0];
+    const keep = r.allow === '*' || r.allow.indexOf(this.state.screen) > -1;
+    this.setState({ role: id, screen: keep ? this.state.screen : first });
+  };
+
+  renderVals() {
+    const S = this.state, b = BRANDS[S.brand], role = ROLES.find(x => x.id === S.role);
+    const acc = b.accent, screen = S.screen;
+    const on = '#f3f2f2', off = 'rgba(243,242,242,.62)';
+
+    const brands = BRANDS.map((x, i) => ({
+      name: x.name.split(' ').slice(-2).join(' '), accent: x.accent,
+      bg: i === S.brand ? 'rgba(243,242,242,.14)' : 'transparent',
+      bd: i === S.brand ? 'rgba(243,242,242,.5)' : 'rgba(255,255,255,.18)',
+      fg: i === S.brand ? on : off,
+      swatchBorder: i === S.brand ? '2px solid var(--color-text)' : '1px solid var(--color-divider)',
+      pick: () => this.setState({ brand: i })
+    }));
+
+    const seg = (cur, set, opts) => opts.map(o => ({
+      label: o.label,
+      bg: cur === o.v ? 'rgba(243,242,242,.16)' : 'transparent',
+      fg: cur === o.v ? on : off,
+      pick: () => set(o.v)
+    }));
+
+    const toggles = [
+      { label: 'Navegação', opts: seg(this.navMode, v => this.setState({ nav: v }), [{v:'sidebar',label:'Sidebar'},{v:'topbar',label:'Topbar'}]) },
+      { label: 'Agenda', opts: seg(this.agendaView, v => this.setState({ agenda: v, screen: 'agenda' }), [{v:'dia',label:'Dia'},{v:'semana',label:'Semana'},{v:'lista',label:'Lista'}]) },
+      { label: 'Ficha', opts: seg(this.fichaMode, v => this.setState({ ficha: v, screen: 'atendimento' }), [{v:'etapas',label:'Etapas'},{v:'unica',label:'Tela única'}]) },
+      { label: 'Tela', opts: seg(S.logged ? 'app' : 'login', v => this.setState({ logged: v === 'app' }), [{v:'login',label:'Login'},{v:'app',label:'Sistema'}]) }
+    ];
+
+    const topbar = this.navMode === 'topbar';
+    const navStyle = topbar
+      ? 'flex:none;display:flex;align-items:center;gap:22px;padding:0 24px 0 0;border-bottom:1px solid var(--color-divider);background:var(--color-neutral-100)'
+      : 'flex:none;width:218px;display:flex;flex-direction:column;border-right:1px solid var(--color-divider);background:var(--color-neutral-100)';
+
+    const navGroups = GROUPS.map(g => {
+      const items = Object.keys(SCREENS).filter(k => SCREENS[k].group === g && this.allowed(k) && (k !== 'portal' || S.role === 'pac')).map(k => {
+        const act = screen === k;
+        return {
+          label: SCREENS[k].label, badge: SCREENS[k].badge,
+          badgeColor: act ? acc : 'var(--color-neutral-500)',
+          style: topbar
+            ? `display:flex;align-items:center;gap:6px;padding:11px 3px;border:0;border-bottom:2px solid ${act ? acc : 'transparent'};background:transparent;cursor:pointer;font:400 12.5px/1 'Lora',serif;color:${act ? 'var(--color-text)' : 'var(--color-neutral-700)'};white-space:nowrap`
+            : `display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:9px 16px 9px ${act ? '13px' : '16px'};border:0;border-left:${act ? '3px solid ' + acc : 'none'};background:${act ? 'var(--color-bg)' : 'transparent'};cursor:pointer;text-align:left;font:400 13px/1.3 'Lora',serif;color:${act ? 'var(--color-text)' : 'var(--color-neutral-700)'}`,
+          pick: this.go(k)
+        };
+      });
+      return {
+        label: g, items,
+        wrap: topbar ? 'display:flex;gap:18px;align-items:center' : 'display:flex;flex-direction:column;padding:14px 0',
+        head: topbar ? 'display:none' : "font:400 9px/1 'Lora',serif;letter-spacing:.2em;text-transform:uppercase;color:var(--color-neutral-500);padding:0 16px 9px"
+      };
+    }).filter(g => g.items.length);
+
+    const sc = SCREENS[screen] || SCREENS.dash;
+    const step = STEPS[S.step] || STEPS[0];
+    const unica = this.fichaMode === 'unica';
+
+    const money = n => 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    const tagFor = st => st === 'Confirmado' ? 'tag-accent' : st === 'Aguardando' ? 'tag-outline' : st === 'Atendido' ? 'tag-neutral' : 'tag-outline';
+
+    const appts = [
+      {hora:'09h', paciente:'Carla Bueno', proc:'Toxina botulínica full face', sala:'Tatuapé', status:'Atendido', valor:'R$ 1.283'},
+      {hora:'10h', paciente:'Juliana Prado', proc:'Skinbooster Profhilo', sala:'Tatuapé', status:'Atendido', valor:'R$ 2.272'},
+      {hora:'11h', paciente:'—', proc:'', sala:'', status:'', valor:''},
+      {hora:'12h', paciente:'Bloqueio', proc:'Almoço · sala liberada', sala:'', status:'', valor:''},
+      {hora:'14h', paciente:'Renata Yamada', proc:'Preenchimento labial 1ml · Restylane Kysse', sala:'Tatuapé', status:'Confirmado', valor:'R$ 1.387'},
+      {hora:'15h', paciente:'Márcia Okamoto', proc:'Bioestimulador facial · Sculptra', sala:'Tatuapé', status:'Confirmado', valor:'R$ 2.438'},
+      {hora:'16h', paciente:'Fernanda Lins', proc:'Preenchimento mandíbula · Belotero Volume', sala:'Tatuapé', status:'Aguardando', valor:'R$ 1.619'},
+      {hora:'17h', paciente:'—', proc:'', sala:'', status:'', valor:''},
+      {hora:'18h', paciente:'Patrícia Sato', proc:'Avaliação inicial', sala:'Tatuapé', status:'Confirmado', valor:'—'}
+    ];
+
+    const daySlots = appts.map(a => {
+      const empty = a.paciente === '—';
+      const block = a.paciente === 'Bloqueio';
+      return {
+        hora: a.hora, paciente: empty ? 'Livre' : a.paciente, detalhe: empty ? 'sala não contratada nesta hora' : a.proc,
+        status: a.status, valor: a.valor, tagClass: tagFor(a.status),
+        blockStyle: empty
+          ? "height:100%;border:1px dashed var(--color-neutral-300);border-radius:3px;display:flex;align-items:center;padding:0 12px;font:400 11px 'Lora',serif;color:var(--color-neutral-500);cursor:pointer"
+          : block
+            ? 'height:100%;border:1px solid var(--color-divider);border-radius:3px;background:repeating-linear-gradient(135deg,var(--color-neutral-200) 0 6px,var(--color-neutral-100) 6px 12px);padding:9px 12px;cursor:pointer'
+            : `height:100%;border:1px solid var(--color-divider);border-left:3px solid ${acc};border-radius:3px;background:var(--color-neutral-100);padding:9px 12px;cursor:pointer`,
+        open: this.go('atendimento')
+      };
+    });
+    daySlots.forEach(s => { if (s.paciente === 'Livre') { s.detalhe = 'sala não contratada'; s.status = ''; s.valor = ''; } if (s.paciente === 'Bloqueio') { s.status = ''; s.valor = ''; } });
+
+    const weekSeed = [
+      [{hora:'09h',paciente:'Carla Bueno',proc:'Toxina'},{hora:'14h',paciente:'Ana B. Moura',proc:'Labial 1ml'}],
+      [{hora:'10h',paciente:'Juliana Prado',proc:'Skinbooster'},{hora:'15h',paciente:'Lúcia Amaral',proc:'Bioestimulador'}],
+      [{hora:'09h',paciente:'Carla Bueno',proc:'Retoque toxina'},{hora:'14h',paciente:'Renata Yamada',proc:'Labial 1ml'},{hora:'15h',paciente:'Márcia Okamoto',proc:'Sculptra'}],
+      [{hora:'11h',paciente:'Fernanda Lins',proc:'Mandíbula'}],
+      [{hora:'09h',paciente:'Patrícia Sato',proc:'Avaliação'},{hora:'10h',paciente:'Bruna Tavares',proc:'Labial 1ml'},{hora:'16h',paciente:'Sofia Kimura',proc:'Toxina'}],
+      [{hora:'10h',paciente:'Encaixe',proc:'lista de espera'}]
+    ];
+    const weekDays = ['Seg','Ter','Qua','Qui','Sex','Sáb'].map((d, i) => {
+      const today = i === 2;
+      return {
+        dia: d, num: String(21 + i), numColor: today ? acc : 'var(--color-text)',
+        bg: today ? 'var(--color-neutral-100)' : 'transparent',
+        mBd: today ? acc : 'var(--color-divider)',
+        mBg: today ? `color-mix(in srgb, ${acc} 12%, var(--color-bg))` : 'var(--color-neutral-100)',
+        mFg: today ? 'var(--color-text)' : 'var(--color-neutral-700)',
+        items: weekSeed[i].map(x => Object.assign({}, x, {
+          style: `border:1px solid var(--color-divider);border-left:2px solid ${acc};border-radius:3px;padding:8px 9px;background:var(--color-bg)`
+        }))
+      };
+    });
+
+    const listRows = [
+      {data:'23/09',hora:'09h',paciente:'Carla Bueno',proc:'Toxina full face · Nabota',sala:'Tatuapé',status:'Atendido',valor:'R$ 1.130',pag:'Pix'},
+      {data:'23/09',hora:'10h',paciente:'Juliana Prado',proc:'Skinbooster · Profhilo',sala:'Tatuapé',status:'Atendido',valor:'R$ 2.272',pag:'Crédito 12×'},
+      {data:'23/09',hora:'14h',paciente:'Renata Yamada',proc:'Labial 1ml · Restylane Kysse',sala:'Tatuapé',status:'Confirmado',valor:'R$ 1.387',pag:'Crédito 12×'},
+      {data:'23/09',hora:'15h',paciente:'Márcia Okamoto',proc:'Bioestimulador · Sculptra',sala:'Tatuapé',status:'Confirmado',valor:'R$ 2.438',pag:'A definir'},
+      {data:'23/09',hora:'16h',paciente:'Fernanda Lins',proc:'Mandíbula · Belotero Volume',sala:'Tatuapé',status:'Aguardando',valor:'R$ 1.619',pag:'A definir'},
+      {data:'24/09',hora:'11h',paciente:'Ana Beatriz Moura',proc:'Labial 1ml · Rennova Lips',sala:'Parque do Carmo',status:'Confirmado',valor:'R$ 954',pag:'Débito'},
+      {data:'24/09',hora:'15h',paciente:'Lúcia Amaral',proc:'Bioestimulador · Radiesse',sala:'Tatuapé',status:'Confirmado',valor:'R$ 2.070',pag:'Crédito 6×'},
+      {data:'25/09',hora:'10h',paciente:'Bruna Tavares',proc:'Labial 1ml · Belotero',sala:'Tatuapé',status:'Aguardando',valor:'R$ 1.050',pag:'A definir'}
+    ].map(r => Object.assign({}, r, { tagClass: tagFor(r.status) }));
+
+    const stockSeed = [
+      ['Xeomin®','Toxina botulínica','Frasco 100U',599,'1,5',399,2,'XM-8821 · 04/2027','OK'],
+      ['Letybo®','Toxina botulínica','Frasco 100U',570,'1,5',380,1,'LB-3390 · 11/2026','Baixo'],
+      ['Nabota®','Toxina botulínica','Frasco 100U',549,'1,5',366,3,'NB-1174 · 06/2027','OK'],
+      ['Belotero®','Labial 1ml','Seringa 1ml',270,'1,0',270,4,'BL-5520 · 09/2027','OK'],
+      ['Restylane® Kysse','Labial 1ml','Seringa 1ml',435,'1,0',435,2,'RK-4471 · 08/2027','OK'],
+      ['Rennova® Lips','Labial 1ml','Seringa 1ml',265,'1,0',265,1,'RN-9004 · 12/2026','Baixo'],
+      ['Sculptra®','Bioestimulador','Frasco',940,'1,0',940,2,'SC-2218 · 03/2027','OK'],
+      ['Radiesse®','Bioestimulador','Seringa 1,5ml',760,'1,0',760,1,'RD-7781 · 10/2026','Vence'],
+      ['Profhilo®','Skinbooster','Seringa 2ml',879,'1,0',879,0,'—','Repor'],
+      ['Belotero® Volume','Mandíbula/mento','Seringa 1ml',549,'1,0',549,2,'BV-6612 · 05/2027','OK'],
+      ['Rennova® Ultra Volume','Mandíbula/mento','Seringa 1,25ml',247,'1,0',247,3,'RU-4408 · 07/2027','OK']
+    ];
+    const stock = stockSeed.map(s => ({
+      marca:s[0], proc:s[1], unid:s[2], custo:money(s[3]), rend:s[4], unit:money(s[5]), qtd:s[6], lote:s[7],
+      status:s[8], tagClass: s[8] === 'OK' ? 'tag-neutral' : s[8] === 'Baixo' ? 'tag-outline' : 'tag-accent'
+    }));
+
+    const finRowsSeed = [
+      ['22/09','Carla Bueno','Toxina full face · Nabota','Pix',1130,514,68,548,'32%'],
+      ['22/09','Ana B. Moura','Labial 1ml · Rennova','Débito',954,468,101,385,'28%'],
+      ['19/09','Lúcia Amaral','Bioestimulador · Radiesse','Crédito 6×',2070,1015,435,620,'30%'],
+      ['18/09','Bruna Tavares','Labial 1ml · Belotero','Crédito 12×',1050,515,221,314,'30%'],
+      ['16/09','Juliana Prado','Skinbooster · Profhilo','Crédito 12×',2272,1114,477,681,'30%'],
+      ['15/09','Sofia Kimura','Toxina full face · Letybo','Pix',1024,610,61,353,'34%'],
+      ['12/09','Patrícia Sato','Labial 1ml · Restylane','Crédito 10×',1280,680,269,331,'26%'],
+      ['10/09','Márcia Okamoto','Bioestimulador · Sculptra','Crédito 12×',2438,1195,512,731,'30%']
+    ];
+    const finRows = finRowsSeed.map(r => ({
+      data:r[0], pac:r[1], proc:r[2], pag:r[3], cobrado:money(r[4]), custo:money(r[5]), taxa:money(r[6]), lucro:money(r[7]),
+      margem:r[8], mColor: parseInt(r[8]) < 28 ? 'var(--color-accent-700)' : 'var(--color-text)'
+    }));
+
+    const nextIdx = Math.min(S.step + 1, STEPS.length - 1);
+
+    return {
+      brands, toggles, roles: ROLES, role: S.role, setRole: this.setRole,
+      brandName: b.name, brandSub: b.sub, mono: b.mono, accent: acc, domain: b.domain, unitName: b.unit,
+      userName: role.user, userMono: role.mono, roleLabel: role.label,
+      screen, title: sc.title, crumb: sc.crumb, primaryAction: sc.action,
+      shellDir: topbar ? 'column' : 'row',
+      navStyle, navGroups,
+      navBrandPad: topbar ? '0 22px 0 24px' : '18px 16px',
+      navListStyle: topbar ? 'display:flex;gap:26px;align-items:center;flex:1;overflow-x:auto' : 'flex:1;overflow-y:auto',
+      navFootStyle: topbar
+        ? 'display:flex;align-items:center;gap:12px;margin-left:auto'
+        : 'display:flex;align-items:center;gap:10px;padding:14px 16px;border-top:1px solid var(--color-divider)',
+
+      sLogin: !S.logged, sApp: S.logged,
+      sDash: screen === 'dash', sAgenda: screen === 'agenda', sPac: screen === 'pacientes',
+      sAtend: screen === 'atendimento', sFin: screen === 'financeiro', sEst: screen === 'estoque',
+      sRel: screen === 'relatorios', sMsg: screen === 'mensagens', sTerm: screen === 'termos',
+      sCfg: screen === 'config', sTen: screen === 'tenants', sPortal: screen === 'portal',
+      sGeneric: ['dash','agenda','atendimento','portal'].indexOf(screen) === -1,
+      genericNote: 'No celular este módulo abre em leitura — o suficiente para consultar fora da clínica; a edição fica no desktop.',
+      genericRows: [
+        {t:'Faturamento do mês', d:'32 atendimentos · ticket R$ 1.157', v:'R$ 37.024', vColor:'var(--color-text)'},
+        {t:'Lucro líquido', d:'margem realizada 30,1%', v:'R$ 11.107', vColor:acc},
+        {t:'Profhilo®', d:'estoque zerado · repor', v:'0', vColor:'var(--color-accent-700)'},
+        {t:'Radiesse®', d:'vence em 10/2026', v:'1', vColor:'var(--color-text)'},
+        {t:'Termos pendentes', d:'3 assinaturas em falta', v:'3', vColor:acc},
+        {t:'Fila de envio WhatsApp', d:'lembretes de amanhã', v:'14', vColor:'var(--color-text)'}
+      ],
+
+      doLogin: () => this.setState({ logged: true }),
+      doLogout: () => this.setState({ logged: false }),
+      goLogin: () => this.setState({ logged: false }),
+      goAgenda: this.go('agenda'), goAtend: this.go('atendimento'),
+
+      kpis: [
+        {label:'Atendimentos no mês', value:'32', note:'meta 40 · 80% da agenda'},
+        {label:'Faturamento', value:'R$ 37.024', note:'ticket médio R$ 1.157'},
+        {label:'Lucro líquido', value:'R$ 11.107', note:'margem realizada 30,1%'},
+        {label:'Lucro por hora', value:'R$ 347', note:'22h de sala contratadas'}
+      ],
+      kpisMobile: [
+        {label:'Hoje', value:'6'}, {label:'Ocupação', value:'74%'},
+        {label:'Faturado', value:'R$ 37k'}, {label:'Margem', value:'30%'}
+      ],
+      todayNext: appts.filter(a => a.status).map(a => Object.assign({}, a, { tagClass: tagFor(a.status) })),
+      profitBars: [
+        {nome:'Bioestimulador · Sculptra', valor:'R$ 602/h', pct:'100%'},
+        {nome:'Skinbooster · Profhilo', valor:'R$ 561/h', pct:'93%'},
+        {nome:'Mandíbula · Belotero Volume', valor:'R$ 400/h', pct:'66%'},
+        {nome:'Labial · Restylane Kysse', valor:'R$ 343/h', pct:'57%'},
+        {nome:'Toxina · Xeomin', valor:'R$ 317/h', pct:'53%'}
+      ],
+      alerts: [
+        {t:'Profhilo® zerado', d:'1 atendimento agendado depende da reposição'},
+        {t:'3 termos sem assinatura', d:'Bruna Tavares, Sofia Kimura, Lúcia Amaral'},
+        {t:'Radiesse® vence em 10/2026', d:'1 seringa — priorizar na agenda'}
+      ],
+
+      agendaRange: this.agendaView === 'dia' ? 'Quarta, 23 de setembro' : this.agendaView === 'semana' ? '21 – 26 de setembro' : 'Setembro de 2026',
+      agendaTabs: [{v:'dia',label:'Dia'},{v:'semana',label:'Semana'},{v:'lista',label:'Lista'}].map(t => ({
+        label:t.label, on: this.agendaView === t.v, pick: () => this.setState({ agenda: t.v })
+      })),
+      agDia: this.agendaView === 'dia', agSemana: this.agendaView === 'semana', agLista: this.agendaView === 'lista',
+      daySlots, weekDays, listRows,
+      dayStats: [
+        {k:'Receita prevista', v:'R$ 8.797'}, {k:'Custo de material', v:'R$ 3.263'},
+        {k:'Sala (7h × R$ 77)', v:'R$ 539'}, {k:'Lucro estimado', v:'R$ 2.640'}
+      ],
+      mobileAgenda: appts.filter(a => a.status).map(a => Object.assign({}, a, { tagClass: tagFor(a.status), edge: acc })),
+
+      patients: [
+        {nome:'Renata Yamada', tags:'Lábios · retorno 14d', nasc:'12/03/1992', tel:'(11) 98812-4410', ultimo:'12/09/26', proximo:'23/09 · 14h', ltv:'R$ 9.840', open:this.go('atendimento')},
+        {nome:'Carla Bueno', tags:'Toxina · 3× ao ano', nasc:'04/07/1985', tel:'(11) 99120-7733', ultimo:'22/09/26', proximo:'—', ltv:'R$ 7.210', open:this.go('atendimento')},
+        {nome:'Juliana Prado', tags:'Skinbooster', nasc:'28/11/1990', tel:'(11) 97744-2091', ultimo:'16/09/26', proximo:'—', ltv:'R$ 6.480', open:this.go('atendimento')},
+        {nome:'Márcia Okamoto', tags:'Bioestimulador', nasc:'19/01/1978', tel:'(11) 98003-1188', ultimo:'10/09/26', proximo:'23/09 · 15h', ltv:'R$ 12.350', open:this.go('atendimento')},
+        {nome:'Fernanda Lins', tags:'Mandíbula · 1ª sessão', nasc:'06/05/1994', tel:'(11) 99551-8827', ultimo:'—', proximo:'23/09 · 16h', ltv:'R$ 0', open:this.go('atendimento')},
+        {nome:'Patrícia Sato', tags:'Avaliação agendada', nasc:'23/09/1988', tel:'(11) 98467-3020', ultimo:'—', proximo:'23/09 · 18h', ltv:'R$ 1.280', open:this.go('atendimento')},
+        {nome:'Ana Beatriz Moura', tags:'Lábios · Parque do Carmo', nasc:'30/08/1996', tel:'(11) 97012-5540', ultimo:'22/09/26', proximo:'24/09 · 11h', ltv:'R$ 2.860', open:this.go('atendimento')}
+      ],
+      patientFacts: [
+        {k:'CPF', v:'324.118.***-40'}, {k:'Alergias', v:'Nega'},
+        {k:'Alerta clínico', v:'Herpes labial recorrente'}, {k:'Termo vigente', v:'Labial v3 · 12/09/26'},
+        {k:'Forma habitual', v:'Crédito 12×'}
+      ],
+
+      fichaEtapas: !unica, fichaCols: unica ? '1.5fr 1fr' : '1.35fr 1fr',
+      steps: STEPS.map((s, i) => {
+        const act = i === S.step;
+        return {
+          n: String(i + 1), label: s.label,
+          numColor: act ? acc : 'var(--color-neutral-500)',
+          mobileBg: i <= S.step ? acc : 'var(--color-neutral-300)',
+          style: `flex:1;display:flex;align-items:center;gap:9px;padding:13px 15px;border:0;border-left:1px solid var(--color-divider);cursor:pointer;background:${act ? 'var(--color-neutral-100)' : 'transparent'};color:${act ? 'var(--color-text)' : 'var(--color-neutral-600)'};border-bottom:2px solid ${act ? acc : 'transparent'}`,
+          pick: () => this.setState({ step: i })
+        };
+      }),
+      stepKicker: 'Etapa ' + (S.step + 1) + ' de 5 · ' + step.label,
+      nextLabel: S.step === STEPS.length - 1 ? 'Finalizar' : 'Próxima: ' + STEPS[nextIdx].label,
+      nextStep: () => this.setState({ step: nextIdx }),
+      showAnamnese: unica || step.k === 'anamnese',
+      showProc: unica || step.k === 'proc',
+      showFotos: unica || step.k === 'fotos',
+      showFin: unica || step.k === 'fin',
+      showTermo: unica || step.k === 'termo',
+      photoSlots: [
+        {label:'frontal repouso', note:'guia fantasma'}, {label:'frontal sorriso', note:'guia fantasma'},
+        {label:'perfil direito', note:'novo'}, {label:'perfil esquerdo', note:'novo'}
+      ],
+      closeRows: [
+        {k:'Custo do material (Restylane® Kysse)', v:'R$ 435,00', tdStyle:''},
+        {k:'Sala — 1h × R$ 77', v:'R$ 77,00', tdStyle:''},
+        {k:'Descartáveis e anestésico', v:'R$ 55,00', tdStyle:''},
+        {k:'Rateio de custo fixo', v:'R$ 112,50', tdStyle:''},
+        {k:'Impostos (6%) + maquininha (15%)', v:'R$ 291,21', tdStyle:''},
+        {k:'Custo total', v:'R$ 970,71', tdStyle:'font-weight:500'},
+        {k:'Lucro líquido · margem 30,0%', v:'R$ 416,02', tdStyle:'font-weight:500;color:' + acc}
+      ],
+      timeline: [
+        {data:'12/09/26', o:'Toxina full face · Xeomin', d:'Lote XM-8821 · sem intercorrências'},
+        {data:'18/03/26', o:'Labial 1ml · Restylane Kysse', d:'Retorno de 14 dias realizado'},
+        {data:'02/11/25', o:'Avaliação + fotos', d:'Plano de 3 sessões proposto'},
+        {data:'14/03/24', o:'Labial 1ml · Belotero', d:'Primeira sessão'}
+      ],
+
+      finKpis: [
+        {label:'Faturamento', value:'R$ 37.024', note:'32 atendimentos', color:'var(--color-text)'},
+        {label:'Custos diretos', value:'R$ 15.890', note:'material, sala, descartáveis', color:'var(--color-text)'},
+        {label:'Impostos + taxas', value:'R$ 6.427', note:'6% + maquininha', color:'var(--color-text)'},
+        {label:'Lucro líquido', value:'R$ 11.107', note:'margem 30,1%', color:acc},
+        {label:'A receber', value:'R$ 4.318', note:'antecipação em 2 dias', color:'var(--color-text)'}
+      ],
+      finRows,
+      params: [
+        {k:'Impostos sobre faturamento', v:'6,0%'}, {k:'Maquininha à vista', v:'4,5%'},
+        {k:'Maquininha parcelado', v:'15,0%'}, {k:'Custos fixos mensais', v:'R$ 4.500'},
+        {k:'Atendimentos estimados', v:'40 / mês'}, {k:'Rateio por atendimento', v:'R$ 112,50'}
+      ],
+      reserves: [
+        {k:'Recompra de estoque (10%)', v:'R$ 3.702', pct:'100%'},
+        {k:'Colchão de emergência (5%)', v:'R$ 1.851', pct:'62%'},
+        {k:'Disponível para retirada', v:'R$ 5.554', pct:'48%'}
+      ],
+
+      months: [
+        {nome:'Abr', fat:'R$ 24k', h:'52%', lh:'30%'}, {nome:'Mai', fat:'R$ 28k', h:'61%', lh:'32%'},
+        {nome:'Jun', fat:'R$ 26k', h:'57%', lh:'28%'}, {nome:'Jul', fat:'R$ 33k', h:'72%', lh:'34%'},
+        {nome:'Ago', fat:'R$ 39k', h:'85%', lh:'36%'}, {nome:'Set', fat:'R$ 37k', h:'81%', lh:'30%'}
+      ],
+      mix: [
+        {nome:'Bioestimulador', v:'R$ 11.2k', pct:'100%'}, {nome:'Labial', v:'R$ 9.6k', pct:'86%'},
+        {nome:'Toxina', v:'R$ 8.1k', pct:'72%'}, {nome:'Skinbooster', v:'R$ 4.5k', pct:'40%'},
+        {nome:'Mandíbula/mento', v:'R$ 3.6k', pct:'32%'}
+      ],
+      marginGuide: [
+        {faixa:'< 15%', t:'Zona de risco', color:'var(--color-neutral-400)', textColor:'var(--color-neutral-700)'},
+        {faixa:'20–30%', t:'Mínimo saudável em crescimento', color:'var(--color-neutral-400)', textColor:'var(--color-neutral-700)'},
+        {faixa:'30–40%', t:'Faixa-alvo para injetáveis — a clínica está aqui', color:acc, textColor:'var(--color-text)'},
+        {faixa:'> 40%', t:'Possível em alto valor percebido com agenda cheia', color:'var(--color-neutral-400)', textColor:'var(--color-neutral-700)'}
+      ],
+
+      automations: [
+        {gatilho:'24h antes', nome:'Lembrete de horário', texto:'Confirma data, hora e endereço da sala; resposta 1 confirma e 2 devolve o horário à lista de espera.', status:'Ativa', tagClass:'tag-accent', stat:'96% de leitura'},
+        {gatilho:'48h antes', nome:'Preparo pré-procedimento', texto:'Envia as orientações específicas do procedimento agendado — inclui profilaxia para herpes quando marcada na ficha.', status:'Ativa', tagClass:'tag-accent', stat:'enviadas: 28'},
+        {gatilho:'1 dia depois', nome:'Pós-procedimento e sinais de alerta', texto:'Cuidados, o que é esperado e quando chamar a clínica. Canal aberto para foto de dúvida.', status:'Ativa', tagClass:'tag-accent', stat:'12 respostas'},
+        {gatilho:'14 dias depois', nome:'Convite de retorno', texto:'Agenda o retorno de avaliação com dois horários sugeridos conforme a grade da semana.', status:'Ativa', tagClass:'tag-accent', stat:'taxa 71%'},
+        {gatilho:'Após 2 faltas', nome:'Política de falta', texto:'Informa a cobrança de 30% e exige confirmação prévia nos próximos agendamentos.', status:'Pausada', tagClass:'tag-outline', stat:'—'},
+        {gatilho:'Aniversário', nome:'Mensagem de aniversário', texto:'Sem oferta comercial — só a lembrança. Desligável por tenant.', status:'Ativa', tagClass:'tag-neutral', stat:'6 no mês'}
+      ],
+
+      terms: [
+        {nome:'Preenchimento labial', v:'v3', desde:'01/09/26', qtd:64, status:'Vigente', tagClass:'tag-accent'},
+        {nome:'Toxina botulínica', v:'v2', desde:'14/03/26', qtd:98, status:'Vigente', tagClass:'tag-accent'},
+        {nome:'Bioestimulador de colágeno', v:'v2', desde:'14/03/26', qtd:41, status:'Vigente', tagClass:'tag-accent'},
+        {nome:'Skinbooster', v:'v1', desde:'02/01/26', qtd:22, status:'Vigente', tagClass:'tag-accent'},
+        {nome:'Uso de imagem', v:'v4', desde:'01/09/26', qtd:146, status:'Vigente', tagClass:'tag-accent'},
+        {nome:'Preenchimento labial', v:'v2', desde:'10/01/25', qtd:88, status:'Arquivada', tagClass:'tag-neutral'}
+      ],
+      pendingTerms: [
+        {pac:'Bruna Tavares', termo:'Labial v3', data:'agendada 25/09'},
+        {pac:'Sofia Kimura', termo:'Toxina v2', data:'agendada 25/09'},
+        {pac:'Lúcia Amaral', termo:'Uso de imagem v4', data:'atendida 19/09'}
+      ],
+
+      featureFlags: [
+        {nome:'Portal da paciente', desc:'confirmação, orientações e documentos', on:true},
+        {nome:'Fotos clínicas', desc:'armazenamento separado com marca d\u2019água', on:true},
+        {nome:'Precificação automática', desc:'preço sugerido a partir de custo e margem', on:true},
+        {nome:'Estoque com baixa automática', desc:'consome insumo ao fechar o atendimento', on:true},
+        {nome:'Múltiplos profissionais e comissão', desc:'repasse por procedimento', on:false},
+        {nome:'Múltiplas unidades', desc:'agenda e caixa por unidade', on:false}
+      ].map(f => ({
+        nome:f.nome, desc:f.desc,
+        trackBg: f.on ? acc : 'var(--color-neutral-200)',
+        trackBd: f.on ? acc : 'var(--color-neutral-400)',
+        knobBg: f.on ? 'var(--color-bg)' : 'var(--color-neutral-500)',
+        knobLeft: f.on ? '17px' : '3px'
+      })),
+      permMatrix: [
+        ['Agenda','●','●','—','●'], ['Prontuário e anamnese','●','—','—','●'],
+        ['Fotos clínicas','●','—','—','◐'], ['Valores e caixa','●','◐','●','—'],
+        ['Estoque','●','◐','●','—'], ['Relatórios','●','—','●','—'],
+        ['Termos','●','●','—','●'], ['Configurações','●','—','—','—']
+      ].map(r => {
+        const c = v => v === '●' ? acc : v === '◐' ? 'var(--color-neutral-700)' : 'var(--color-neutral-400)';
+        return {mod:r[0], v1:r[1], v2:r[2], v3:r[3], v4:r[4], c1:c(r[1]), c2:c(r[2]), c3:c(r[3]), c4:c(r[4])};
+      }),
+
+      tenantKpis: [
+        {label:'Clínicas ativas', value:'6', note:'+2 neste trimestre'},
+        {label:'MRR', value:'R$ 8.940', note:'ticket médio R$ 1.490'},
+        {label:'Atendimentos/mês', value:'412', note:'na plataforma toda'},
+        {label:'Churn 12 meses', value:'0%', note:'nenhum cancelamento'}
+      ],
+      tenants: [
+        {nome:'Dra. Tati Mayumi', cidade:'Tatuapé, SP', dominio:'app.dratatimayumi.com.br', plano:'Profissional', planTag:'tag-accent', users:3, atend:40, modulos:'Todos exceto multiunidade', cobranca:'Em dia', billTag:'tag-neutral', accent:'#b68235', impersonate:this.go('dash')},
+        {nome:'Clínica Aurora', cidade:'Moema, SP', dominio:'app.clinicaaurora.com.br', plano:'Profissional', planTag:'tag-accent', users:5, atend:78, modulos:'Todos + comissão', cobranca:'Em dia', billTag:'tag-neutral', accent:'#7d5411', impersonate:this.go('dash')},
+        {nome:'Vértice Saúde', cidade:'Jardins, SP', dominio:'app.verticesaude.com.br', plano:'Rede', planTag:'tag-accent', users:22, atend:196, modulos:'Todos + multiunidade', cobranca:'Em dia', billTag:'tag-neutral', accent:'#444141', impersonate:this.go('dash')},
+        {nome:'Studio Lumine', cidade:'Campinas, SP', dominio:'app.studiolumine.com.br', plano:'Essencial', planTag:'tag-outline', users:2, atend:31, modulos:'Agenda, pacientes, termos', cobranca:'Em dia', billTag:'tag-neutral', accent:'#9b9797', impersonate:this.go('dash')},
+        {nome:'Clínica Sereno', cidade:'Curitiba, PR', dominio:'app.clinicasereno.com.br', plano:'Essencial', planTag:'tag-outline', users:2, atend:37, modulos:'Agenda, pacientes, financeiro', cobranca:'Atrasada 4d', billTag:'tag-accent', accent:'#7d7979', impersonate:this.go('dash')},
+        {nome:'Ateliê da Pele', cidade:'Santos, SP', dominio:'app.ateliedapele.com.br', plano:'Teste', planTag:'tag-outline', users:1, atend:30, modulos:'Agenda, pacientes', cobranca:'Trial · 9 dias', billTag:'tag-outline', accent:'#bab6b6', impersonate:this.go('dash')}
+      ],
+
+      mobileFicha: [
+        {k:'Procedimento', v:'Preenchimento labial 1ml'},
+        {k:'Produto / marca', v:'Restylane® Kysse'},
+        {k:'Lote', v:'RK-4471-B'},
+        {k:'Volume aplicado', v:'1,0 ml'},
+        {k:'Alerta clínico', v:'Herpes labial — profilaxia feita'}
+      ],
+      portalDocs: [
+        {nome:'Termo — preenchimento labial v3', data:'12/09/26'},
+        {nome:'Termo — uso de imagem v4', data:'12/09/26'},
+        {nome:'Recibo — R$ 1.280', data:'12/09/26'},
+        {nome:'Orientações pós-procedimento', data:'12/09/26'}
+      ],
+      tabBar: [
+        {k:'dash', label:'Painel'}, {k:'agenda', label:'Agenda'}, {k:'atendimento', label:'Atender'},
+        {k:'pacientes', label:'Pacientes'}, {k:'financeiro', label:'Caixa'}
+      ].filter(t => this.allowed(t.k)).map(t => ({
+        label: t.label,
+        fg: screen === t.k ? 'var(--color-text)' : 'var(--color-neutral-600)',
+        dot: screen === t.k ? acc : 'transparent',
+        pick: this.go(t.k)
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

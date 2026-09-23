@@ -1,0 +1,226 @@
+// Prumo — white-label clinic management system.
+//
+// Structural rules (see CLAUDE.md):
+//  - Every business table carries `tenant_id` and is protected by Row Level Security.
+//    Policies live in the `_rls` migration; access always goes through `withTenant()`
+//    (src/lib/db.ts), which issues `SET LOCAL app.tenant_id`.
+//  - `tenants` and `tenant_domains` are the PLATFORM registry (reseller scope). They
+//    carry no tenant_id and are only read in platform scope — the hostname lookup has
+//    to happen before we know which tenant we are in.
+//  - Code is English, product copy is pt-BR. Column names are snake_case.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Prisma 7: the connection URL lives in prisma.config.ts (CLI) and in the
+// @prisma/adapter-pg driver adapter (runtime) — see src/lib/db.ts.
+datasource db {
+  provider = "postgresql"
+}
+
+/// Access profiles. The module x role matrix lives in src/lib/rbac.ts.
+enum Role {
+  OWNER // the doctor who owns the clinic — full access
+  RECEPTION // front desk / secretary
+  FINANCE // finance / bookkeeping
+  PRACTITIONER // guest practitioner, limited to their own patients
+  SUPERADMIN // reseller super-admin (platform scope, no tenant)
+  PATIENT // patient portal
+
+  @@map("role")
+}
+
+enum Plan {
+  ESSENTIAL
+  CLINIC
+  NETWORK
+
+  @@map("plan")
+}
+
+enum BillingStatus {
+  ACTIVE
+  PAST_DUE
+  TRIAL
+  SUSPENDED
+
+  @@map("billing_status")
+}
+
+/// A clinic on the platform: branding, domain, plan and enabled modules.
+model Tenant {
+  id String @id @default(uuid()) @db.Uuid
+
+  name     String
+  subtitle String?
+  monogram String  @db.VarChar(3)
+  logoUrl  String? @map("logo_url")
+
+  /// Accent colour as hex (#rrggbb). Replaces --color-accent at runtime.
+  /// The application validates contrast >= 3:1 against the #f3f2f2 background on save.
+  accentColor String @map("accent_color") @db.VarChar(7)
+
+  /// The clinic's primary domain (e.g. dratatimayumi.com.br). The hostnames that
+  /// actually resolve to this tenant live in `tenant_domains`.
+  domain String @unique
+
+  /// Unit name shown under the brand in the navigation.
+  defaultUnit String? @map("default_unit")
+
+  plan          Plan          @default(ESSENTIAL)
+  billingStatus BillingStatus @default(TRIAL) @map("billing_status")
+
+  /// Per-tenant feature flags (Settings screen). See DEFAULT_FLAGS in src/lib/flags.ts.
+  enabledModules Json @default("{}") @map("enabled_modules")
+
+  active Boolean @default(true)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  domains       TenantDomain[]
+  users         User[]
+  sessions      Session[]
+  auditLogs     AuditLog[]
+  loginAttempts LoginAttempt[]
+
+  @@map("tenants")
+}
+
+/// Hostnames that resolve to a tenant. A tenant may have several
+/// (app.clinic.com.br in production, tati.localhost:3100 in development).
+model TenantDomain {
+  id       String  @id @default(uuid()) @db.Uuid
+  tenantId String  @map("tenant_id") @db.Uuid
+  /// Lowercased host, including the port when there is one (e.g. "tati.localhost:3100").
+  host     String  @unique
+  primary  Boolean @default(false)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("tenant_domains")
+}
+
+/// A system user. `tenantId` is null only for the reseller's SUPERADMIN.
+model User {
+  id       String  @id @default(uuid()) @db.Uuid
+  tenantId String? @map("tenant_id") @db.Uuid
+
+  name         String
+  email        String
+  passwordHash String @map("password_hash")
+  role         Role
+
+  /// Base32 TOTP secret. Roles that reach medical records require 2FA (see rbac.ts).
+  totpSecret      String?   @map("totp_secret")
+  totpConfirmedAt DateTime? @map("totp_confirmed_at")
+
+  active     Boolean   @default(true)
+  lastLoginAt DateTime? @map("last_login_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tenant   Tenant?   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  sessions Session[]
+  auditLogs AuditLog[]
+  /// Sessions this user (a SUPERADMIN) opened through "impersonate".
+  impersonatedSessions Session[] @relation("SessionImpersonatedBy")
+
+  /// Email is unique WITHIN a tenant — the same person may exist in two clinics.
+  @@unique([tenantId, email])
+  @@index([tenantId])
+  @@map("users")
+}
+
+/// A login session. The cookie holds an opaque token; we only store its hash.
+model Session {
+  id String @id @default(uuid()) @db.Uuid
+
+  /// SHA-256 HMAC (keyed with SESSION_SECRET) of the token handed to the cookie.
+  tokenHash String  @unique @map("token_hash")
+  userId    String  @map("user_id") @db.Uuid
+  tenantId  String? @map("tenant_id") @db.Uuid
+
+  /// False until the second factor has been verified in this session.
+  twoFactorOk Boolean @default(false) @map("two_factor_ok")
+
+  /// Set when the reseller uses "impersonate": holds the originating SUPERADMIN.
+  impersonatedByUserId String? @map("impersonated_by_user_id") @db.Uuid
+  /// While impersonating, medical records are masked unless explicitly authorised.
+  medicalRecordUnlocked Boolean @default(false) @map("medical_record_unlocked")
+
+  ip        String?
+  userAgent String? @map("user_agent")
+
+  expiresAt DateTime  @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+
+  createdAt  DateTime @default(now()) @map("created_at")
+  lastUsedAt DateTime @default(now()) @map("last_used_at")
+
+  user            User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant          Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  impersonatedBy  User?   @relation("SessionImpersonatedBy", fields: [impersonatedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([tenantId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+/// Audit trail — LGPD. Every access to a medical record, anamnesis or photo lands
+/// here, along with authentication and configuration-change events.
+model AuditLog {
+  id       String  @id @default(uuid()) @db.Uuid
+  tenantId String? @map("tenant_id") @db.Uuid
+  userId   String? @map("user_id") @db.Uuid
+
+  /// E.g. "login.success", "medicalRecord.view", "tenant.impersonate".
+  action String
+
+  /// Kind of resource touched ("patient", "photo", "tenant") and its id.
+  resource   String?
+  resourceId String? @map("resource_id")
+
+  ip        String?
+  userAgent String? @map("user_agent")
+
+  /// Extra context. Never any health data.
+  details Json?
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // SetNull rather than Cascade: the audit trail outlives both the clinic and the
+  // user. With Cascade, deleting a tenant would erase the proof of who read which
+  // medical record — precisely the record LGPD requires us to keep.
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, createdAt])
+  @@index([userId, createdAt])
+  @@index([resource, resourceId])
+  @@map("audit_log")
+}
+
+/// Login attempts, for throttling per email+IP. Pruned by a job (stage 6).
+model LoginAttempt {
+  id       String  @id @default(uuid()) @db.Uuid
+  tenantId String? @map("tenant_id") @db.Uuid
+
+  email   String
+  ip      String?
+  success Boolean @default(false)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([email, createdAt])
+  @@index([ip, createdAt])
+  @@map("login_attempts")
+}

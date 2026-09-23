@@ -1,0 +1,33 @@
+# dependencies
+node_modules/
+
+# build output
+.next/
+out/
+build/
+next-env.d.ts
+tsconfig.tsbuildinfo
+
+# test output
+coverage/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# secrets and local config
+.env
+.env.local
+.env*.local
+
+# Real clinic data (purchase costs, room rates, margins). The repository is public and
+# this is a third party's commercial information — it stays out of git. See README,
+# "Regras de negócio", for how to obtain the spreadsheet.
+data/
+
+# logs and OS/editor cruft
+*.log
+npm-debug.log*
+.DS_Store
+.vscode/
+.idea/

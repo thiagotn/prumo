@@ -1,0 +1,97 @@
+/* The application layer on top of the Classical tokens. Structure and shared utilities
+   only — colour and typography always come from a var(). */
+@import './tokens.css';
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  /* The tenant's accent lands in --color-accent on <html>; --brand is the alias the
+     prototype uses for strokes and borders. */
+  --brand: var(--color-accent);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Tabular figures in tables and KPIs (CLAUDE.md). */
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Kicker: Lora 9–10px, wide tracking, uppercase, neutral-600. */
+.kicker {
+  font-family: var(--font-body);
+  font-size: 10px;
+  line-height: 1;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-neutral-600);
+}
+
+.kicker-accent {
+  color: var(--color-accent);
+  letter-spacing: 0.24em;
+}
+
+/* Discreet scrollbar, as in the prototype. */
+.scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--color-text) 22%, transparent) transparent;
+}
+.scrollbar::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+.scrollbar::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--color-text) 22%, transparent);
+  border-radius: 9px;
+}
+
+/* The tenant monogram in a circle with an accent border. */
+.monogram {
+  display: grid;
+  place-items: center;
+  flex: none;
+  border: 1px solid var(--color-accent);
+  border-radius: 50%;
+  color: var(--color-accent);
+  font-family: var(--font-heading);
+  font-weight: 400;
+}
+
+/* Touch targets >= 44px in the care flows (CLAUDE.md). */
+@media (pointer: coarse) {
+  .btn,
+  .input,
+  a.touch,
+  button.touch {
+    min-height: 44px;
+  }
+}
+
+/* Accessibility: skip to content. */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-bg);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-md);
+}
+.skip-link:focus {
+  left: var(--space-3);
+  top: var(--space-3);
+}
+
+/* Form error — an accent stroke, never an alarm red: the tone stays clinically sober. */
+.form-error {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-accent-700);
+  border-left: 2px solid var(--color-accent-700);
+  padding-left: var(--space-2);
+}

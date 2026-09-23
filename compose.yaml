@@ -1,0 +1,72 @@
+# Local execution with Docker (CLAUDE.md): `docker compose up` brings up the database and
+# the application, with no dependency on what happens to be installed on the machine.
+#
+#   docker compose up -d --build     # database + app on http://localhost:3100
+#   docker compose --profile db up -d  # database only, for `npm run dev`
+#
+# Production runs on the homelab's shared Postgres (ns postgres) with the same design:
+# one database and one NON-SUPERUSER role per app — a superuser would bypass RLS.
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: prumo-db
+    profiles: ['db', 'app']
+    environment:
+      # Cluster superuser — the app does NOT use this role (a superuser ignores RLS).
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - '5434:5432'
+    volumes:
+      - prumo-pgdata:/var/lib/postgresql/data
+      # Runs once, when the volume is created: creates the app's role and database.
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/10-init-db.sql:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Migrations run as their own one-shot service, exactly as the initContainer does in
+  # the homelab. It has to finish before the app starts.
+  migrate:
+    build:
+      context: .
+    profiles: ['app']
+    command: ['node', 'node_modules/prisma/build/index.js', 'migrate', 'deploy']
+    environment:
+      DATABASE_URL: postgresql://prumo:prumo@db:5432/prumo?schema=public
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: 'no'
+
+  app:
+    build:
+      context: .
+    container_name: prumo-app
+    profiles: ['app']
+    ports:
+      - '3100:3000'
+    environment:
+      DATABASE_URL: postgresql://prumo:prumo@db:5432/prumo?schema=public
+      # Local-only value. In production this is the `prumo-app` secret, and changing it
+      # invalidates every open session.
+      SESSION_SECRET: local-development-secret-not-for-production-0123456789
+      TENANT_HOST_FALLBACK: localhost:3100
+      PLATFORM_HOSTS: admin.localhost:3100
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ['CMD-SHELL', 'node -e "fetch(\"http://127.0.0.1:3000/healthz\").then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"']
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 15s
+
+volumes:
+  prumo-pgdata:

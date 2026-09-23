@@ -1,0 +1,240 @@
+/* Sign-in screen — 1.05fr/.95fr split (README, screen 1). On mobile the dark panel
+   becomes a compact header and the form takes over the screen. */
+
+.screen {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  min-height: 100vh;
+}
+
+/* ── left-hand brand panel ─────────────────────────────────────────────────── */
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-8);
+  padding: 60px 56px;
+  background: var(--color-neutral-900);
+  color: var(--color-bg);
+}
+
+.brandTop {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.brandMonogram {
+  width: 40px;
+  height: 40px;
+  font-size: 15px;
+}
+
+.brandName {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+.brandSubtitle {
+  font-size: 10px;
+  line-height: 1.2;
+  letter-spacing: 0.1em;
+  margin-top: 3px;
+  color: color-mix(in srgb, var(--color-bg) 50%, transparent);
+}
+
+.headline {
+  font-family: var(--font-heading);
+  /* display weight 300, as in the prototype */
+  font-weight: 300;
+  font-size: 54px;
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+  margin: 20px 0 0;
+  max-width: 12em;
+}
+
+.rule {
+  width: 62px;
+  height: 1px;
+  background: var(--color-accent);
+  margin: 30px 0;
+}
+
+.brandText {
+  font-size: 14px;
+  line-height: 1.75;
+  text-align: justify;
+  max-width: 34em;
+  margin: 0;
+  color: color-mix(in srgb, var(--color-bg) 66%, transparent);
+}
+
+.brandFooter {
+  font-size: 11px;
+  line-height: 1.6;
+  color: color-mix(in srgb, var(--color-bg) 38%, transparent);
+}
+
+/* ── form side ─────────────────────────────────────────────────────────────── */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 60px;
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 34px;
+  line-height: 1.1;
+  margin: 0 0 6px;
+}
+
+.subtitle {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--color-neutral-700);
+  margin: 0 0 30px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 380px;
+  width: 100%;
+}
+
+.helperRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: 12px;
+  line-height: 1;
+}
+
+.remember {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-neutral-700);
+  cursor: pointer;
+}
+
+.remember input {
+  accent-color: var(--color-accent);
+  width: 15px;
+  height: 15px;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--color-neutral-500);
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-divider);
+}
+
+.note {
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--color-neutral-600);
+  margin: 10px 0 0;
+}
+
+/* 2FA code field: wide, tabular digits. */
+.code {
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
+  font-size: 22px;
+  letter-spacing: 0.35em;
+  text-align: center;
+  min-height: 52px;
+}
+
+.qr {
+  align-self: center;
+  padding: var(--space-3);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  background: var(--color-neutral-100);
+}
+
+.qr svg {
+  display: block;
+  width: 168px;
+  height: 168px;
+}
+
+.secret {
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-align: center;
+  padding: var(--space-2);
+  border: 1px dashed var(--color-divider);
+  border-radius: var(--radius-md);
+  color: var(--color-neutral-800);
+  word-break: break-all;
+}
+
+.steps {
+  margin: 0;
+  padding-left: 1.2em;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--color-neutral-700);
+}
+
+/* ── mobile: centred (README, screen 1) ────────────────────────────────────── */
+
+@media (max-width: 860px) {
+  .screen {
+    grid-template-columns: 1fr;
+  }
+
+  .brand {
+    gap: var(--space-4);
+    padding: var(--space-6) var(--space-4);
+  }
+
+  .headline {
+    font-size: 32px;
+    margin-top: var(--space-3);
+  }
+
+  .rule {
+    margin: var(--space-4) 0;
+  }
+
+  /* On a phone the screen is the form: the long copy and the legal footer step aside. */
+  .brandText,
+  .brandFooter {
+    display: none;
+  }
+
+  .panel {
+    padding: var(--space-6) var(--space-4) var(--space-8);
+  }
+
+  .form {
+    max-width: none;
+  }
+}

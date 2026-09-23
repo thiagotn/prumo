@@ -1,0 +1,75 @@
+# Verificação de cada push e PR: typecheck, testes unitários e testes de integração
+# (RLS e sessão) contra um Postgres de serviço com o MESMO desenho do homelab —
+# role da aplicação sem superusuário, porque superusuário ignora Row Level Security
+# e os testes de isolamento passariam sem provar nada.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://prumo:prumo@localhost:5432/prumo?schema=public
+      SESSION_SECRET: segredo-de-ci-sem-valor-em-producao-0123456789abcdef
+      TENANT_HOST_FALLBACK: localhost:3100
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Role sem superusuário + database próprio: espelha helm/postgres/app-db-prumo.yml.
+      - name: Provisionar role e database da aplicação
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -c \
+            "CREATE ROLE prumo LOGIN PASSWORD 'prumo' NOSUPERUSER CREATEDB;"
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -c \
+            "CREATE DATABASE prumo OWNER prumo;"
+
+      - run: npx prisma generate
+      # `next typegen` (dentro do typecheck) gera next-env.d.ts e os tipos de rota,
+      # que não são versionados porque apontam para dentro de .next/.
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npx prisma migrate deploy
+      - run: npm run db:seed
+      - run: npm test
+      - run: npx next build
+
+      # End-to-end: Playwright starts the dev server itself (see playwright.config.ts).
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

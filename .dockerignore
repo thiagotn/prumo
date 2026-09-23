@@ -1,0 +1,11 @@
+node_modules
+.next
+.git
+.github
+design
+data
+docs
+*.md
+.env*
+coverage
+compose.yaml
