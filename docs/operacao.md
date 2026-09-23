@@ -31,7 +31,13 @@ Três coisas, nesta ordem — só a terceira é deploy:
 
 1. **Regra no túnel** (repo homelab, `helm/cloudflared/configmap.yml`): copie o bloco de
    `app.dratatimayumi.com.br` trocando o hostname. Depois, na máquina com acesso:
-   `cloudflared tunnel route dns --overwrite-dns <tunnel-id> app.<dominio-da-clinica>`
+
+   ```bash
+   cloudflared tunnel route dns --overwrite-dns <tunnel-id> app.<dominio-da-clinica>
+   # ⚠️ obrigatório: o cloudflared lê a config no boot e NÃO recarrega o ConfigMap.
+   # Sem este restart o hostname novo cai no catch-all e responde 404 vazio.
+   kubectl -n cloudflared rollout restart deploy/cloudflared
+   ```
 2. **Host no Ingress** (`helm/apps/prumo/ingress.yml`): mais um item em `tls.hosts` e mais uma
    `rule` igual à existente.
 3. **A clínica no banco**, pelo script — rodado **da sua máquina**, no repo `prumo`, com o banco
