@@ -57,25 +57,56 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Deploy key SSH de ESCRITA do repo homelab (secret deste repo, nunca no cluster).
-      - uses: actions/checkout@v5
+      # The homelab repo is private, so the write-back needs its own SSH deploy key. Until
+      # that secret exists this job warns and stops instead of failing the whole run — a
+      # permanently red main teaches people to ignore CI. The image is already on GHCR;
+      # only the tag write-back is pending. See ADR 0010 in the homelab repo.
+      - name: Check for the homelab deploy key
+        id: key
+        env:
+          DEPLOY_KEY: ${{ secrets.HOMELAB_DEPLOY_KEY }}
+          TAG: ${{ needs.build-push.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if [ -z "${DEPLOY_KEY}" ]; then
+            echo 'present=false' >> "$GITHUB_OUTPUT"
+            echo "::warning title=Deploy pendente::HOMELAB_DEPLOY_KEY nao configurado; a imagem ${TAG} foi publicada mas a tag nao foi gravada no repo homelab."
+            {
+              echo '### Deploy do homelab nao executado'
+              echo
+              echo "A imagem \`${TAG}\` foi publicada no GHCR, mas o secret \`HOMELAB_DEPLOY_KEY\` nao existe neste repo,"
+              echo 'entao a tag nao foi escrita em `helm/apps/prumo/kustomization.yaml`.'
+              echo
+              echo 'Para ligar o deploy automatico: gere uma deploy key de ESCRITA no repo `homelab` e guarde a'
+              echo 'chave privada em Settings -> Secrets -> Actions deste repo, como `HOMELAB_DEPLOY_KEY`.'
+              echo
+              echo "Enquanto isso, o deploy manual e: trocar \`newTag\` por \`${TAG}\` em"
+              echo '`helm/apps/prumo/kustomization.yaml` e dar `git push` no repo homelab.'
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'present=true' >> "$GITHUB_OUTPUT"
+          fi
+
+      - if: steps.key.outputs.present == 'true'
+        uses: actions/checkout@v5
         with:
           repository: thiagotn/homelab
           ssh-key: ${{ secrets.HOMELAB_DEPLOY_KEY }}
           ref: main
 
-      - name: Apontar o kustomization para a imagem nova
+      - name: Point the kustomization at the new image
+        if: steps.key.outputs.present == 'true'
         env:
           TAG: ${{ needs.build-push.outputs.tag }}
         run: |
           set -euo pipefail
-          arquivo=helm/apps/prumo/kustomization.yaml
-          # Troca só o newTag da imagem do prumo, preservando o resto do arquivo.
-          sed -i "/name: ghcr.io\/thiagotn\/prumo$/{n;s|newTag: .*|newTag: ${TAG}|}" "$arquivo"
-          git diff --exit-code "$arquivo" && echo "tag já era ${TAG}, nada a fazer" && exit 0 || true
+          file=helm/apps/prumo/kustomization.yaml
+          # Replace only the prumo image's newTag, leaving the rest of the file alone.
+          sed -i "/name: ghcr.io\/thiagotn\/prumo$/{n;s|newTag: .*|newTag: ${TAG}|}" "$file"
+          git diff --exit-code "$file" && echo "tag was already ${TAG}, nothing to do" && exit 0 || true
 
           git config user.name  'prumo-ci'
           git config user.email 'prumo-ci@users.noreply.github.com'
-          git add "$arquivo"
-          git commit -m "prumo: imagem ${TAG} [skip ci]"
+          git add "$file"
+          git commit -m "prumo: image ${TAG} [skip ci]"
           git push
