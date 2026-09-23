@@ -1,6 +1,6 @@
 // The accent colour comes from the tenant and replaces --color-accent at runtime.
 // Before saving, contrast against the Classical background (#f3f2f2) must be >= 3:1
-// (README) — below that the primary button's border disappears into the paper.
+// (docs/design.md) — below that the primary button's border disappears into the paper.
 export const CLASSICAL_BACKGROUND = '#f3f2f2';
 
 /** Minimum required contrast: WCAG 2.1 AA for user interface components (1.4.11). */

@@ -1,5 +1,5 @@
 /* The app shell: nav (218px sidebar) + content area (header padding 18/28px, scroll
-   padding 26/28/40px). README, "Screens / Views". */
+   padding 26/28/40px). docs/especificacao.md, "Telas". */
 
 .shell {
   display: flex;

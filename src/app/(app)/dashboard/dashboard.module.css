@@ -1,4 +1,4 @@
-/* Dashboard — band of 4 KPIs with hairline dividers (README, screen 2). */
+/* Dashboard — band of 4 KPIs with hairline dividers (docs/especificacao.md, screen 2). */
 
 .kpiBand {
   display: grid;

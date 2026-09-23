@@ -1,4 +1,5 @@
-// Development seed: the README's three example tenants (Tati, Aurora, Vértice) plus one
+// Development seed: the three example tenants from docs/design.md (Tati, Aurora, Vértice)
+// plus one
 // user per role. Idempotent — running it again does not duplicate anything.
 //
 // These passwords only ever exist in development. In production the first account is

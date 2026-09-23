@@ -1,5 +1,5 @@
 // Proxy (called `middleware` up to Next 15): tenant resolution by hostname starts here —
-// README, "Resolução de tenant por hostname via middleware".
+// docs/especificacao.md, "Multi-tenant / white-label" -> "Resolução por hostname".
 //
 // What it does NOT do: validate a session or a permission. It runs before rendering,
 // with no access to Postgres, and Next's own docs warn against relying on shared modules

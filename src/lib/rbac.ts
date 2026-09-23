@@ -1,5 +1,5 @@
-// The module x role permission matrix — transcribed from the README's "Perfis e
-// permissões" table. It is the source of truth: the menu hides what it denies, but the
+// The module x role permission matrix — transcribed from the "Perfis e permissões" table
+// in docs/especificacao.md. It is the source of truth: the menu hides what it denies, but the
 // thing that actually DENIES is the server guard (src/lib/auth/guards.ts). Hiding a
 // menu item is not a permission (CLAUDE.md).
 import { Role } from '@prisma/client';
@@ -95,7 +95,7 @@ export function reachesSensitiveData(role: Role): boolean {
 }
 
 /**
- * 2FA is mandatory for roles that reach medical records (README). The reseller's
+ * 2FA is mandatory for roles that reach medical records (docs/especificacao.md). The reseller's
  * SUPERADMIN needs it too — they can take over entire instances.
  */
 export function requiresTwoFactor(role: Role): boolean {

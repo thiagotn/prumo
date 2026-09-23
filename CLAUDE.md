@@ -1,6 +1,16 @@
 # CLAUDE.md — Sistema de gestão clínica white-label
 
-Leia `README.md` antes de qualquer tarefa. O protótipo em `design/` é referência visual/comportamental; não copie o HTML.
+Leia `README.md` antes de qualquer tarefa — ele aponta para os documentos abaixo:
+
+| Documento | Conteúdo |
+|---|---|
+| `docs/especificacao.md` | escopo: telas, perfis e permissões, white-label, modelo de dados |
+| `docs/regras-de-negocio.md` | parâmetros e fórmulas de preço (da planilha) |
+| `docs/design.md` | protótipo de referência e tokens do Classical |
+| `docs/FAQ.md` | como usar o sistema (linguagem de quem opera a clínica) |
+| `docs/operacao.md` | runbook de produção |
+
+O protótipo em `design/` é referência visual/comportamental; não copie o HTML.
 
 ## Idioma: código em inglês, produto em português
 - **Código em inglês, sempre**: identificadores, comentários, nomes de arquivo e de pasta, rotas
@@ -10,6 +20,8 @@ Leia `README.md` antes de qualquer tarefa. O protótipo em `design/` é referên
   validação, e-mails, PDFs. Tom sóbrio clínico. Moeda e datas em `pt-BR` (BRL).
 - **Commits e pull requests em inglês**, no imperativo (`add patient search`, não `added`/`adds`).
 - Documentação (`README.md`, `docs/`, este arquivo) segue em português — é material do time.
+- Especificação e código não divergem: se a tabela de permissões de `docs/especificacao.md` mudar,
+  `src/lib/rbac.ts` e `src/lib/rbac.test.ts` mudam no mesmo commit.
 - Vocabulário do domínio, para não divergir: prontuário = `medicalRecord`, anamnese = `anamnesis`,
   ficha de atendimento = `encounter`, agenda = `schedule`, paciente = `patient`, sala = `room`,
   insumo/material = `product`, lote = `stockLot`, termo de consentimento = `consent`,
@@ -22,7 +34,7 @@ Leia `README.md` antes de qualquer tarefa. O protótipo em `design/` é referên
 - Nunca hard-code cor/fonte: use os tokens do Classical (`styles.css`). Acento vem do tenant.
 - Permissões checadas no servidor, não só escondendo menu.
 - Prontuário, anamnese e fotos: acesso grava `audit_log`; fotos em bucket privado com URL assinada.
-- Fórmulas de preço exatamente como em README → "Regras de negócio"; cobrir com testes unitários usando os valores da planilha (ex. Restylane Kysse/Tatuapé → à vista R$ 1.142,02, parcelado R$ 1.386,73).
+- Fórmulas de preço exatamente como em `docs/regras-de-negocio.md`; cobrir com testes unitários usando os valores da planilha (ex. Restylane Kysse/Tatuapé → à vista R$ 1.142,02, parcelado R$ 1.386,73).
 - Mobile-first nos fluxos de atendimento (agenda do dia, ficha, fotos); alvos ≥ 44px.
 - `data/` fica **fora do git**: contém a planilha real da clínica (custos, margens). O repo é público.
 

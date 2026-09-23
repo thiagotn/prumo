@@ -1,4 +1,4 @@
-/* Sign-in screen — 1.05fr/.95fr split (README, screen 1). On mobile the dark panel
+/* Sign-in screen — 1.05fr/.95fr split (docs/especificacao.md, screen 1). On mobile the dark panel
    becomes a compact header and the form takes over the screen. */
 
 .screen {
@@ -203,7 +203,7 @@
   color: var(--color-neutral-700);
 }
 
-/* ── mobile: centred (README, screen 1) ────────────────────────────────────── */
+/* ── mobile: centred (docs/especificacao.md, screen 1) ─────────────────────── */
 
 @media (max-width: 860px) {
   .screen {

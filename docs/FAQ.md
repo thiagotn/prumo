@@ -216,4 +216,5 @@ recibos.
 ## Ainda com dúvida?
 
 Se a resposta não está aqui, fale com quem administra a clínica. Para dúvida técnica ou coisa que
-parece defeito, o runbook de operação está em [`docs/operacao.md`](operacao.md).
+parece defeito, o runbook de operação está em [`operacao.md`](operacao.md); o que cada tela vai ter
+está em [`especificacao.md`](especificacao.md).

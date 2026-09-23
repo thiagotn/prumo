@@ -1,4 +1,4 @@
-// Lucide icons per module (README, "Assets"). One map, used by the mobile tab bar and
+// Lucide icons per module (docs/design.md, "Assets"). One map, used by the mobile tab bar and
 // anywhere else that needs it.
 import {
   CalendarDays,

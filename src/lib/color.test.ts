@@ -48,7 +48,7 @@ describe('contrastRatio', () => {
 });
 
 describe('validateAccentColor — minimum 3:1 against the Classical background', () => {
-  // The README's three example tenants all have to pass.
+  // The three example tenants from docs/design.md all have to pass.
   it.each([
     ['Tati', '#b68235'],
     ['Aurora', '#7d5411'],

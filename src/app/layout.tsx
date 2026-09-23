@@ -52,7 +52,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html
       lang="pt-BR"
       className={`${cormorant.variable} ${lora.variable}`}
-      // The tenant's colour replaces the design system token at runtime (README).
+      // The tenant's colour replaces the design system token at runtime
+      // (docs/especificacao.md, "Multi-tenant / white-label").
       style={{ '--color-accent': accent, '--brand': accent } as React.CSSProperties}
     >
       <body>

@@ -3,9 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { MODULES, MODULE_DEFS } from './modules';
 import { accessLevel, canAccess, initialModule, requiresTwoFactor } from './rbac';
 
-// The README's "Perfis e permissões" table, transcribed literally. If the code's matrix
-// drifts from it, this test fails — it is the contract with the specification.
-const README_TABLE: Array<[string, Role, Record<string, string>]> = [
+// The "Perfis e permissões" table from docs/especificacao.md, transcribed literally. If the
+// code's matrix drifts from it, this test fails — it is the contract with the specification.
+const SPEC_TABLE: Array<[string, Role, Record<string, string>]> = [
   [
     'Doutora (owner)',
     Role.OWNER,
@@ -64,8 +64,8 @@ const README_TABLE: Array<[string, Role, Record<string, string>]> = [
   ],
 ];
 
-describe('permission matrix matches the README table', () => {
-  for (const [label, role, expected] of README_TABLE) {
+describe('permission matrix matches the specification table', () => {
+  for (const [label, role, expected] of SPEC_TABLE) {
     for (const [moduleName, level] of Object.entries(expected)) {
       it(`${label} · ${moduleName} -> ${level}`, () => {
         expect(accessLevel(role, moduleName as never)).toBe(level);

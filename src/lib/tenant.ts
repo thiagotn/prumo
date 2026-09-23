@@ -1,4 +1,4 @@
-// Tenant resolution by hostname (README: "app.<clinic-domain>").
+// Tenant resolution by hostname (docs/especificacao.md: "app.<clinic-domain>").
 //
 // The request host is looked up in `tenant_domains`, which is the platform registry —
 // it has to be readable BEFORE any tenant scope exists, which is why it sits outside

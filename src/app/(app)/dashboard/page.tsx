@@ -8,7 +8,7 @@ import styles from './dashboard.module.css';
 
 export const metadata: Metadata = { title: 'Painel' };
 
-/** The four KPIs in the band (README, screen 2). Values arrive in stage 4/6. */
+/** The four KPIs in the band (docs/especificacao.md, screen 2). Values arrive in stage 4/6. */
 const KPIS = [
   { label: 'Atendimentos no mês', note: 'meta definida em Configurações' },
   { label: 'Faturamento', note: 'ticket médio' },

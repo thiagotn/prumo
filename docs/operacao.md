@@ -1,5 +1,8 @@
 # Operação — Prumo em produção (homelab)
 
+Runbook do dia a dia. Para uso do sistema, ver [`FAQ.md`](FAQ.md); para o escopo,
+[`especificacao.md`](especificacao.md).
+
 O deploy vive no repo `homelab`: manifests em `helm/apps/prumo/`, Application do Argo em
 `helm/argocd/application-prumo.yml`, database em `helm/postgres/app-db-prumo.yml`, e a decisão
 de infra registrada em `docs/adr/0010-prumo-no-homelab.md`. **Os pré-requisitos out-of-git

@@ -101,6 +101,21 @@ jobs:
         run: |
           set -euo pipefail
           file=helm/apps/prumo/kustomization.yaml
+
+          # The manifests have to be in the homelab repo before a tag can be written to
+          # them. Without this check the failure is a bare "sed: No such file".
+          if [ ! -f "$file" ]; then
+            echo "::error title=Manifests ausentes::${file} nao existe no repo homelab."
+            {
+              echo '### Manifests do prumo ainda nao estao no repo homelab'
+              echo
+              echo "A imagem \`${TAG}\` foi publicada, mas nao existe \`${file}\` para gravar a tag."
+              echo 'Faca o commit de `helm/apps/prumo/`, `helm/argocd/application-prumo.yml` e'
+              echo '`helm/postgres/app-db-prumo.yml` no repo homelab (ver ADR 0010) e rode este'
+              echo 'workflow de novo.'
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
           # Replace only the prumo image's newTag, leaving the rest of the file alone.
           sed -i "/name: ghcr.io\/thiagotn\/prumo$/{n;s|newTag: .*|newTag: ${TAG}|}" "$file"
           git diff --exit-code "$file" && echo "tag was already ${TAG}, nothing to do" && exit 0 || true
