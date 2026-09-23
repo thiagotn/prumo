@@ -40,16 +40,44 @@ Três coisas, nesta ordem — só a terceira é deploy:
    ```
 2. **Host no Ingress** (`helm/apps/prumo/ingress.yml`): mais um item em `tls.hosts` e mais uma
    `rule` igual à existente.
-3. **A clínica no banco**, pelo script — rodado **da sua máquina**, no repo `prumo`, com o banco
-   do cluster alcançável por port-forward. (A imagem de produção não traz `tsx`, que é
-   devDependency; até a etapa 8 entregar o painel da revenda, é assim que uma clínica nasce.)
+3. **A clínica no banco.** Há dois caminhos; os dois fazem a mesma coisa.
+
+   **a) No node, com `scripts/onboard-clinic.sh`** — faz os passos 1 e 3 de uma vez (cria o
+   CNAME e cadastra a clínica), é idempotente e não precisa de Node.js nem do CLI do
+   cloudflared. Copie o script para o node e rode lá:
+
+   ```bash
+   scp scripts/onboard-clinic.sh <node>:~/
+   ssh <node> './onboard-clinic.sh \
+     --host app.clinicaaurora.com.br \
+     --name "Clínica Aurora" \
+     --subtitle "Harmonização Facial · Moema, SP" \
+     --monogram CA \
+     --color "#7d5411" \
+     --unit "Unidade Moema" \
+     --plan ESSENTIAL \
+     --owner-name "Dra. Helena Prado" \
+     --owner-email helena@clinicaaurora.com.br'
+   ```
+
+   Ele lê o id do túnel e o token da Cloudflare do próprio cluster, valida o contraste da cor
+   com a mesma regra da aplicação e imprime a senha inicial uma vez. Tem `--dry-run` e
+   `--only-dns`. O passo 1 (DNS) ele cobre; a regra no túnel e o host no Ingress continuam
+   sendo commit no repo homelab, feitos antes.
+
+   **b) Da sua máquina, com `scripts/create-tenant.ts`** — quando você quiser o caminho que
+   passa pelas validações da aplicação em TypeScript. Precisa do banco alcançável; use
+   `scripts/tunnel-prod-db.sh` (a imagem de produção não traz `tsx`, que é devDependency).
 
 ```bash
-# terminal 1 — na LAN ou pela malha
-kubectl -n postgres port-forward svc/postgres 5432:5432
+# terminal 1 — abre o túnel (o Service do Postgres é headless, então não dá para usar
+# `kubectl port-forward` de fora; o script encaminha via SSH pelo node)
+PRUMO_NODE=<user@node> ./scripts/tunnel-prod-db.sh
 
-# terminal 2 — a senha é a do secret prumo-db do cluster
-export DATABASE_URL="postgresql://prumo:<senha>@localhost:5432/prumo?schema=public"
+# terminal 2 — lê a senha do secret do cluster, sem passar pelo histórico do shell
+export DATABASE_URL="$(ssh <user@node> \
+  "kubectl -n prumo get secret prumo-db -o jsonpath='{.data.DATABASE_URL}' | base64 -d" \
+  | sed 's|@postgres.postgres.svc.cluster.local:5432|@localhost:5435|')"
 npx tsx scripts/create-tenant.ts \
   --name "Clínica Aurora" \
   --subtitle "Harmonização Facial · Moema, SP" \
@@ -73,7 +101,8 @@ primeiro login (QR na tela).
 
 ## Redefinir senha / trocar de celular
 
-Mesmo esquema do script anterior: da sua máquina, com o `DATABASE_URL` do cluster por port-forward.
+Da sua máquina, com o túnel aberto (`scripts/tunnel-prod-db.sh`) e o `DATABASE_URL` montado a
+partir do secret, como no bloco acima.
 
 ```bash
 npx tsx scripts/reset-password.ts --host app.dratatimayumi.com.br --email tati@dratatimayumi.com.br
