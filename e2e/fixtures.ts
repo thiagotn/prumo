@@ -5,7 +5,7 @@ export const DEV_PASSWORD = 'prumo1234';
 
 /** Seeded users, by role. See prisma/seed.ts. */
 export const USERS = {
-  owner: { email: 'tati@dratatimayumi.com.br', name: 'Dra. Tati Mayumi' },
+  owner: { email: 'owner@dratatimayumi.com.br', name: 'Dra. Tati Mayumi' },
   reception: { email: 'recepcao@dratatimayumi.com.br', name: 'Aline Souza' },
   finance: { email: 'financeiro@dratatimayumi.com.br', name: 'Marcos Ribeiro' },
   practitioner: { email: 'pedro@dratatimayumi.com.br', name: 'Dr. Pedro Lemos' },

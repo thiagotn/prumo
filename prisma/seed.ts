@@ -41,7 +41,7 @@ const TENANTS: TenantSeed[] = [
     flags: { clinicalPhotos: true, automaticPricing: true, automaticStockDeduction: true },
     hosts: ['app.dratatimayumi.com.br', 'localhost:3100', 'tati.localhost:3100'],
     users: [
-      { name: 'Dra. Tati Mayumi', email: 'tati@dratatimayumi.com.br', role: Role.OWNER },
+      { name: 'Dra. Tati Mayumi', email: 'owner@dratatimayumi.com.br', role: Role.OWNER },
       { name: 'Aline Souza', email: 'recepcao@dratatimayumi.com.br', role: Role.RECEPTION },
       { name: 'Marcos Ribeiro', email: 'financeiro@dratatimayumi.com.br', role: Role.FINANCE },
       { name: 'Dr. Pedro Lemos', email: 'pedro@dratatimayumi.com.br', role: Role.PRACTITIONER },

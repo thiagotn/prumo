@@ -95,10 +95,10 @@ describe('authenticator enrolment', () => {
   it('builds the otpauth URI with issuer and period', () => {
     const uri = otpAuthUri({
       base32Secret: 'ABCD',
-      email: 'tati@x.com.br',
+      email: 'owner@x.com.br',
       issuer: 'Dra. Tati Mayumi',
     });
-    expect(uri).toContain('otpauth://totp/Dra.%20Tati%20Mayumi%3Atati%40x.com.br');
+    expect(uri).toContain('otpauth://totp/Dra.%20Tati%20Mayumi%3Aowner%40x.com.br');
     expect(uri).toContain('secret=ABCD');
     expect(uri).toContain('period=30');
     expect(uri).toContain('digits=6');

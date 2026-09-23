@@ -105,7 +105,7 @@ Da sua máquina, com o túnel aberto (`scripts/tunnel-prod-db.sh`) e o `DATABASE
 partir do secret, como no bloco acima.
 
 ```bash
-npx tsx scripts/reset-password.ts --host app.dratatimayumi.com.br --email tati@dratatimayumi.com.br
+npx tsx scripts/reset-password.ts --host <app.dominio-da-clinica> --email <e-mail-da-pessoa>
 npx tsx scripts/reset-password.ts --host ... --email ... --reenrol-2fa
 ```
 

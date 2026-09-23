@@ -3,15 +3,15 @@
 //
 // Usage (local, with .env pointing at the right database):
 //   npx tsx scripts/create-tenant.ts \
-//     --name "Dra. Tati Mayumi" \
-//     --subtitle "Estética Avançada · Tatuapé, SP" \
-//     --monogram TM \
-//     --color "#b68235" \
-//     --domain dratatimayumi.com.br \
-//     --host app.dratatimayumi.com.br \
-//     --unit "Coworking Tatuapé" \
-//     --owner-name "Dra. Tati Mayumi" \
-//     --owner-email tati@dratatimayumi.com.br
+//     --name "Clínica Exemplo" \
+//     --subtitle "Harmonização Facial · São Paulo, SP" \
+//     --monogram CE \
+//     --color "#7d5411" \
+//     --domain clinic.example \
+//     --host app.clinic.example \
+//     --unit "Unidade Centro" \
+//     --owner-name "Dra. Fulana" \
+//     --owner-email owner@clinic.example
 //
 // For production (homelab), see docs/operacao.md — it runs from the admin's machine
 // against a port-forwarded Postgres.

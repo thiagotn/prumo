@@ -3,7 +3,7 @@
 // whenever a credential leak is suspected.
 //
 // Usage:
-//   npx tsx scripts/reset-password.ts --host app.dratatimayumi.com.br --email tati@dratatimayumi.com.br
+//   npx tsx scripts/reset-password.ts --host app.clinic.example --email owner@clinic.example
 //   npx tsx scripts/reset-password.ts --host ... --email ... --reenrol-2fa
 //
 // --reenrol-2fa clears the TOTP secret, so the person enrols the authenticator again on

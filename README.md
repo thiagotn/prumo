@@ -94,7 +94,7 @@ Senha de todos: `prumo1234`.
 
 | Entrar como | E-mail | Endereço |
 |---|---|---|
-| Doutora (owner, exige 2FA) | `tati@dratatimayumi.com.br` | http://localhost:3100 |
+| Doutora (owner, exige 2FA) | `owner@dratatimayumi.com.br` | http://localhost:3100 |
 | Recepção (sem 2FA) | `recepcao@dratatimayumi.com.br` | http://localhost:3100 |
 | Financeiro | `financeiro@dratatimayumi.com.br` | http://localhost:3100 |
 | Profissional convidado | `pedro@dratatimayumi.com.br` | http://localhost:3100 |
