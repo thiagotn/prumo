@@ -8,8 +8,9 @@ Prontuário, agenda, ficha de atendimento, financeiro, estoque, relatórios, ter
 lembretes por WhatsApp e portal da paciente — com dados sensíveis de saúde, o que define quase todas
 as decisões de arquitetura abaixo.
 
-> **Etapas 1 e 2 de 8 concluídas.** Login com perfis, tenant por hostname, cadastro de pacientes e
-> configurações da clínica (identidade, parâmetros de preço, módulos) estão de pé. As telas dos
+> **Etapas 1, 2 e 3 de 8 concluídas.** Login com perfis, tenant por hostname, cadastro de pacientes,
+> configurações da clínica (identidade, parâmetros de preço, módulos) e a agenda (dia, semana e
+> lista) estão de pé. As telas dos
 > outros módulos são placeholders que já passam por guard, tenant e auditoria, e dizem qual etapa as
 > entrega. Ver [Estado](#estado).
 
@@ -191,11 +192,20 @@ código precisa dele está transcrito em [`docs/regras-de-negocio.md`](docs/regr
 - Tela de Pacientes: filtros, busca, e painel lateral com o alerta clínico em destaque.
 - `scripts/import-catalog.ts` importa o catálogo real da planilha, que fica fora do git.
 
+**Etapa 3 concluída** — agenda:
+
+- Três visões sobre os mesmos dados: dia (grade de 8h às 19h), semana (seg–sáb) e lista (14 dias).
+- Filtro por sala, navegação por dia/semana, e seletor de dias no celular.
+- Bloqueios (almoço, sala não contratada) como entradas sem paciente, com restrição no banco que
+  impede um bloqueio com paciente.
+- `src/lib/schedule.ts` trabalha no fuso da clínica, não no do servidor — com testes que cobrem
+  horário de verão e a virada de dia.
+- Detecção de conflito de sala pronta (`clashesIn`), coberta por teste, para o agendamento da etapa 4.
+
 ### Ordem das próximas etapas
 
 | Etapa | Entrega |
 |---|---|
-| 3 | Agenda (dia / semana / lista) |
 | 4 | Ficha de atendimento + estoque com baixa por lote + fechamento financeiro |
 | 5 | Termos com assinatura e PDF |
 | 6 | Financeiro e relatórios |

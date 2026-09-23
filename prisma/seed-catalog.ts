@@ -177,3 +177,72 @@ export async function seedCatalog(tx: Tx, tenantId: string, withPatients: boolea
     else await tx.patient.create({ data: { tenantId, ...data } });
   }
 }
+
+/**
+ * A week of appointments around today, so the three schedule views have something to
+ * show in development. Times are the clinic's working hours; the dates move with the
+ * seed so the diary is never empty.
+ */
+export async function seedAppointments(tx: Tx, tenantId: string) {
+  const existing = await tx.appointment.count({ where: { tenantId } });
+  if (existing > 0) return existing;
+
+  const [patients, rooms, procedures, tenant] = await Promise.all([
+    tx.patient.findMany({ where: { tenantId }, orderBy: { name: 'asc' } }),
+    tx.room.findMany({ where: { tenantId }, orderBy: { name: 'asc' } }),
+    tx.procedure.findMany({ where: { tenantId }, include: { products: true }, orderBy: { name: 'asc' } }),
+    tx.tenant.findUnique({ where: { id: tenantId }, select: { defaultUnit: true } }),
+  ]);
+  if (patients.length === 0 || rooms.length === 0 || procedures.length === 0) return 0;
+
+  // Book into the clinic's own unit rather than whichever room sorts first: the diary
+  // should look like the clinic's, and it leaves the second room genuinely free.
+  const mainRoom = rooms.find((r) => r.name === tenant?.defaultUnit) ?? rooms[0]!;
+
+  const { instantAt, todayKey, addDays } = await import('../src/lib/schedule');
+  const today = todayKey();
+
+  // day offset, hour, patient index, procedure index, status, block?
+  const plan: Array<[number, number, number, number, 'CONFIRMED' | 'WAITING' | 'ATTENDED', boolean]> = [
+    [0, 9, 1, 0, 'ATTENDED', false],
+    [0, 10, 4, 3, 'ATTENDED', false],
+    [0, 12, 0, 0, 'CONFIRMED', true], // lunch
+    [0, 14, 7, 1, 'CONFIRMED', false],
+    [0, 15, 5, 2, 'CONFIRMED', false],
+    [0, 16, 3, 4, 'WAITING', false],
+    [0, 18, 6, 1, 'CONFIRMED', false],
+    [1, 11, 0, 1, 'CONFIRMED', false],
+    [1, 15, 2, 2, 'CONFIRMED', false],
+    [2, 10, 7, 1, 'WAITING', false],
+    [2, 14, 1, 0, 'CONFIRMED', false],
+    [-1, 9, 2, 0, 'ATTENDED', false],
+    [-1, 14, 6, 1, 'ATTENDED', false],
+    [-2, 10, 3, 3, 'ATTENDED', false],
+  ];
+
+  let created = 0;
+  for (const [dayOffset, hour, patientIndex, procedureIndex, status, isBlock] of plan) {
+    const day = addDays(today, dayOffset);
+    const procedure = procedures[procedureIndex % procedures.length]!;
+    const durationHours = Number(procedure.defaultDurationHours);
+    const startsAt = instantAt(day, hour);
+    const endsAt = new Date(startsAt.getTime() + durationHours * 60 * 60 * 1000);
+
+    await tx.appointment.create({
+      data: {
+        tenantId,
+        patientId: isBlock ? null : patients[patientIndex % patients.length]!.id,
+        roomId: mainRoom.id,
+        procedureId: isBlock ? null : procedure.id,
+        productId: isBlock ? null : (procedure.products[0]?.id ?? null),
+        startsAt,
+        endsAt,
+        status,
+        isBlock,
+        notes: isBlock ? 'Almoço · sala liberada' : null,
+      },
+    });
+    created++;
+  }
+  return created;
+}

@@ -89,6 +89,7 @@ model Tenant {
   procedures    Procedure[]
   products      Product[]
   patients      Patient[]
+  appointments  Appointment[]
 
   @@map("tenants")
 }
@@ -134,7 +135,8 @@ model User {
   sessions Session[]
   auditLogs AuditLog[]
   /// Sessions this user (a SUPERADMIN) opened through "impersonate".
-  impersonatedSessions Session[] @relation("SessionImpersonatedBy")
+  impersonatedSessions Session[]     @relation("SessionImpersonatedBy")
+  appointments         Appointment[] @relation("AppointmentPractitioner")
 
   /// Email is unique WITHIN a tenant — the same person may exist in two clinics.
   @@unique([tenantId, email])
@@ -280,8 +282,9 @@ model Room {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  products Product[]
+  tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  products     Product[]
+  appointments Appointment[]
 
   @@unique([tenantId, name])
   @@index([tenantId])
@@ -303,8 +306,9 @@ model Procedure {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  products Product[]
+  tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  products     Product[]
+  appointments Appointment[]
 
   @@unique([tenantId, name])
   @@index([tenantId])
@@ -333,9 +337,10 @@ model Product {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  procedure Procedure @relation(fields: [procedureId], references: [id], onDelete: Cascade)
-  room      Room?     @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  procedure    Procedure     @relation(fields: [procedureId], references: [id], onDelete: Cascade)
+  room         Room?         @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  appointments Appointment[]
 
   @@unique([tenantId, procedureId, brand])
   @@index([tenantId])
@@ -368,9 +373,70 @@ model Patient {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  appointments Appointment[]
 
   @@unique([tenantId, document])
   @@index([tenantId, name])
   @@map("patients")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Stage 3 — the schedule
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Where an appointment stands. The encounter itself arrives in stage 4; these are the
+/// states the front desk works with.
+enum AppointmentStatus {
+  CONFIRMED // patient confirmed, usually by WhatsApp
+  WAITING // booked, not confirmed yet
+  ATTENDED // seen; the encounter record hangs off this from stage 4
+  NO_SHOW // did not come, and did not warn
+  CANCELLED
+
+  @@map("appointment_status")
+}
+
+/// A slot in the diary. `BLOCK` entries carry no patient: they are lunch, travel, or a
+/// room that was not booked — the diary has to be able to say "not available" as much as
+/// "someone is coming".
+model Appointment {
+  id       String @id @default(uuid()) @db.Uuid
+  tenantId String @map("tenant_id") @db.Uuid
+
+  /// Null on a block.
+  patientId String? @map("patient_id") @db.Uuid
+  roomId    String? @map("room_id") @db.Uuid
+  /// What is planned. The brand can still change at the chair, which is why the encounter
+  /// records what was actually used (stage 4).
+  procedureId String? @map("procedure_id") @db.Uuid
+  productId   String? @map("product_id") @db.Uuid
+  /// Which practitioner. A guest practitioner only sees their own.
+  practitionerId String? @map("practitioner_id") @db.Uuid
+
+  startsAt DateTime @map("starts_at")
+  endsAt   DateTime @map("ends_at")
+
+  status AppointmentStatus @default(WAITING)
+  /// True for lunch, travel or an unbooked room. Blocks have no patient and no price.
+  isBlock Boolean @default(false) @map("is_block")
+
+  notes String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tenant       Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  patient      Patient?   @relation(fields: [patientId], references: [id], onDelete: SetNull)
+  room         Room?      @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  procedure    Procedure? @relation(fields: [procedureId], references: [id], onDelete: SetNull)
+  product      Product?   @relation(fields: [productId], references: [id], onDelete: SetNull)
+  practitioner User?      @relation("AppointmentPractitioner", fields: [practitionerId], references: [id], onDelete: SetNull)
+
+  // The day view reads a date range for one tenant; the patient panel reads one patient's
+  // history. Both are covered here.
+  @@index([tenantId, startsAt])
+  @@index([patientId, startsAt])
+  @@index([roomId, startsAt])
+  @@map("appointments")
 }

@@ -1,0 +1,179 @@
+/* Schedule — three views over the same data (docs/especificacao.md, screen 3). */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+}
+
+.spacer { margin-left: auto; }
+
+.dayLabel {
+  font-family: var(--font-heading);
+  font-weight: 500;
+  font-size: 17px;
+  padding: 0 var(--space-2);
+}
+
+/* ── day view: 74px per hour slot ──────────────────────────────────────────── */
+
+.dayGrid {
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.slot {
+  display: grid;
+  grid-template-columns: 78px 1fr;
+  min-height: 74px;
+  border-bottom: 1px solid var(--color-divider);
+}
+
+.slot:last-child { border-bottom: 0; }
+
+.slotHour {
+  padding: var(--space-2) var(--space-3);
+  font-size: 12px;
+  color: var(--color-neutral-600);
+  border-right: 1px solid var(--color-divider);
+  background: var(--color-neutral-100);
+}
+
+.slotBody { padding: 6px; display: flex; flex-direction: column; gap: 4px; }
+
+.card {
+  border: 1px solid var(--color-divider);
+  border-left: 3px solid var(--color-accent);
+  border-radius: 3px;
+  background: var(--color-neutral-100);
+  padding: 9px 12px;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.card:hover { background: color-mix(in srgb, var(--color-accent) 8%, var(--color-neutral-100)); }
+
+/* A block is not an appointment: it is the diary saying "not available". */
+.block {
+  border: 1px solid var(--color-divider);
+  border-radius: 3px;
+  background: repeating-linear-gradient(
+    135deg,
+    var(--color-neutral-200) 0 6px,
+    var(--color-neutral-100) 6px 12px
+  );
+  padding: 9px 12px;
+  font-size: 12px;
+  color: var(--color-neutral-700);
+}
+
+.free {
+  border: 1px dashed var(--color-neutral-300);
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  min-height: 62px;
+  font-size: 11px;
+  color: var(--color-neutral-500);
+  text-decoration: none;
+}
+
+.free:hover { border-color: var(--color-accent); color: var(--color-accent); }
+
+.cardName { font-size: 13px; }
+.cardDetail { font-size: 11px; color: var(--color-neutral-600); }
+.cardMeta { margin-left: auto; display: flex; align-items: center; gap: var(--space-2); }
+
+/* ── week view: six columns, Monday to Saturday ────────────────────────────── */
+
+.weekGrid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.weekColumn { border-right: 1px solid var(--color-divider); min-height: 320px; }
+.weekColumn:last-child { border-right: 0; }
+.weekToday { background: var(--color-neutral-100); }
+
+.weekHead {
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--color-divider);
+  text-align: center;
+}
+
+.weekDayName {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-neutral-600);
+}
+
+.weekDayNumber { font-family: var(--font-heading); font-size: 19px; line-height: 1.2; }
+.weekTodayNumber { color: var(--color-accent); }
+.weekItems { padding: 6px; display: flex; flex-direction: column; gap: 5px; }
+
+.weekCard {
+  border: 1px solid var(--color-divider);
+  border-left: 2px solid var(--color-accent);
+  border-radius: 3px;
+  padding: 7px 8px;
+  background: var(--color-bg);
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.weekCard:hover { border-color: var(--color-accent); }
+.weekHour { font-size: 11px; color: var(--color-neutral-600); }
+.weekName { font-size: 12px; }
+
+/* ── list view ─────────────────────────────────────────────────────────────── */
+
+.listWrap { border: 1px solid var(--color-divider); border-radius: var(--radius-md); overflow: hidden; }
+.empty { padding: var(--space-6); text-align: center; font-size: 13px; color: var(--color-neutral-600); }
+
+/* ── mobile: day picker plus cards ─────────────────────────────────────────── */
+
+.dayPicker { display: none; }
+
+@media (max-width: 900px) {
+  .dayPicker {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: var(--space-2);
+    margin-bottom: var(--space-3);
+  }
+
+  .dayPick {
+    flex: none;
+    min-width: 52px;
+    min-height: 56px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    color: inherit;
+    font-size: 11px;
+  }
+
+  .dayPickActive { border-color: var(--color-accent); color: var(--color-accent); }
+
+  .slot { grid-template-columns: 58px 1fr; }
+  .weekGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .listWrap { overflow-x: auto; }
+}

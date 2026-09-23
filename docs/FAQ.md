@@ -3,10 +3,10 @@
 Perguntas na linguagem de quem opera a clínica. Se algo aqui não corresponde ao que você vê na
 tela, o sistema está errado, não o texto — avise.
 
-> **Onde estamos:** etapas 1 e 2 prontas — entrar no sistema, perfis de acesso, uma instância por
-> clínica, **cadastro de pacientes** e **configurações da clínica** (identidade, parâmetros de preço
-> e módulos). As telas de agenda, ficha de atendimento, financeiro, estoque, relatórios, mensagens e
-> termos ainda estão sendo construídas — ao abrir, cada uma informa em qual etapa entra. As
+> **Onde estamos:** etapas 1, 2 e 3 prontas — entrar no sistema, perfis de acesso, uma instância por
+> clínica, cadastro de pacientes, configurações da clínica e a **agenda** (dia, semana e lista). As
+> telas de ficha de atendimento, financeiro, estoque, relatórios, mensagens e termos ainda estão
+> sendo construídas — ao abrir, cada uma informa em qual etapa entra. As
 > perguntas sobre essas telas estão marcadas com **(em breve)**.
 
 ---
@@ -249,11 +249,50 @@ no servidor a cada acesso — não é questão de esconder item de menu.
 
 ---
 
-## Telas em construção
+## Agenda
 
-### Agenda **(em breve, etapa 3)**
-Três visões — dia, semana e lista —, filtro por sala, e os status Confirmado, Aguardando e Atendido.
-No celular, cards com "WhatsApp" e "Atender".
+### Como vejo o dia de hoje?
+
+Em **Agenda**. Ela abre no dia de hoje, na visão **Dia**: uma faixa por hora, das 8h às 19h. As
+setas andam um dia para trás ou para frente, e o botão **Hoje** aparece assim que você se afasta.
+
+### Para que servem as três visões?
+
+- **Dia** — a grade hora a hora, para trabalhar o dia corrente.
+- **Semana** — segunda a sábado lado a lado, com hoje destacado, para enxergar a carga da semana.
+- **Lista** — os próximos 14 dias em tabela, com data, hora, paciente, procedimento, sala e status.
+
+### O que é um "Bloqueio"?
+
+Uma faixa listrada sem paciente: almoço, deslocamento, ou uma sala que não foi contratada naquela
+hora. É a agenda dizendo "indisponível", e não "vago".
+
+### O que significam as cores dos status?
+
+**Confirmado** (destaque), **Aguardando** (contorno) e **Atendido** (neutro). Faltou e Cancelado
+aparecem também, quando for o caso.
+
+### Filtrei por sala e sumiu tudo
+
+O filtro mostra só o que está marcado naquela sala. Volte em **Todas as salas** para ver a agenda
+inteira.
+
+### Cliquei numa paciente e não abriu a ficha
+
+A ficha de atendimento entra na etapa 4. Até lá, o clique leva para a tela que avisa isso.
+
+### Sou profissional convidado e vejo pouca coisa
+
+Você vê a sua agenda. Os horários de outro profissional não aparecem para você.
+
+### No celular
+
+A tira de dias no topo troca o dia com um toque, e cada atendimento vira um card. Os alvos são
+grandes o suficiente para o dedo.
+
+---
+
+## Telas em construção
 
 ### Ficha de atendimento **(em breve, etapa 4)**
 Cinco passos: anamnese, procedimento, fotos, fechamento e termo. Ao registrar o procedimento, o lote

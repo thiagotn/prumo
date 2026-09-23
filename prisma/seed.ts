@@ -10,7 +10,7 @@ import { hashPassword } from '../src/lib/auth/password';
 import { validateAccentColor } from '../src/lib/color';
 import { prisma, withPlatformScope } from '../src/lib/db';
 import type { Flags } from '../src/lib/flags';
-import { seedCatalog } from './seed-catalog';
+import { seedAppointments, seedCatalog } from './seed-catalog';
 
 const DEV_PASSWORD = 'prumo1234';
 
@@ -145,16 +145,21 @@ async function main() {
       // The catalogue only goes to the clinics that actually run appointments; the
       // patient portal tenant (Aurora) gets patients too, for the portal flow.
       await seedCatalog(tx, tenant.id, seed.domain !== 'verticesaude.com.br');
+      // Only the first clinic gets a diary: the others exist to prove isolation, and an
+      // empty schedule is what proves it.
+      if (seed.domain === 'dratatimayumi.com.br') await seedAppointments(tx, tenant.id);
 
       const counts = await Promise.all([
         tx.room.count({ where: { tenantId: tenant.id } }),
         tx.procedure.count({ where: { tenantId: tenant.id } }),
         tx.product.count({ where: { tenantId: tenant.id } }),
         tx.patient.count({ where: { tenantId: tenant.id } }),
+        tx.appointment.count({ where: { tenantId: tenant.id } }),
       ]);
       console.log(
         `✅ ${seed.name} — ${seed.hosts.length} host(s), ${seed.users.length} user(s), ` +
-          `${counts[0]} room(s), ${counts[1]} procedure(s), ${counts[2]} product(s), ${counts[3]} patient(s)`,
+          `${counts[0]} room(s), ${counts[1]} procedure(s), ${counts[2]} product(s), ` +
+          `${counts[3]} patient(s), ${counts[4]} appointment(s)`,
       );
     }
 
