@@ -1,0 +1,97 @@
+/* Portal da paciente (docs/especificacao.md, screen 13). One column, phone first: this is
+   opened from a WhatsApp link, on the way to work. */
+
+.page {
+  max-width: 44em;
+}
+
+.hello {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 25px;
+  line-height: 1.2;
+  margin: var(--space-1) 0 var(--space-5);
+}
+
+.card {
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.next {
+  border-left: 3px solid var(--color-accent);
+}
+
+.when {
+  font-family: var(--font-heading);
+  font-weight: 500;
+  font-size: 21px;
+  margin: var(--space-2) 0 var(--space-1);
+  text-transform: lowercase;
+}
+
+.when::first-letter {
+  text-transform: uppercase;
+}
+
+.where {
+  font-size: 13px;
+  color: var(--color-neutral-700);
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.prep {
+  white-space: pre-wrap;
+  font-size: 13px;
+  line-height: 1.75;
+  margin: var(--space-2) 0 0;
+}
+
+.list {
+  list-style: none;
+  margin: var(--space-3) 0 0;
+  padding: 0;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-divider);
+  font-size: 13px;
+}
+
+.item:last-child {
+  border-bottom: 0;
+}
+
+.itemMeta {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--color-neutral-600);
+  text-align: right;
+}
+
+.note {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--color-neutral-600);
+  margin: var(--space-3) 0 0;
+}
+
+@media (max-width: 720px) {
+  .actions :global(.btn) {
+    flex: 1;
+    min-height: 44px;
+  }
+}

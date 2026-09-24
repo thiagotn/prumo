@@ -8,12 +8,11 @@ Prontuário, agenda, ficha de atendimento, financeiro, estoque, relatórios, ter
 lembretes por WhatsApp e portal da paciente — com dados sensíveis de saúde, o que define quase todas
 as decisões de arquitetura abaixo.
 
-> **Etapas 1 a 6 de 8 concluídas.** Login com perfis, tenant por hostname, cadastro de pacientes,
+> **Etapas 1 a 7 de 8 concluídas.** Login com perfis, tenant por hostname, cadastro de pacientes,
 > configurações, agenda com marcação de horário, estoque por lote, a ficha de atendimento com
-> fechamento financeiro, os termos de consentimento com assinatura e PDF, o financeiro e os
-> relatórios estão de pé. Faltam as telas de mensagens e do portal da paciente (etapa 7) e o painel
-> da revenda (etapa 8), que já passam por guard, tenant e auditoria e dizem qual etapa as entrega.
-> Ver [Estado](#estado).
+> fechamento financeiro, os termos de consentimento com assinatura e PDF, o financeiro, os
+> relatórios, as automações de WhatsApp e o portal da paciente estão de pé. Falta o painel da
+> revenda (etapa 8). Ver [Estado](#estado).
 
 ---
 
@@ -62,12 +61,18 @@ guard (`src/lib/auth/guards.ts`). A matriz módulo × perfil é transcrita da
 **Tenant vem do hostname.** `app.<dominio-da-clinica>` resolve pela tabela `tenant_domains`, então
 abrir uma clínica é configuração, não deploy. Hostname desconhecido dá 404, não instância genérica.
 
+**O WhatsApp é uma fila, não um envio.** Uma mensagem entra em `message_jobs` no instante em que o
+motivo dela acontece, já renderizada; um script (`scripts/dispatch-messages.ts`, num CronJob) envia
+o que venceu. Sem credenciais a fila apenas espera. Consequência a saber: **as credenciais são do
+deployment, não do tenant** — várias clínicas na mesma instalação compartilham um número. Dar um
+número por clínica é mover essas variáveis para a linha do tenant, que é assunto da etapa 8.
+
 **Termos assinados não viram arquivo.** O PDF é montado a cada download a partir da linha do banco
 — texto, assinatura, instante, IP — e o hash impresso nele cobre esse conjunto. Não há objeto no
 bucket para sair de sincronia com o registro, e a via da paciente e a da clínica saem idênticas por
 construção.
 
-Ainda por escolher, nas etapas em que entram: WhatsApp Cloud API e fila de jobs (etapa 7).
+Ainda por escolher: nada pendente até a etapa 8.
 
 ---
 
@@ -117,8 +122,8 @@ Para ver que o menu não é a proteção: logado como recepção, digite `/setti
 ### Testes
 
 ```bash
-npm test          # 335 unitários + integração de RLS e sessão (precisa do db:up)
-npm run test:e2e  # 70 end-to-end no Playwright (sobe o dev server sozinho)
+npm test          # 368 unitários + integração de RLS e sessão (precisa do db:up)
+npm run test:e2e  # 80 end-to-end no Playwright (sobe o dev server sozinho)
 npm run test:all  # os dois
 npm run typecheck
 npm run lint
@@ -143,6 +148,9 @@ src/
     patient.ts      dados de cadastro: CPF, telefone, nascimento (normalização e checagem)
     consent.ts      termos: preenchimento do texto, hash da assinatura, validade do link
     finance.ts      meses no fuso da clínica, somatórios do mês e CSV para o contador
+    messages.ts     automações: texto, quando cada uma vence, E.164, leitura da resposta
+    message-queue.ts enfileiramento (marcação, fechamento, falta, aniversário)
+    whatsapp.ts     Cloud API: envio, assinatura do webhook, leitura do payload
     pdf.ts          mecânica compartilhada dos PDFs (página, quebra de linha, WinAnsi)
     consent-pdf.ts  o PDF do termo assinado (pdf-lib, fontes padrão)
     report-pdf.ts   o relatório mensal em PDF
@@ -162,7 +170,8 @@ src/
   proxy.ts          carimba o host da requisição (era middleware.ts até o Next 15)
 
 prisma/             schema, migrations (a `_rls` tem as policies) e seed
-scripts/            create-tenant.ts, reset-password.ts — operação até a etapa 8
+scripts/            create-tenant.ts, reset-password.ts, link-portal-login.ts,
+                    dispatch-messages.ts (CronJob) — operação até a etapa 8
 tests/              integração contra o Postgres: RLS e ciclo de sessão
 e2e/                Playwright: login, 2FA, permissões, tenants, mobile
 docs/               especificação, regras de negócio, design, FAQ, operação
@@ -272,11 +281,31 @@ código precisa dele está transcrito em [`docs/regras-de-negocio.md`](docs/regr
 - O seed passou a criar seis meses de atendimentos fechados, com as fórmulas reais, para que as
   telas tenham história em desenvolvimento.
 
+**Etapa 7 concluída** — WhatsApp e portal da paciente:
+
+- **Seis automações** (lembrete 24h, preparo 48h, pós 1 dia, retorno 14 dias, política de falta,
+  aniversário), com o texto editável por clínica, prévia no formato do WhatsApp e métricas.
+- **A fila é a feature**, não o envio: a mensagem é montada e congelada quando o motivo acontece
+  (uma marcação, um fechamento, uma falta) e guardada em `message_jobs`. Reescrever o texto depois
+  não muda o que já estava na fila.
+- **Sem credenciais, nada quebra**: as automações continuam enfileirando, a tela diz que o canal não
+  está conectado, e o que estiver na hora sai quando ele for ligado — a mesma postura do R2 em
+  `storage.ts`. O envio é do `scripts/dispatch-messages.ts`, chamado por um CronJob.
+- **Respostas**: o webhook verifica a assinatura `X-Hub-Signature-256` antes de ler qualquer coisa,
+  "1" confirma o horário, "2" devolve e cancela os lembretes pendentes, e o `provider_message_id`
+  impede que uma reentrega da Meta aja duas vezes. Qualquer outro texto é só registrado.
+- **Agenda**: a visão Lista ganhou **Confirmar / Faltou / Cancelar** — é o que dispara a política de
+  falta e cancela os lembretes de um horário que não existe mais.
+- **Portal da paciente**: próximo horário com confirmar/reagendar, orientações de preparo já
+  preenchidas para o horário dela, termos assinados em PDF e os últimos atendimentos. Prontuário e
+  fotos não aparecem, e a tela diz isso.
+- Um login de paciente aponta para o cadastro por `users.patient_id`, com um trigger que recusa um
+  vínculo entre clínicas — a única coisa que o RLS não conseguiria expressar sozinho.
+
 ### Ordem das próximas etapas
 
 | Etapa | Entrega |
 |---|---|
-| 7 | WhatsApp e portal da paciente |
 | 8 | Painel da revenda (tenants, flags, "entrar como") |
 
 ---

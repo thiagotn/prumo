@@ -35,6 +35,10 @@ export type AuditAction =
   | 'patient.create'
   | 'patient.update'
   | 'appointment.create'
+  | 'appointment.status'
+  | 'message.queued'
+  | 'message.sent'
+  | 'message.reply'
   | 'patient.erased'
   | 'tenant.impersonate'
   | 'tenant.impersonate.end'
@@ -52,10 +56,16 @@ export type AuditEntry = {
 /** IP and user-agent of the current request. Behind the tunnel/Traefik the real IP
  *  arrives in X-Forwarded-For. */
 export async function requestContext(): Promise<{ ip: string | null; userAgent: string | null }> {
-  const h = await headers();
-  const forwarded = h.get('x-forwarded-for');
-  const ip = forwarded?.split(',')[0]?.trim() ?? h.get('x-real-ip') ?? null;
-  return { ip: ip || null, userAgent: h.get('user-agent') };
+  try {
+    const h = await headers();
+    const forwarded = h.get('x-forwarded-for');
+    const ip = forwarded?.split(',')[0]?.trim() ?? h.get('x-real-ip') ?? null;
+    return { ip: ip || null, userAgent: h.get('user-agent') };
+  } catch {
+    // No request at all: a maintenance script or the message dispatcher, which audit too.
+    // An event with no IP is worth more than an exception in the middle of a cron run.
+    return { ip: null, userAgent: null };
+  }
 }
 
 /**

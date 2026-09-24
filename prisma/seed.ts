@@ -14,6 +14,7 @@ import {
   seedAppointments,
   seedCatalog,
   seedClosedEncounters,
+  seedMessageQueue,
   seedStockLots,
 } from './seed-catalog';
 
@@ -143,6 +144,10 @@ async function main() {
             name: user.name,
             role: user.role,
             active: true,
+            // The password goes back to the development one too: `npm run db:seed` is
+            // what the README promises brings the whole known state back, and a login
+            // changed by a script or a test would otherwise stay changed forever.
+            passwordHash,
             totpSecret: null,
             totpConfirmedAt: null,
           },
@@ -166,6 +171,22 @@ async function main() {
         await seedStockLots(tx, tenant.id);
         await seedAppointments(tx, tenant.id);
         await seedClosedEncounters(tx, tenant.id);
+        await seedMessageQueue(tx, tenant.id);
+      }
+
+      // A portal login has to point at a clinical record: the portal shows that patient's
+      // own diary and documents, and it finds them by this link.
+      for (const user of seed.users.filter((u) => u.role === Role.PATIENT)) {
+        const patient = await tx.patient.findFirst({
+          where: { tenantId: tenant.id, name: user.name },
+          select: { id: true },
+        });
+        if (patient) {
+          await tx.user.update({
+            where: { tenantId_email: { tenantId: tenant.id, email: user.email } },
+            data: { patientId: patient.id },
+          });
+        }
       }
 
       const counts = await Promise.all([
@@ -176,12 +197,13 @@ async function main() {
         tx.appointment.count({ where: { tenantId: tenant.id } }),
         tx.stockLot.count({ where: { tenantId: tenant.id } }),
         tx.payment.count({ where: { tenantId: tenant.id } }),
+        tx.messageJob.count({ where: { tenantId: tenant.id } }),
       ]);
       console.log(
         `✅ ${seed.name} — ${seed.hosts.length} host(s), ${seed.users.length} user(s), ` +
           `${counts[0]} room(s), ${counts[1]} procedure(s), ${counts[2]} product(s), ` +
           `${counts[3]} patient(s), ${counts[4]} appointment(s), ${counts[5]} lot(s), ` +
-          `${counts[6]} closing(s)`,
+          `${counts[6]} closing(s), ${counts[7]} message(s) queued`,
       );
     }
 

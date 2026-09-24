@@ -1,0 +1,160 @@
+/* Mensagens (docs/especificacao.md, screen 9): one card per automation, with the wording,
+   the preview as WhatsApp renders it, and what the queue has been doing. */
+
+.channel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-5);
+  font-size: 13px;
+}
+
+.channelOff {
+  border-color: var(--color-accent-400);
+  border-left: 3px solid var(--color-accent);
+  background: var(--color-accent-100);
+  color: var(--color-accent-800);
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 26px;
+  align-items: start;
+}
+
+.automation {
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.automationHead {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.automationTitle {
+  font-family: var(--font-heading);
+  font-weight: 500;
+  font-size: 17px;
+  margin: 0;
+}
+
+.automationNote {
+  font-size: 11px;
+  color: var(--color-neutral-600);
+}
+
+.metrics {
+  margin-left: auto;
+  display: flex;
+  gap: var(--space-3);
+  font-size: 11px;
+  color: var(--color-neutral-600);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+  margin-top: var(--space-3);
+  align-items: start;
+}
+
+/* The preview, in the shape the patient sees it. */
+.bubble {
+  background: var(--color-bg);
+  border: 1px solid var(--color-divider);
+  border-radius: 4px;
+  padding: 12px 14px;
+  font-size: 12.5px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.bubbleWrap {
+  background: var(--color-neutral-100);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.checkbox input {
+  accent-color: var(--color-accent);
+  width: 16px;
+  height: 16px;
+}
+
+.hint {
+  margin: var(--space-2) 0 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--color-neutral-600);
+}
+
+.card {
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.cardTitle {
+  font-family: var(--font-heading);
+  font-weight: 500;
+  font-size: 17px;
+  margin: var(--space-1) 0 var(--space-3);
+}
+
+.queueItem {
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-divider);
+  font-size: 12px;
+}
+
+.queueItem:last-child {
+  border-bottom: 0;
+}
+
+.queueWhen {
+  color: var(--color-neutral-600);
+  font-size: 11px;
+}
+
+.saved {
+  margin-bottom: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-left: 3px solid var(--color-accent);
+  background: var(--color-accent-100);
+  font-size: 12px;
+  color: var(--color-accent-800);
+}
+
+@media (max-width: 1000px) {
+  .columns,
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

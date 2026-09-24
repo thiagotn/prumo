@@ -248,3 +248,10 @@
     min-height: 44px;
   }
 }
+
+/* The three buttons that move a booking along, in the list view. */
+.rowActions {
+  display: flex;
+  gap: 2px;
+  flex-wrap: wrap;
+}

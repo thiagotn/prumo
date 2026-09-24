@@ -19,6 +19,7 @@ import {
   weekDays,
 } from '@/lib/schedule';
 import { WriteDeniedNotice } from '../denied-notice';
+import { updateAppointmentStatus } from './actions';
 import styles from './schedule.module.css';
 
 export const metadata: Metadata = { title: 'Agenda' };
@@ -273,6 +274,7 @@ export default async function SchedulePage({
                   <th>Procedimento</th>
                   <th>Sala</th>
                   <th>Status</th>
+                  {mayWrite ? <th>Ações</th> : null}
                 </tr>
               </thead>
               <tbody>
@@ -295,6 +297,52 @@ export default async function SchedulePage({
                     <td>
                       <span className={`tag ${STATUS_TAG[a.status]}`}>{STATUS_LABELS[a.status]}</span>
                     </td>
+                    {mayWrite ? (
+                      <td>
+                        {a.isBlock || a.status === 'ATTENDED' ? null : (
+                          // The three states the front desk sets by hand. "Atendido" is
+                          // what closing the ficha records, so it is not offered here.
+                          <form action={updateAppointmentStatus} className={styles.rowActions}>
+                            <input type="hidden" name="appointmentId" value={a.id} />
+                            <input type="hidden" name="day" value={activeDay} />
+                            <input type="hidden" name="view" value="list" />
+                            {a.status !== 'CONFIRMED' ? (
+                              <button
+                                className="btn btn-ghost"
+                                type="submit"
+                                name="status"
+                                value="CONFIRMED"
+                                style={{ fontSize: 11 }}
+                              >
+                                Confirmar
+                              </button>
+                            ) : null}
+                            {a.status !== 'NO_SHOW' ? (
+                              <button
+                                className="btn btn-ghost"
+                                type="submit"
+                                name="status"
+                                value="NO_SHOW"
+                                style={{ fontSize: 11 }}
+                              >
+                                Faltou
+                              </button>
+                            ) : null}
+                            {a.status !== 'CANCELLED' ? (
+                              <button
+                                className="btn btn-ghost"
+                                type="submit"
+                                name="status"
+                                value="CANCELLED"
+                                style={{ fontSize: 11 }}
+                              >
+                                Cancelar
+                              </button>
+                            ) : null}
+                          </form>
+                        )}
+                      </td>
+                    ) : null}
                   </tr>
                 ))}
               </tbody>

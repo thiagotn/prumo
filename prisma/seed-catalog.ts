@@ -492,3 +492,42 @@ export async function seedClosedEncounters(tx: Tx, tenantId: string) {
   }
   return created;
 }
+
+/**
+ * Fills the outbox for the bookings that are still ahead, through the same queue the
+ * booking form uses. Separate from seedAppointments so it runs even on a database that
+ * already has a diary — the dedupe key makes it safe to call again.
+ */
+export async function seedMessageQueue(tx: Tx, tenantId: string) {
+  const { enqueueForAppointment } = await import('../src/lib/message-queue');
+  const tenant = await tx.tenant.findUnique({ where: { id: tenantId }, select: { name: true } });
+  if (!tenant) return 0;
+
+  const upcoming = await tx.appointment.findMany({
+    where: { tenantId, isBlock: false, startsAt: { gte: new Date() } },
+    include: {
+      patient: { select: { name: true, phone: true, active: true } },
+      procedure: { select: { name: true } },
+      room: { select: { name: true } },
+    },
+    orderBy: { startsAt: 'asc' },
+  });
+
+  let queued = 0;
+  for (const appointment of upcoming) {
+    queued += await enqueueForAppointment(
+      tx,
+      { tenantId, clinicName: tenant.name },
+      {
+        id: appointment.id,
+        startsAt: appointment.startsAt,
+        endsAt: appointment.endsAt,
+        patientId: appointment.patientId,
+        patient: appointment.patient,
+        procedure: appointment.procedure,
+        room: appointment.room,
+      },
+    );
+  }
+  return queued;
+}

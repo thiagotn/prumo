@@ -97,6 +97,9 @@ model Tenant {
   clinicalPhotos ClinicalPhoto[]
   consentTemplates ConsentTemplate[]
   consents      Consent[]
+  messageTemplates MessageTemplate[]
+  messageJobs   MessageJob[]
+  messageReplies MessageReply[]
 
   @@map("tenants")
 }
@@ -135,10 +138,15 @@ model User {
   active     Boolean   @default(true)
   lastLoginAt DateTime? @map("last_login_at")
 
+  /// For a PATIENT login: the clinical record it belongs to. The portal shows this
+  /// patient's own diary and documents, and nothing else.
+  patientId String? @unique @map("patient_id") @db.Uuid
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   tenant   Tenant?   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  patient  Patient?  @relation(fields: [patientId], references: [id], onDelete: SetNull)
   sessions Session[]
   auditLogs AuditLog[]
   /// Sessions this user (a SUPERADMIN) opened through "impersonate".
@@ -388,6 +396,9 @@ model Patient {
   encounters   Encounter[]
   photos       ClinicalPhoto[]
   consents     Consent[]
+  /// The portal login, when the patient has one.
+  login        User?
+  messageJobs  MessageJob[]
 
   @@unique([tenantId, document])
   @@index([tenantId, name])
@@ -447,6 +458,7 @@ model Appointment {
   practitioner User?      @relation("AppointmentPractitioner", fields: [practitionerId], references: [id], onDelete: SetNull)
   encounter    Encounter?
   consents     Consent[]
+  messageJobs  MessageJob[]
 
   // The day view reads a date range for one tenant; the patient panel reads one patient's
   // history. Both are covered here.
@@ -784,4 +796,114 @@ model Consent {
   @@index([patientId, createdAt])
   @@index([appointmentId])
   @@map("consents")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Stage 7 — WhatsApp automations
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// The automations the clinic runs (docs/especificacao.md, screen 9).
+enum MessageKind {
+  REMINDER_24H // "amanhã às 14h"
+  PREP_48H // what to avoid before the procedure
+  FOLLOW_UP_1D // the day after
+  RETURN_14D // time to come back
+  NO_SHOW_POLICY // after a no-show
+  BIRTHDAY
+
+  @@map("message_kind")
+}
+
+enum MessageStatus {
+  PENDING // waiting for its hour, or for the provider to be configured
+  SENT
+  FAILED
+  CANCELLED // the appointment moved or was cancelled before the message went out
+
+  @@map("message_status")
+}
+
+/// The wording of one automation, per clinic. One row per kind: unlike a consent term,
+/// a reminder is not a document anyone signs, so editing it in place is the right thing.
+model MessageTemplate {
+  id       String @id @default(uuid()) @db.Uuid
+  tenantId String @map("tenant_id") @db.Uuid
+
+  kind    MessageKind
+  body    String
+  enabled Boolean @default(true)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, kind])
+  @@map("message_templates")
+}
+
+/// One message queued for one patient.
+///
+/// The text and the phone number are frozen at enqueue time: what went out has to stay
+/// legible even after the patient changes her number or the clinic rewrites the wording.
+model MessageJob {
+  id       String @id @default(uuid()) @db.Uuid
+  tenantId String @map("tenant_id") @db.Uuid
+
+  kind          MessageKind
+  patientId     String  @map("patient_id") @db.Uuid
+  appointmentId String? @map("appointment_id") @db.Uuid
+
+  /// Destination in E.164, as it was when the message was queued.
+  phone String
+  /// The rendered text, as it will be sent.
+  body String
+
+  scheduledFor DateTime      @map("scheduled_for")
+  status       MessageStatus @default(PENDING)
+  attempts     Int           @default(0)
+  sentAt       DateTime?     @map("sent_at")
+  /// The provider's id for the message, for tracing a delivery report back.
+  providerMessageId String? @map("provider_message_id")
+  error             String?
+
+  /// What makes this message unique — "reminder24h:<appointment>", "birthday:<patient>:2026".
+  /// The queue is filled from several places; this is what stops the same patient being
+  /// messaged twice for the same reason.
+  dedupeKey String @map("dedupe_key")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  patient     Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  appointment Appointment? @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, dedupeKey])
+  @@index([tenantId, status, scheduledFor])
+  @@index([appointmentId])
+  @@map("message_jobs")
+}
+
+/// What the patient answered. "1" confirms the appointment, "2" gives the slot back.
+model MessageReply {
+  id       String @id @default(uuid()) @db.Uuid
+  tenantId String @map("tenant_id") @db.Uuid
+
+  patientId     String? @map("patient_id") @db.Uuid
+  appointmentId String? @map("appointment_id") @db.Uuid
+
+  phone String
+  text  String
+  /// What the reply did: "confirmed", "released", or null when it was not an instruction.
+  action String?
+
+  /// The provider's message id, so a retried webhook does not act twice.
+  providerMessageId String?  @unique @map("provider_message_id")
+  receivedAt        DateTime @default(now()) @map("received_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, receivedAt])
+  @@map("message_replies")
 }

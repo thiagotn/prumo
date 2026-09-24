@@ -45,6 +45,8 @@ export type ActiveSession = {
   /** Set when the reseller is using "impersonate". */
   impersonatedByUserId: string | null;
   medicalRecordUnlocked: boolean;
+  /** For a PATIENT login: the clinical record the portal reads. Null for staff. */
+  patientId: string | null;
   expiresAt: Date;
 };
 
@@ -58,7 +60,15 @@ const SESSION_SELECT = {
   expiresAt: true,
   revokedAt: true,
   user: {
-    select: { id: true, name: true, email: true, role: true, active: true, totpConfirmedAt: true },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      active: true,
+      totpConfirmedAt: true,
+      patientId: true,
+    },
   },
 } satisfies Prisma.SessionSelect;
 
@@ -78,6 +88,7 @@ function build(session: LoadedSession, token: string): ActiveSession {
     totpEnrolled: session.user.totpConfirmedAt !== null,
     impersonatedByUserId: session.impersonatedByUserId,
     medicalRecordUnlocked: session.medicalRecordUnlocked,
+    patientId: session.user.patientId,
     expiresAt: session.expiresAt,
   };
 }

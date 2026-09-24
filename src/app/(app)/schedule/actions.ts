@@ -10,6 +10,7 @@ import { z } from 'zod';
 import { audit } from '@/lib/audit';
 import { requireModuleWrite } from '@/lib/auth/guards';
 import { withTenant } from '@/lib/db';
+import { cancelPendingFor, enqueueForAppointment, enqueueNoShow } from '@/lib/message-queue';
 import {
   appointmentWindow,
   clashesIn,
@@ -160,7 +161,27 @@ export async function createAppointment(
         notes: input.notes || null,
       },
     });
-    return { ok: true, id: appointment.id, patientName: patient.name } as const;
+
+    // The reminders this booking earns. In the same transaction as the appointment: a
+    // horário that exists without its messages is how a patient stops being reminded.
+    const procedure = input.procedureId
+      ? await tx.procedure.findUnique({ where: { id: input.procedureId }, select: { name: true } })
+      : null;
+    const queued = await enqueueForAppointment(
+      tx,
+      { tenantId: tenant.id, clinicName: tenant.name },
+      {
+        id: appointment.id,
+        startsAt: appointment.startsAt,
+        endsAt: appointment.endsAt,
+        patientId: patient.id,
+        patient: { name: patient.name, phone: patient.phone, active: patient.active },
+        procedure,
+        room: { name: room.name },
+      },
+    );
+
+    return { ok: true, id: appointment.id, patientName: patient.name, queued } as const;
   });
 
   if (!result.ok) return fail(result.error);
@@ -171,10 +192,105 @@ export async function createAppointment(
     action: 'appointment.create',
     resource: 'appointment',
     resourceId: result.id,
-    details: { day: input.day, durationMinutes: input.durationMinutes },
+    details: { day: input.day, durationMinutes: input.durationMinutes, queued: result.queued },
   });
 
   revalidatePath('/schedule');
   revalidatePath('/dashboard');
   redirect(`/schedule?day=${input.day}&saved=1`);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Moving a booking along: confirmed, absent, cancelled
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * The states the front desk sets by hand. `ATTENDED` is not here: being seen is what the
+ * encounter's close records, and setting it from the diary would produce an attendance
+ * with no ficha behind it.
+ */
+const SETTABLE = [
+  AppointmentStatus.WAITING,
+  AppointmentStatus.CONFIRMED,
+  AppointmentStatus.NO_SHOW,
+  AppointmentStatus.CANCELLED,
+] as const;
+
+export async function updateAppointmentStatus(formData: FormData): Promise<void> {
+  const { tenant, session } = await requireModuleWrite('schedule');
+  if (!tenant) return;
+
+  const parsed = z
+    .object({
+      appointmentId: z.string().uuid(),
+      status: z.enum(SETTABLE),
+      day: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+      view: z.string().max(10).optional(),
+    })
+    .safeParse({
+      appointmentId: formData.get('appointmentId'),
+      status: formData.get('status'),
+      day: formData.get('day') || undefined,
+      view: formData.get('view') || undefined,
+    });
+  if (!parsed.success) return;
+  const { appointmentId, status } = parsed.data;
+
+  await withTenant(tenant.id, async (tx) => {
+    const appointment = await tx.appointment.findUnique({
+      where: { id: appointmentId },
+      include: { patient: true, procedure: { select: { name: true } }, room: { select: { name: true } } },
+    });
+    if (!appointment || appointment.isBlock) return;
+    // An attended appointment is history: it has a closing and a payment behind it.
+    if (appointment.status === AppointmentStatus.ATTENDED) return;
+
+    await tx.appointment.update({ where: { id: appointment.id }, data: { status } });
+
+    if (status === AppointmentStatus.CANCELLED || status === AppointmentStatus.NO_SHOW) {
+      // A reminder for a horário that no longer exists is worse than no reminder.
+      await cancelPendingFor(tx, appointment.id);
+    }
+    if (status === AppointmentStatus.NO_SHOW) {
+      await enqueueNoShow(
+        tx,
+        { tenantId: tenant.id, clinicName: tenant.name },
+        {
+          id: appointment.id,
+          startsAt: appointment.startsAt,
+          endsAt: appointment.endsAt,
+          patientId: appointment.patientId,
+          patient: appointment.patient
+            ? {
+                name: appointment.patient.name,
+                phone: appointment.patient.phone,
+                active: appointment.patient.active,
+              }
+            : null,
+          procedure: appointment.procedure,
+          room: appointment.room,
+        },
+      );
+    }
+  });
+
+  await audit({
+    tenantId: tenant.id,
+    userId: session.userId,
+    action: 'appointment.status',
+    resource: 'appointment',
+    resourceId: appointmentId,
+    details: { status },
+  });
+
+  revalidatePath('/schedule');
+  revalidatePath('/dashboard');
+  revalidatePath('/messages');
+
+  const { day, view } = parsed.data;
+  const query = new URLSearchParams();
+  if (view) query.set('view', view);
+  if (day) query.set('day', day);
+  const suffix = query.toString();
+  redirect(suffix ? `/schedule?${suffix}` : '/schedule');
 }

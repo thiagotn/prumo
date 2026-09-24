@@ -251,6 +251,9 @@ describe('every business table is protected', () => {
       prisma.payment.count(),
       prisma.consentTemplate.count(),
       prisma.consent.count(),
+      prisma.messageTemplate.count(),
+      prisma.messageJob.count(),
+      prisma.messageReply.count(),
     ]);
     expect(counts).toEqual(counts.map(() => 0));
   });
@@ -516,5 +519,104 @@ describe('consent terms', () => {
       tx.consent.findUnique({ where: { id: consent.id } }),
     );
     expect(orphan).toBeNull();
+  });
+});
+
+describe('messages and the portal login', () => {
+  // The outbox holds phone numbers and the text that went to them, and the portal login
+  // is what points a patient's account at her record. Both are tenant-scoped, and the
+  // login carries a guard RLS alone cannot express.
+  const created: string[] = [];
+
+  afterAll(async () => {
+    if (created.length === 0) return;
+    await withPlatformScope((tx) => tx.patient.deleteMany({ where: { id: { in: created } } }));
+  });
+
+  async function makePatient(tenantId: string) {
+    const patient = await withTenant(tenantId, (tx) =>
+      tx.patient.create({
+        data: { tenantId, name: `Mensagem Teste ${Date.now()}`, phone: '11987650001' },
+      }),
+    );
+    created.push(patient.id);
+    return patient;
+  }
+
+  it("a queued message of one clinic is invisible to another", async () => {
+    const patient = await makePatient(tatiId);
+    const job = await withTenant(tatiId, (tx) =>
+      tx.messageJob.create({
+        data: {
+          tenantId: tatiId,
+          kind: 'REMINDER_24H',
+          patientId: patient.id,
+          phone: '+5511987650001',
+          body: 'Olá.',
+          scheduledFor: new Date(),
+          dedupeKey: `reminder_24h:test-${Date.now()}`,
+        },
+      }),
+    );
+
+    expect(await withTenant(auroraId, (tx) => tx.messageJob.findUnique({ where: { id: job.id } }))).toBeNull();
+    expect(
+      (await withTenant(tatiId, (tx) => tx.messageJob.findUnique({ where: { id: job.id } })))?.id,
+    ).toBe(job.id);
+  });
+
+  it('refuses to queue the same reason twice for the same appointment', async () => {
+    const patient = await makePatient(tatiId);
+    const key = `reminder_24h:dup-${Date.now()}`;
+    const data = {
+      tenantId: tatiId,
+      kind: 'REMINDER_24H' as const,
+      patientId: patient.id,
+      phone: '+5511987650001',
+      body: 'Olá.',
+      scheduledFor: new Date(),
+      dedupeKey: key,
+    };
+
+    await withTenant(tatiId, (tx) => tx.messageJob.create({ data }));
+    await expect(withTenant(tatiId, (tx) => tx.messageJob.create({ data }))).rejects.toThrow();
+  });
+
+  it('refuses a message marked sent with no date on it', async () => {
+    const patient = await makePatient(tatiId);
+    const job = await withTenant(tatiId, (tx) =>
+      tx.messageJob.create({
+        data: {
+          tenantId: tatiId,
+          kind: 'BIRTHDAY',
+          patientId: patient.id,
+          phone: '+5511987650001',
+          body: 'Parabéns!',
+          scheduledFor: new Date(),
+          dedupeKey: `birthday:${patient.id}:9999`,
+        },
+      }),
+    );
+
+    await expect(
+      withTenant(tatiId, (tx) =>
+        tx.messageJob.update({ where: { id: job.id }, data: { status: 'SENT' } }),
+      ),
+    ).rejects.toThrow(/message_jobs_sent_has_a_date/);
+  });
+
+  it('refuses a portal login pointing at another clinic patient', async () => {
+    // RLS keeps the rows apart; this trigger keeps the LINK honest, because the portal
+    // reads by this id.
+    const auroraPatient = await makePatient(auroraId);
+    const tatiUser = await withTenant(tatiId, (tx) =>
+      tx.user.findFirst({ where: { tenantId: tatiId }, select: { id: true } }),
+    );
+
+    await expect(
+      withPlatformScope((tx) =>
+        tx.user.update({ where: { id: tatiUser!.id }, data: { patientId: auroraPatient.id } }),
+      ),
+    ).rejects.toThrow(/another clinic/);
   });
 });

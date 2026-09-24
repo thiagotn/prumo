@@ -3,12 +3,12 @@
 Perguntas na linguagem de quem opera a clínica. Se algo aqui não corresponde ao que você vê na
 tela, o sistema está errado, não o texto — avise.
 
-> **Onde estamos:** etapas 1 a 6 prontas — entrar no sistema, perfis de acesso, uma instância por
+> **Onde estamos:** etapas 1 a 7 prontas — entrar no sistema, perfis de acesso, uma instância por
 > clínica, **cadastro de pacientes**, configurações, agenda com **marcação de horário**, **estoque
 > por lote**, a **ficha de atendimento com fechamento financeiro**, as **fotos clínicas** e os
-> **termos de consentimento com assinatura e PDF**, o **financeiro** e os **relatórios**. Ainda em
-> construção: anamnese versionada, mensagens por WhatsApp e o portal da paciente — ao abrir, cada
-> uma informa em qual etapa entra. As perguntas sobre essas telas estão marcadas com **(em breve)**.
+> **termos de consentimento com assinatura e PDF**, o **financeiro**, os **relatórios**, as
+> **mensagens no WhatsApp** e o **portal da paciente**. Falta a anamnese versionada e o painel da
+> revenda (etapa 8).
 
 ---
 
@@ -596,16 +596,86 @@ em inglês, importe escolhendo **ponto e vírgula** como separador.
 
 ---
 
-## Telas em construção
+## Mensagens no WhatsApp
 
-### Mensagens **(em breve, etapa 7)**
-Lembretes automáticos por WhatsApp: 24h antes, preparo 48h antes, pós-procedimento em 1 dia, retorno
-em 14 dias, política de falta e aniversário. A paciente responde "1" para confirmar e "2" para
-devolver o horário à lista de espera.
+### O que sai automaticamente?
 
-### Portal da paciente **(em breve, etapa 7)**
-A paciente confirma ou reagenda o próximo horário, lê as orientações de preparo e baixa termos e
-recibos.
+Seis automações, cada uma com o seu texto, que você edita em **Mensagens**:
+
+- **Lembrete 24h antes** — na véspera, às 10h.
+- **Preparo 48h antes** — dois dias antes, às 10h, com o que evitar.
+- **Pós-procedimento** — no dia seguinte ao atendimento, às 10h.
+- **Retorno em 14 dias** — duas semanas depois, às 10h.
+- **Política de falta** — na hora em que você marca o horário como falta.
+- **Aniversário** — no dia, às 9h.
+
+Cada uma pode ser ligada ou desligada. Ao lado do texto, a prévia mostra a mensagem exatamente como
+ela chega no celular da paciente.
+
+### Como escrevo o texto?
+
+No campo **Texto**, usando os campos entre chaves: `{{paciente}}`, `{{clinica}}`, `{{data}}`,
+`{{hora}}`, `{{procedimento}}` e `{{sala}}`. Um campo sem valor **some** do texto junto com o espaço
+— um lembrete emitido fora de um atendimento não mostra "{{sala}}" para a paciente. **Restaurar
+texto padrão** volta ao texto que veio com o sistema.
+
+### Editei o texto. E as mensagens que já estavam na fila?
+
+Saem como estavam. O texto é montado e congelado quando a mensagem entra na fila, então a paciente
+recebe o que a clínica quis dizer no dia em que aquilo foi agendado.
+
+### "WhatsApp ainda não conectado"
+
+O canal depende de credenciais da Meta que quem cuida da infraestrutura configura. Sem elas as
+automações continuam funcionando: a fila enche e **nada se perde**. Quando o canal for ligado, o que
+já estiver na hora sai.
+
+### O que a paciente responde?
+
+**1** confirma o horário — ele passa a aparecer como Confirmado na agenda. **2** devolve o horário:
+ele é cancelado, os lembretes pendentes dele são cancelados junto, e a recepção vê a resposta na
+tela de Mensagens para remarcar. Qualquer outra resposta é só registrada, sem mexer em nada.
+
+### Marquei falta e a mensagem não saiu
+
+Ela entra na fila na hora e sai no próximo envio. A fila aparece em **Mensagens**, na coluna da
+direita.
+
+### Como marco confirmação, falta ou cancelamento?
+
+Em **Agenda**, visão **Lista**: cada linha tem **Confirmar**, **Faltou** e **Cancelar**. "Atendido"
+não está ali de propósito — quem registra atendimento é o fechamento da ficha.
+
+---
+
+## Portal da paciente
+
+### O que a paciente vê?
+
+Ao entrar com o e-mail dela no endereço da clínica: o próximo horário, com **Confirmar presença** e
+**Preciso reagendar**; as orientações de preparo (o mesmo texto da automação de 48h, já preenchido
+com o horário dela); os termos que ela assinou, com o PDF para baixar; e os últimos atendimentos com
+o valor pago.
+
+### Ela vê o prontuário?
+
+Não. Prontuário, anamnese e fotos ficam na clínica — são dados de saúde e o portal não os expõe. A
+tela diz isso para ela, e pede que fale com a recepção se quiser uma cópia.
+
+### "Preciso reagendar" cancela mesmo?
+
+Devolve o horário: ele sai da agenda como cancelado e os lembretes pendentes são cancelados. A
+recepção vê e entra em contato. O histórico dela continua intacto.
+
+### Como ligo o acesso de uma paciente ao cadastro dela?
+
+O acesso de portal precisa apontar para o cadastro dela. Ainda não há tela para isso: quem
+administra o sistema roda `scripts/link-portal-login.ts` com o e-mail dela e o CPF (ou o nome), e o
+comando devolve a senha de primeiro acesso — uma vez só.
+
+### O portal não aparece para a minha clínica
+
+Ele depende do módulo **Portal da paciente** estar ligado em Configurações.
 
 ---
 

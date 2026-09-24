@@ -63,6 +63,10 @@ export default defineConfig({
     env: {
       // The reseller panel needs a platform host to exist; the e2e suite provides one.
       PLATFORM_HOSTS: 'admin.localhost:3100',
+      // Only the webhook secret: the suite exercises inbound answers, and leaving the
+      // sending credentials out keeps the channel "not connected", which is the state the
+      // Mensagens screen has to explain.
+      WHATSAPP_APP_SECRET: 'e2e-app-secret',
     },
   },
 });

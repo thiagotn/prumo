@@ -111,7 +111,10 @@ Desktop: canvas 1280 × 800. Mobile: 390 × 812. Layout do app = nav (sidebar 21
    quem foi atendida, e toda exportação grava em `audit_log`.
 9. **Mensagens** — automações (24h antes, 48h preparo, pós 1 dia, retorno 14 dias, política de
    falta, aniversário) com status e métricas; pré-visualização no formato WhatsApp. Resposta "1"
-   confirma, "2" devolve à lista de espera.
+   confirma, "2" devolve à lista de espera. O texto vai para a fila já renderizado, e o webhook de
+   entrada só é aceito com assinatura válida. **Limite conhecido**: as credenciais do canal são do
+   deployment, não do tenant — um número por clínica entra com o painel da revenda (etapa 8). A
+   "lista de espera" ainda não existe: o "2" cancela o horário e avisa a recepção.
 10. **Termos** — modelos versionados (versão nova nunca sobrescreve; o PDF guarda a versão
     assinada) + pendências com "Reenviar link". O **texto** do termo é escrito só pela doutora;
     emitir, enviar o link e colher a assinatura é da recepção. O link de assinatura é um token

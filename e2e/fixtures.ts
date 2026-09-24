@@ -119,6 +119,51 @@ export async function createPatientForTests(
 }
 
 /**
+ * Books an appointment straight in the database, for specs that need one to act on (a
+ * webhook answer, a reminder). The marker goes in the notes, so `deleteAppointmentsNoted`
+ * takes it away afterwards.
+ */
+export async function createAppointmentForTests(params: {
+  patientName: string;
+  marker: string;
+  clinicName?: string;
+  daysAhead?: number;
+}): Promise<string> {
+  const id = await withPlatformScope(async (tx) => {
+    const tenant = await tx.tenant.findFirst({
+      where: { name: params.clinicName ?? CLINICS.tati.name },
+      select: { id: true },
+    });
+    if (!tenant) throw new Error('Seed is missing: run npm run db:seed');
+    const patient = await tx.patient.findFirst({
+      where: { tenantId: tenant.id, name: params.patientName },
+      select: { id: true },
+    });
+    if (!patient) throw new Error(`No patient named ${params.patientName} in the seed`);
+    const room = await tx.room.findFirst({ where: { tenantId: tenant.id }, select: { id: true } });
+
+    const startsAt = new Date();
+    startsAt.setDate(startsAt.getDate() + (params.daysAhead ?? 30));
+    startsAt.setHours(14, 0, 0, 0);
+
+    const appointment = await tx.appointment.create({
+      data: {
+        tenantId: tenant.id,
+        patientId: patient.id,
+        roomId: room?.id ?? null,
+        startsAt,
+        endsAt: new Date(startsAt.getTime() + 3_600_000),
+        status: 'WAITING',
+        notes: params.marker,
+      },
+    });
+    return appointment.id;
+  });
+  await prisma.$disconnect();
+  return id;
+}
+
+/**
  * Removes consent templates a spec published, by slug prefix. Call it AFTER the patients,
  * so the consents that point at them are already gone.
  */

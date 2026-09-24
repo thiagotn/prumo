@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { audit } from '@/lib/audit';
 import { requireSensitiveModule } from '@/lib/auth/guards';
 import { withTenant } from '@/lib/db';
+import { enqueueAfterEncounter } from '@/lib/message-queue';
 import { currentPricingParams } from '@/lib/pricing-params';
 import { costBreakdown, realized, toCents } from '@/lib/pricing';
 import { planConsumption } from '@/lib/stock';
@@ -190,6 +191,27 @@ export async function closeEncounter(_previous: CloseState, formData: FormData):
         where: { id: appointment.id },
         data: { status: 'ATTENDED' },
       });
+
+      // What follows a closing: how are you tomorrow, and the return in two weeks.
+      await enqueueAfterEncounter(
+        tx,
+        { tenantId: tenant.id, clinicName: tenant.name },
+        {
+          id: appointment.id,
+          startsAt: appointment.startsAt,
+          endsAt: appointment.endsAt,
+          patientId: appointment.patientId,
+          patient: appointment.patient
+            ? {
+                name: appointment.patient.name,
+                phone: appointment.patient.phone,
+                active: appointment.patient.active,
+              }
+            : null,
+          procedure: appointment.procedure,
+          room: appointment.room,
+        },
+      );
 
       return {
         outcome: 'closed',
