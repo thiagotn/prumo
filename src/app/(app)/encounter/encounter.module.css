@@ -41,3 +41,50 @@
   .layout { grid-template-columns: 1fr; }
   .sidePanel { position: static; }
 }
+
+/* ── clinical photos ───────────────────────────────────────────────────────── */
+
+.photoGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin: var(--space-3) 0;
+}
+
+.photoSlot { display: flex; flex-direction: column; gap: 6px; }
+.photoLabel { font-size: 11px; color: var(--color-neutral-600); }
+
+.photoFrame {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  background: var(--color-neutral-200);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+
+.photoImage { width: 100%; height: 100%; object-fit: cover; }
+
+/* The previous session, faint, to line the new shot up against. */
+.photoGhost { opacity: 0.32; filter: grayscale(0.4); }
+
+.photoHintOverlay {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: 4px 6px;
+  font-size: 10px;
+  text-align: center;
+  background: color-mix(in srgb, var(--color-neutral-900) 60%, transparent);
+  color: var(--color-bg);
+}
+
+.photoEmpty { font-size: 11px; color: var(--color-neutral-600); }
+
+/* The file input is driven by its label, which is a real button. */
+.photoInput { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+@media (max-width: 900px) {
+  .photoGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

@@ -39,7 +39,7 @@ export default async function globalSetup() {
   });
   await prisma.$disconnect();
 
-  execFileSync('npx', ['tsx', 'prisma/seed.ts'], {
+  execFileSync('npx', ['tsx', '--tsconfig', 'tsconfig.scripts.json', 'prisma/seed.ts'], {
     stdio: process.env.CI ? 'inherit' : 'ignore',
     env: process.env,
   });

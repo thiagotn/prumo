@@ -4,8 +4,8 @@ Perguntas na linguagem de quem opera a clínica. Se algo aqui não corresponde a
 tela, o sistema está errado, não o texto — avise.
 
 > **Onde estamos:** etapas 1 a 4 prontas — entrar no sistema, perfis de acesso, uma instância por
-> clínica, pacientes, configurações, agenda, **estoque por lote** e a **ficha de atendimento com
-> fechamento financeiro**. Ainda em construção: anamnese versionada, fotos clínicas, termos,
+> clínica, pacientes, configurações, agenda, **estoque por lote**, a **ficha de atendimento com
+> fechamento financeiro** e as **fotos clínicas**. Ainda em construção: anamnese versionada, termos,
 > relatórios e mensagens — ao abrir, cada uma informa em qual etapa entra. As
 > perguntas sobre essas telas estão marcadas com **(em breve)**.
 
@@ -356,6 +356,46 @@ paga no produto.
 ### Como dou entrada de nota?
 
 Entra junto com o financeiro (etapa 6). Hoje os lotes chegam pelo cadastro inicial.
+
+---
+
+## Fotos clínicas
+
+### Como tiro as fotos?
+
+Na ficha do atendimento, em **Fotos clínicas**. São quatro enquadramentos fixos — frontal, perfil
+esquerdo, perfil direito e terço superior. Pelo celular, o botão abre a câmera direto.
+
+### O que é aquela imagem apagada no fundo?
+
+A foto da **sessão anterior**, no mesmo enquadramento, para você alinhar a nova. Assim o antes e
+depois compara de verdade, em vez de comparar ângulos diferentes.
+
+### Onde as fotos ficam guardadas?
+
+Num armazenamento privado, separado do sistema. Elas **não passam pelo servidor**: vão do seu
+aparelho direto para lá. Não existe link público — cada visualização gera um endereço que vale
+poucos segundos e depois morre.
+
+### Quem pode ver?
+
+Só quem o perfil permite: a doutora vê todas, o profissional convidado vê parcialmente, e recepção e
+financeiro **não veem nenhuma**. Toda visualização fica registrada no log de auditoria, com quem
+abriu e quando.
+
+### A foto demora a abrir
+
+Cada abertura pede um endereço novo ao armazenamento, de propósito — nada fica em cache no
+navegador. É o custo de a foto não ficar acessível por um link solto.
+
+### Posso substituir uma foto?
+
+Pode: enviar de novo no mesmo enquadramento substitui a que aparece. O histórico permanece.
+
+### Apagar as fotos de uma paciente
+
+Apagar a paciente apaga as fotos dela também — inclusive os arquivos, não só os registros. É
+operação de administração; peça a quem cuida do sistema.
 
 ---
 

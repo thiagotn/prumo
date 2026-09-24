@@ -154,6 +154,89 @@ o padrão é negar. Vale para toda tabela de negócio.
 desligamento da clínica. Os registros ficam legíveis só em escopo de plataforma. Exporte a trilha
 antes, se a clínica precisar dela.
 
+---
+
+## Fotos clínicas (R2)
+
+As fotos ficam num bucket privado do Cloudflare R2 — sem domínio próprio, sem `r2.dev`, sem proxy
+público. O único jeito de ler um objeto é uma URL assinada que o servidor emite depois de autorizar.
+O racional completo está na **ADR 0011** do repo `homelab`.
+
+### As cinco variáveis
+
+| Variável | Onde | Valor |
+|---|---|---|
+| `R2_ACCOUNT_ID` | secret `prumo-r2` | conta da Cloudflare |
+| `R2_ACCESS_KEY_ID` | secret `prumo-r2` | token escopado ao bucket |
+| `R2_SECRET_ACCESS_KEY` | secret `prumo-r2` | idem |
+| `R2_BUCKET` | ConfigMap | `prumo-clinical` |
+| `R2_SIGNED_URL_TTL` | ConfigMap | `120` (segundos, leitura) |
+
+Sem elas o app sobe normalmente — a seção de fotos diz que o armazenamento não está configurado.
+É o que permite rodar dev e CI sem bucket.
+
+```bash
+kubectl -n prumo exec deploy/prumo -- printenv | grep -c '^R2_'   # espera 5
+```
+
+### Como um upload acontece
+
+1. O navegador converte a foto para WebP e pede `POST /api/photos/sign-upload`.
+2. O servidor confere sessão, 2FA, perfil, flag da clínica e se o atendimento é do tenant; cria a
+   linha em `PENDING` e devolve um PUT assinado de 5 minutos.
+3. O navegador envia **direto para o R2** — o byte não passa pelo pod nem pelo túnel.
+4. `POST /api/photos/{id}/confirm` faz `HeadObject`, confere tipo e tamanho, e marca `READY`.
+
+Um upload que não chega nunca vira `READY`, e o objeto de tipo errado é apagado na confirmação.
+
+### Como uma leitura acontece
+
+`GET /api/photos/{id}/raw` → autoriza → grava `audit_log` → **302** para um GET assinado de 120s,
+com `Cache-Control: private, no-store`.
+
+A URL assinada nunca aparece no HTML. Num `src` de `<img>` ela vazaria no histórico do navegador e
+expiraria na cara da usuária; o redirect resolve os dois e dá o único ponto onde toda leitura é
+registrada.
+
+### Apagar uma paciente (LGPD)
+
+As linhas cascateiam; **os objetos no bucket não**. Use o script, que varre o prefixo da paciente:
+
+```bash
+PRUMO_NODE=<user@node> ./scripts/tunnel-prod-db.sh        # terminal 1
+export DATABASE_URL="$(ssh <user@node> \
+  "kubectl -n prumo get secret prumo-db -o jsonpath='{.data.DATABASE_URL}' | base64 -d" \
+  | sed 's|@postgres.postgres.svc.cluster.local:5432|@localhost:5435|')"
+export R2_ACCOUNT_ID=... R2_ACCESS_KEY_ID=... R2_SECRET_ACCESS_KEY=... R2_BUCKET=prumo-clinical
+
+npx tsx --tsconfig tsconfig.scripts.json scripts/erase-patient.ts \
+  --host app.dratatimayumi.com.br --patient <uuid> --dry-run
+```
+
+Sem `--dry-run` ele pede o nome da paciente por extenso antes de apagar. Os objetos saem **antes**
+das linhas: se a varredura falhasse depois, as chaves já teriam sumido do banco e os objetos
+ficariam órfãos, sem nada apontando para eles. Ele varre o **prefixo**, não as chaves do banco,
+então pega também upload assinado que nunca foi confirmado.
+
+No fim ele relista o prefixo e falha se sobrou alguma coisa.
+
+### Backup dos objetos — decisão pendente
+
+O `pg_dumpall` diário cobre as **linhas**, não os objetos. Hoje o R2 é **cópia única**: ele replica
+internamente, mas isso protege contra falha de disco, **não** contra exclusão acidental ou token
+comprometido.
+
+Recomendação: um `rclone sync` diário do bucket para um segundo destino (outro bucket, outra conta),
+como CronJob no cluster — mesmo padrão do `pg_dumpall`. Enquanto isso não existir, uma exclusão
+errada de foto é irreversível. É trabalho do lado do `homelab` e está registrado na ADR 0011.
+
+### Política de privacidade
+
+A Cloudflare passa a ser **subprocessadora de dado de saúde**. A política de privacidade da clínica
+precisa dizer isso antes de a primeira foto real ser enviada.
+
+---
+
 ## Backup
 
 O `pg_dumpall` diário do Postgres compartilhado (`helm/postgres/backup-cronjob.yml`) já cobre o

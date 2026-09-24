@@ -2,7 +2,7 @@
   "name": "prumo",
   "version": "0.1.0",
   "private": true,
-  "description": "Sistema de gestão clínica white-label — multi-tenant",
+  "description": "Sistema de gest\u00e3o cl\u00ednica white-label \u2014 multi-tenant",
   "scripts": {
     "dev": "next dev --port 3100",
     "build": "prisma generate && next build",
@@ -14,7 +14,7 @@
     "db:up": "docker compose --profile db up -d",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
-    "db:seed": "tsx prisma/seed.ts",
+    "db:seed": "tsx --tsconfig tsconfig.scripts.json prisma/seed.ts",
     "db:reset": "prisma migrate reset --force",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
@@ -28,6 +28,8 @@
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1139.0",
+    "@aws-sdk/s3-request-presigner": "^3.1139.0",
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
     "lucide-react": "^1.47.0",

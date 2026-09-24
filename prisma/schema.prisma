@@ -94,6 +94,7 @@ model Tenant {
   stockMovements StockMovement[]
   encounters    Encounter[]
   payments      Payment[]
+  clinicalPhotos ClinicalPhoto[]
 
   @@map("tenants")
 }
@@ -379,9 +380,10 @@ model Patient {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant       Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   appointments Appointment[]
   encounters   Encounter[]
+  photos       ClinicalPhoto[]
 
   @@unique([tenantId, document])
   @@index([tenantId, name])
@@ -554,6 +556,7 @@ model Encounter {
   product     Product?    @relation(fields: [productId], references: [id], onDelete: SetNull)
   lot         StockLot?   @relation(fields: [lotId], references: [id], onDelete: SetNull)
   payment     Payment?
+  photos      ClinicalPhoto[]
 
   @@index([tenantId, performedAt])
   @@index([patientId, performedAt])
@@ -609,4 +612,68 @@ model Payment {
 
   @@index([tenantId, createdAt])
   @@map("payments")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Clinical photos (ADR 0011 in the homelab repo)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// The four standard framings. Comparing before and after only means anything when the
+/// framing is the same, so they are an enum rather than free text.
+enum PhotoFraming {
+  FRONT
+  LEFT_PROFILE
+  RIGHT_PROFILE
+  UPPER_THIRD
+
+  @@map("photo_framing")
+}
+
+enum PhotoStatus {
+  /// A presigned PUT was issued; the object may or may not have arrived.
+  PENDING
+  /// HeadObject confirmed the object, its type and its size.
+  READY
+  /// Marked for deletion; the object is gone or going.
+  DELETED
+
+  @@map("photo_status")
+}
+
+/// A clinical photo. The bytes live in a private R2 bucket and are only ever reached
+/// through a short-lived signed URL issued by the server after an authorisation check —
+/// never a URL embedded in HTML. Every read is written to audit_log.
+model ClinicalPhoto {
+  id          String @id @default(uuid()) @db.Uuid
+  tenantId    String @map("tenant_id") @db.Uuid
+  encounterId String @map("encounter_id") @db.Uuid
+  patientId   String @map("patient_id") @db.Uuid
+
+  framing PhotoFraming
+  /// Object key in the bucket. Carries the tenant first, so the boundary between clinics
+  /// is legible in the bucket too — and no name or document number, because the key shows
+  /// up in logs and error messages.
+  /// t/{tenant_id}/p/{patient_id}/e/{encounter_id}/{framing}-{ulid}.webp
+  objectKey String      @unique @map("object_key")
+  status    PhotoStatus @default(PENDING)
+
+  contentType String? @map("content_type")
+  byteSize    Int?    @map("byte_size")
+
+  /// Who uploaded it, for the audit trail.
+  uploadedByUserId String?   @map("uploaded_by_user_id") @db.Uuid
+  confirmedAt      DateTime? @map("confirmed_at")
+  deletedAt        DateTime? @map("deleted_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  encounter Encounter @relation(fields: [encounterId], references: [id], onDelete: Cascade)
+  patient   Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
+  @@index([encounterId])
+  @@index([patientId, framing])
+  @@map("clinical_photos")
 }

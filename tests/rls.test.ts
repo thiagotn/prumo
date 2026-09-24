@@ -253,3 +253,116 @@ describe('every business table is protected', () => {
     expect(counts).toEqual(counts.map(() => 0));
   });
 });
+
+describe('clinical photos', () => {
+  // The most sensitive rows in the system. Beyond the tenant slice, these assert the
+  // thing RLS cannot do: keep the object key inside the tenant's prefix in the bucket,
+  // where R2 has no idea what a tenant is (ADR 0011).
+  const ulidish = () => 'Z'.repeat(26);
+
+  async function makeEncounter(tenantId: string) {
+    return withTenant(tenantId, async (tx) => {
+      const patient = await tx.patient.create({
+        data: { tenantId, name: `Foto Teste ${Date.now()}` },
+      });
+      const room = await tx.room.findFirst({ where: { tenantId } });
+      const procedure = await tx.procedure.findFirst({ where: { tenantId } });
+      const appointment = await tx.appointment.create({
+        data: {
+          tenantId,
+          patientId: patient.id,
+          roomId: room?.id ?? null,
+          procedureId: procedure?.id ?? null,
+          startsAt: new Date('2026-09-24T12:00:00Z'),
+          endsAt: new Date('2026-09-24T13:00:00Z'),
+        },
+      });
+      const encounter = await tx.encounter.create({
+        data: { tenantId, appointmentId: appointment.id, patientId: patient.id },
+      });
+      return { patientId: patient.id, encounterId: encounter.id };
+    });
+  }
+
+  it("a photo of one clinic is invisible to another, even by id", async () => {
+    const { patientId, encounterId } = await makeEncounter(tatiId);
+    const photo = await withTenant(tatiId, (tx) =>
+      tx.clinicalPhoto.create({
+        data: {
+          tenantId: tatiId,
+          patientId,
+          encounterId,
+          framing: 'FRONT',
+          objectKey: `t/${tatiId}/p/${patientId}/e/${encounterId}/front-${ulidish()}.webp`,
+        },
+      }),
+    );
+
+    const leak = await withTenant(auroraId, (tx) =>
+      tx.clinicalPhoto.findUnique({ where: { id: photo.id }, select: { id: true } }),
+    );
+    expect(leak).toBeNull();
+  });
+
+  it('refuses a key that does not start with the tenant prefix', async () => {
+    // RLS keeps rows apart; nothing in the database keeps the BUCKET apart except this
+    // constraint. A bug in the key builder would otherwise file one clinic's photo under
+    // another's prefix, where the isolation is only a naming convention.
+    const { patientId, encounterId } = await makeEncounter(tatiId);
+    await expect(
+      withTenant(tatiId, (tx) =>
+        tx.clinicalPhoto.create({
+          data: {
+            tenantId: tatiId,
+            patientId,
+            encounterId,
+            framing: 'FRONT',
+            objectKey: `t/${auroraId}/p/${patientId}/e/${encounterId}/front-${ulidish()}.webp`,
+          },
+        }),
+      ),
+    ).rejects.toThrow();
+  });
+
+  it('refuses to mark a photo ready without knowing what it is', async () => {
+    // READY means HeadObject confirmed the object; type, size and time come together.
+    const { patientId, encounterId } = await makeEncounter(tatiId);
+    await expect(
+      withTenant(tatiId, (tx) =>
+        tx.clinicalPhoto.create({
+          data: {
+            tenantId: tatiId,
+            patientId,
+            encounterId,
+            framing: 'FRONT',
+            objectKey: `t/${tatiId}/p/${patientId}/e/${encounterId}/front-${ulidish()}.webp`,
+            status: 'READY',
+          },
+        }),
+      ),
+    ).rejects.toThrow();
+  });
+
+  it('photos go away with the patient they belong to', async () => {
+    const { patientId, encounterId } = await makeEncounter(tatiId);
+    const photo = await withTenant(tatiId, (tx) =>
+      tx.clinicalPhoto.create({
+        data: {
+          tenantId: tatiId,
+          patientId,
+          encounterId,
+          framing: 'FRONT',
+          objectKey: `t/${tatiId}/p/${patientId}/e/${encounterId}/front-${ulidish()}.webp`,
+        },
+      }),
+    );
+
+    await withTenant(tatiId, (tx) => tx.patient.delete({ where: { id: patientId } }));
+
+    const left = await withPlatformScope((tx) =>
+      tx.clinicalPhoto.findUnique({ where: { id: photo.id }, select: { id: true } }),
+    );
+    // The row cascades. The OBJECT does not — that is what scripts/erase-patient.ts is for.
+    expect(left).toBeNull();
+  });
+});

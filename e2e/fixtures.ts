@@ -1,6 +1,7 @@
 // Shared helpers for the e2e suite. The users come from prisma/seed.ts.
 import { createHmac } from 'node:crypto';
 import { expect, type Page } from '@playwright/test';
+import { prisma, withPlatformScope } from '../src/lib/db';
 
 export const DEV_PASSWORD = 'prumo1234';
 
@@ -111,6 +112,20 @@ export function totp(secret: string, atMs = Date.now()): string {
 const enrolledSecrets = new Map<string, string>();
 
 /**
+ * Clears an account's authenticator, so the suite can enrol its own.
+ *
+ * Writes to the database because there is no other way: the stored secret is not readable
+ * back through the application, by design. Safe here because global-setup.ts refuses to
+ * run the suite against anything but a local database.
+ */
+async function clearTwoFactor(email: string) {
+  await withPlatformScope((tx) =>
+    tx.user.updateMany({ where: { email }, data: { totpSecret: null, totpConfirmedAt: null } }),
+  );
+  await prisma.$disconnect();
+}
+
+/**
  * Signs in a role that requires a second factor, settling it either way: enrolling the
  * authenticator on a first sign-in, or entering the code when it is already enrolled.
  * Leaves the browser inside the app shell.
@@ -133,16 +148,25 @@ export async function signInWithTwoFactor(page: Page, email: string) {
     await page.getByLabel('Código do autenticador').fill(totp(secret));
     await page.getByRole('button', { name: /Ativar 2FA/ }).click();
   } else if (/\/login\/2fa/.test(page.url())) {
-    // Already enrolled — either by an earlier test in this run, or by a previous run.
+    // Already enrolled. If this run enrolled it, the secret is in hand; otherwise the
+    // account is left over from an earlier run and the stored secret cannot be read back,
+    // so the enrolment is cleared and redone. Enrolment is one-way per account, and
+    // without this the suite would only be repeatable when every file runs in order.
     const secret = enrolledSecrets.get(email);
-    if (!secret) {
-      throw new Error(
-        `${email} already has an authenticator enrolled from an earlier run, and the stored ` +
-          'secret cannot be read back. Run `npm run db:seed` to clear it.',
-      );
+    if (secret) {
+      await page.getByLabel('Código do autenticador').fill(totp(secret));
+      await page.getByRole('button', { name: 'Confirmar' }).click();
+    } else {
+      await clearTwoFactor(email);
+      await page.goto('/login/2fa/setup');
+      await page.reload();
+      const fresh = (await page.getByLabel('Chave para digitação manual').innerText())
+        .replace(/\s+/g, '')
+        .trim();
+      enrolledSecrets.set(email, fresh);
+      await page.getByLabel('Código do autenticador').fill(totp(fresh));
+      await page.getByRole('button', { name: /Ativar 2FA/ }).click();
     }
-    await page.getByLabel('Código do autenticador').fill(totp(secret));
-    await page.getByRole('button', { name: 'Confirmar' }).click();
   }
 
   await expect(page.getByRole('navigation', { name: 'Módulos' })).toBeVisible();

@@ -6,8 +6,10 @@ import { currency, longDate } from '@/lib/format';
 import { costBreakdown, quote, toCents } from '@/lib/pricing';
 import { currentPricingParams } from '@/lib/pricing-params';
 import { slotLabel, STATUS_LABELS } from '@/lib/schedule';
+import { storageConfigured } from '@/lib/storage';
 import { PendingModule } from '../pending-module';
 import { CloseForm } from './close-form';
+import { Photos } from './photos';
 import styles from './encounter.module.css';
 
 export const metadata: Metadata = { title: 'Ficha de atendimento' };
@@ -15,7 +17,6 @@ export const metadata: Metadata = { title: 'Ficha de atendimento' };
 /** Product copy, pt-BR. */
 const ITEMS = [
   'Anamnese versionada, com a resposta anterior ao lado da nova.',
-  'Fotos em quatro enquadramentos padronizados, com guia fantasma da foto anterior — depende do bucket privado com URL assinada (pendência de infraestrutura registrada na ADR 0010).',
   'Termo de consentimento com assinatura em tela ou por link (etapa 5).',
 ];
 
@@ -57,10 +58,35 @@ export default async function EncounterPage({
       },
     });
     const params = await currentPricingParams(tx, tenant.id);
-    return { appointment, params };
+
+    const encounterId = appointment?.encounter?.id;
+    const photos = encounterId
+      ? await tx.clinicalPhoto.findMany({
+          where: { encounterId, status: 'READY' },
+          select: { id: true, framing: true },
+          orderBy: { createdAt: 'desc' },
+        })
+      : [];
+
+    // The ghost guide comes from the patient's most recent OTHER encounter that has
+    // photos — lining a new shot up against the last one is the whole point.
+    const previousPhotos =
+      appointment?.patientId && encounterId
+        ? await tx.clinicalPhoto.findMany({
+            where: {
+              patientId: appointment.patientId,
+              status: 'READY',
+              encounterId: { not: encounterId },
+            },
+            select: { id: true, framing: true, createdAt: true },
+            orderBy: { createdAt: 'desc' },
+          })
+        : [];
+
+    return { appointment, params, photos, previousPhotos };
   });
 
-  const { appointment, params } = data;
+  const { appointment, params, photos, previousPhotos } = data;
   if (!appointment) return <p className="card-body">Atendimento não encontrado nesta clínica.</p>;
   if (appointment.isBlock) {
     return <p className="card-body">Este horário é um bloqueio, não um atendimento.</p>;
@@ -169,7 +195,27 @@ export default async function EncounterPage({
               </p>
             ) : null}
           </div>
-        ) : options.length === 0 ? (
+        ) : null}
+
+        {appointment.encounter ? (
+          <section style={{ marginTop: 'var(--space-6)' }}>
+            <div className="kicker">Fotos clínicas</div>
+            <Photos
+              encounterId={appointment.encounter.id}
+              photos={photos}
+              // One per framing: the most recent of each, which is the newest row first.
+              previousPhotos={Object.values(
+                Object.fromEntries(
+                  [...previousPhotos].reverse().map((photo) => [photo.framing, photo]),
+                ),
+              )}
+              storageReady={storageConfigured()}
+              canUpload={!masked}
+            />
+          </section>
+        ) : null}
+
+        {closed && payment ? null : options.length === 0 ? (
           <p className="card-body">
             Este procedimento não tem produto cadastrado. Cadastre em Estoque antes de fechar.
           </p>

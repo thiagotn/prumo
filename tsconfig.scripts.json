@@ -1,0 +1,17 @@
+{
+  // Operational scripts run under tsx, in plain Node — not in the React Server Components
+  // graph that gives `server-only` its meaning.
+  //
+  // The marker stays on src/lib/storage.ts, where it earns its place: that module reads
+  // the R2 credentials, and importing it from a Client Component has to fail. This config
+  // points it at a no-op so the scripts that legitimately need it can run, without
+  // weakening the guard for the application build.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"],
+      "server-only": ["./tests/stubs/server-only.ts"]
+    }
+  },
+  "include": ["scripts/**/*.ts", "prisma/**/*.ts", "src/**/*.ts"]
+}

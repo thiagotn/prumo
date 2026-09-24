@@ -13,6 +13,13 @@ const SESSION_COOKIE = 'prumo_session';
 /** Routes that never require a session. */
 const PUBLIC_PATHS = ['/login', '/healthz', '/readyz'];
 
+/**
+ * API routes answer for themselves. Redirecting one to the sign-in page would hand a
+ * fetch an HTML page with a 200, which reads as success; the routes return a real 401
+ * instead. They still authorise — see src/lib/photo-access.ts.
+ */
+const API_PREFIX = '/api/';
+
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
@@ -23,7 +30,9 @@ export function proxy(req: NextRequest) {
     .replace(/:(80|443)$/, '')
     .replace(/^www\./, '');
 
-  const isPublic = PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+  const isPublic =
+    pathname.startsWith(API_PREFIX) ||
+    PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
   if (!isPublic && !req.cookies.has(SESSION_COOKIE)) {
     return NextResponse.redirect(new URL('/login', req.url));

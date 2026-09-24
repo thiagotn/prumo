@@ -21,8 +21,11 @@ export type AuditAction =
   | 'medicalRecord.view'
   | 'anamnesis.view'
   | 'photo.view'
+  | 'photo.upload'
+  | 'photo.delete'
   | 'photo.download'
   | 'settings.save'
+  | 'patient.erased'
   | 'tenant.impersonate'
   | 'tenant.impersonate.end'
   | 'access.denied';
