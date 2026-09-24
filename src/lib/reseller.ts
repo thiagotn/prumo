@@ -4,6 +4,7 @@
 // fee agreed with each clinic, not a price derived from the plan — the plan is what the
 // clinic gets, the fee is what it pays, and a discount separates the two.
 import { monthKey } from './finance';
+import { originFor } from './tenant';
 
 export type TenantRow = {
   id: string;
@@ -83,34 +84,10 @@ export function handoffExpiresAt(now = new Date()): Date {
   return new Date(now.getTime() + HANDOFF_TTL_SECONDS * 1000);
 }
 
-/** True for a hostname that only exists on this machine. */
-export function isLocalHost(host: string): boolean {
-  return /^(localhost|127\.0\.0\.1|\[::1\])(:|$)|\.localhost(:|$)/.test(host);
-}
-
 /**
- * Which of a clinic's hostnames the ticket is minted for.
- *
- * A clinic has more than one: the real one and, in development, a `.localhost`. The
- * ticket has to land somewhere the browser can actually reach FROM WHERE THE RESELLER IS
- * — sending a developer to app.clinic.com.br would hand the session to production, and
- * sending production to tati.localhost would hand it to nobody.
+ * Where a ticket can be spent, and what the reseller is sent to. The host it is minted
+ * for comes from `preferredHost` in tenant.ts, which knows the clinic's addresses.
  */
-export function hostForHandoff(hosts: string[], platformHost: string): string | null {
-  if (hosts.length === 0) return null;
-  const local = isLocalHost(platformHost);
-  return hosts.find((host) => isLocalHost(host) === local) ?? hosts[0]!;
-}
-
-/**
- * Where a ticket can be spent, and what the reseller is sent to.
- *
- * Local development is the only place this is not behind TLS.
- */
-export function originFor(host: string): string {
-  return `${isLocalHost(host) ? 'http' : 'https'}://${host}`;
-}
-
 export function enterUrl(host: string, token: string): string {
   return `${originFor(host)}/enter/${token}`;
 }

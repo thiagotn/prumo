@@ -10,9 +10,9 @@ import { requireSuperadmin } from '@/lib/auth/guards';
 import { mintHandoff } from '@/lib/auth/impersonation';
 import { createImpersonationSession } from '@/lib/auth/session';
 import { withPlatformScope } from '@/lib/db';
-import { requestHost } from '@/lib/tenant';
+import { preferredHost, requestHost } from '@/lib/tenant';
 import { DEFAULT_FLAGS, type Flags } from '@/lib/flags';
-import { enterUrl, hostForHandoff } from '@/lib/reseller';
+import { enterUrl } from '@/lib/reseller';
 
 export type TenantFormState = { error?: string; saved?: string };
 
@@ -114,7 +114,7 @@ export async function impersonate(formData: FormData): Promise<void> {
   const target = await withPlatformScope(async (tx) => {
     const tenant = await tx.tenant.findUnique({
       where: { id: tenantId },
-      include: { domains: { orderBy: { createdAt: 'asc' } } },
+      include: { domains: { orderBy: [{ primary: 'desc' }, { createdAt: 'asc' }] } },
     });
     if (!tenant || !tenant.active) return null;
 
@@ -126,10 +126,7 @@ export async function impersonate(formData: FormData): Promise<void> {
       orderBy: { createdAt: 'asc' },
       select: { id: true, name: true },
     });
-    const host = hostForHandoff(
-      tenant.domains.map((domain) => domain.host),
-      platformHost,
-    );
+    const host = preferredHost(tenant.domains, platformHost);
     return owner && host ? { tenant, owner, host } : null;
   });
 

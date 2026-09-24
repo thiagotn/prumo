@@ -44,6 +44,98 @@ export function isPlatformHost(host: string): boolean {
   return platformHosts().includes(normalizeHost(host));
 }
 
+/**
+ * The domains the product itself owns, derived from the platform hosts: `admin.prumo.in`
+ * means `prumo.in` is ours. It is what a clinic gets a subdomain of when it has no domain
+ * of its own, and it is served by a wildcard — so every label under it reaches the
+ * application instead of dying in the tunnel's 404.
+ */
+export function platformDomains(): string[] {
+  return platformHosts()
+    .map((host) => host.split('.').slice(1).join('.'))
+    .filter(Boolean);
+}
+
+/**
+ * Labels that never become a clinic on a domain of ours.
+ *
+ * Under a wildcard any label is a clinic waiting to happen, and some of them are things
+ * the product needs for itself — or things a person would read as the product speaking.
+ * Outside a platform domain this does not apply: what a clinic calls a host inside its
+ * own domain is the clinic's business.
+ */
+export const RESERVED_LABELS = [
+  'admin',
+  'api',
+  'app',
+  'assets',
+  'cdn',
+  'docs',
+  'help',
+  'hml',
+  'mail',
+  'ns1',
+  'ns2',
+  'painel',
+  'plataforma',
+  'prumo',
+  'smtp',
+  'staging',
+  'static',
+  'status',
+  'suporte',
+  'www',
+] as const;
+
+/** Whether a hostname is the platform's own, and so can never answer for a clinic. */
+export function isReservedHost(host: string): boolean {
+  const normalized = normalizeHost(host);
+  if (!normalized) return true;
+  if (isPlatformHost(normalized)) return true;
+
+  const domains = platformDomains();
+  // The bare domain is ours too — and `www.prumo.in` normalises to it.
+  if (domains.includes(normalized)) return true;
+
+  const [label, ...rest] = normalized.split('.');
+  return (
+    rest.length > 0 &&
+    domains.includes(rest.join('.')) &&
+    (RESERVED_LABELS as readonly string[]).includes(label!)
+  );
+}
+
+/** True for a hostname that only exists on this machine. */
+export function isLocalHost(host: string): boolean {
+  return /^(localhost|127\.0\.0\.1|\[::1\])(:|$)|\.localhost(:|$)/.test(host);
+}
+
+/** Local development is the only place the product is not behind TLS. */
+export function originFor(host: string): string {
+  return `${isLocalHost(host) ? 'http' : 'https'}://${host}`;
+}
+
+/**
+ * Which of a clinic's hostnames to use when the code has to name one.
+ *
+ * A clinic has more than one: the address on its own domain, the one under ours, and in
+ * development a `.localhost`. Two rules, in order. It has to be reachable from where the
+ * caller stands — sending a developer to app.clinic.com.br would hand the session to
+ * production, and sending production to tati.localhost would hand it to nobody. Among
+ * those, the one the clinic calls its own (`primary`) wins, because that is the address
+ * a patient should see on a link.
+ */
+export function preferredHost(
+  domains: Array<{ host: string; primary: boolean }>,
+  from: string,
+): string | null {
+  if (domains.length === 0) return null;
+  const local = isLocalHost(from);
+  const reachable = domains.filter((domain) => isLocalHost(domain.host) === local);
+  const pool = reachable.length > 0 ? reachable : domains;
+  return (pool.find((domain) => domain.primary) ?? pool[0]!).host;
+}
+
 /** Host of the current request, with the env fallback for jobs and scripts. */
 export async function requestHost(): Promise<string> {
   const h = await headers();
@@ -92,6 +184,19 @@ export async function tenantByHost(host: string): Promise<ResolvedTenant | null>
 /** Tenant of the current request. Null on a platform host or an unknown one. */
 export async function currentTenant(): Promise<ResolvedTenant | null> {
   return tenantByHost(await requestHost());
+}
+
+/**
+ * The hostname to put in a link for this clinic, seen from `from` (usually the host of
+ * the request writing the link). Null when the clinic has no hostname at all.
+ */
+export async function canonicalHost(tenantId: string, from: string): Promise<string | null> {
+  const domains = await prisma.tenantDomain.findMany({
+    where: { tenantId },
+    orderBy: [{ primary: 'desc' }, { createdAt: 'asc' }],
+    select: { host: true, primary: true },
+  });
+  return preferredHost(domains, from);
 }
 
 export async function tenantById(id: string): Promise<ResolvedTenant | null> {

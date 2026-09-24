@@ -7,9 +7,8 @@
 import { NextResponse } from 'next/server';
 import { audit } from '@/lib/audit';
 import { consumeHandoff } from '@/lib/auth/impersonation';
-import { originFor } from '@/lib/reseller';
 import { SESSION_COOKIE } from '@/lib/auth/session';
-import { currentTenant, requestHost } from '@/lib/tenant';
+import { currentTenant, originFor, requestHost } from '@/lib/tenant';
 
 export const dynamic = 'force-dynamic';
 

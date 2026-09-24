@@ -194,6 +194,36 @@ describe('deleting a clinic', () => {
   });
 });
 
+describe('the clinic addresses', () => {
+  it('allows only one canonical hostname per clinic', async () => {
+    // `primary` is what a link sent to a patient is built from. Two of them would make
+    // the address a coin toss, so the database refuses the second.
+    const extra = await withPlatformScope((tx) =>
+      tx.tenantDomain.create({
+        data: { tenantId: tatiId, host: `extra-${Date.now()}.localhost:3100`, primary: false },
+      }),
+    );
+
+    await expect(
+      withPlatformScope((tx) =>
+        tx.tenantDomain.update({ where: { id: extra.id }, data: { primary: true } }),
+      ),
+    ).rejects.toThrow(/tenant_domains_one_primary/);
+
+    await withPlatformScope((tx) => tx.tenantDomain.delete({ where: { id: extra.id } }));
+  });
+
+  it('lets a second clinic have its own canonical hostname', async () => {
+    const [tati, aurora] = await withPlatformScope((tx) =>
+      Promise.all([
+        tx.tenantDomain.count({ where: { tenantId: tatiId, primary: true } }),
+        tx.tenantDomain.count({ where: { tenantId: auroraId, primary: true } }),
+      ]),
+    );
+    expect([tati, aurora]).toEqual([1, 1]);
+  });
+});
+
 describe('every business table is protected', () => {
   // This exists because a migration once shipped four tables — encounters, payments and
   // the two stock tables — with RLS off. Nothing failed: queries simply returned other

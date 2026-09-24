@@ -34,12 +34,19 @@ enabled_modules (jsonb), billing_status`.
 - **Feature flags por tenant** (tela Configurações): portal da paciente, fotos clínicas,
   precificação automática, baixa automática de estoque, múltiplos profissionais/comissão,
   múltiplas unidades.
-- **Resolução por hostname**: `app.<dominio-da-clinica>`. Os hostnames que respondem por um tenant
-  ficam em `tenant_domains`, então abrir uma clínica nova é configuração, não deploy. Hostname
-  desconhecido dá 404 — não existe instância genérica.
+- **Resolução por hostname**, em duas formas, e uma clínica pode ter as duas ao mesmo tempo:
+  `<clinica>.prumo.in` (domínio do produto, coberto por curinga — clínica nova é um INSERT) e
+  `app.<dominio-da-clinica>` (domínio da cliente — pede CNAME, regra no túnel e host no Ingress).
+  Os hostnames que respondem por um tenant ficam em `tenant_domains`; o que a clínica chama de seu
+  é o `primary`, e é dele que sai qualquer link mandado para a paciente. Hostname desconhecido dá
+  404 — não existe instância genérica.
+- **Nomes reservados**: sob um domínio do produto, rótulos como `admin`, `api`, `www`, `status` e
+  `hml` não viram clínica (`RESERVED_LABELS` em `src/lib/tenant.ts`); dentro do domínio da própria
+  clínica não há restrição.
 - **Super-admin da revenda** vê a lista de tenants, MRR e uso. "Entrar como" abre a instância com
   faixa de sessão assumida, registrado em log, e **prontuário mascarado** salvo autorização.
-- Nome do produto da revenda ainda indefinido (placeholder "Ateliê").
+- O produto é **Prumo**, em `prumo.in`; o painel da revenda fica em `admin.prumo.in`
+  (`PLATFORM_HOSTS`). O apex ainda não tem site.
 
 ---
 

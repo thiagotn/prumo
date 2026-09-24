@@ -1,5 +1,14 @@
 import { expect, test } from '@playwright/test';
-import { CLINICS, DEV_PASSWORD, USERS, clinicUrl, formError, signInWithoutTwoFactor } from './fixtures';
+import {
+  CLINICS,
+  DEV_PASSWORD,
+  USERS,
+  clinicUrl,
+  createPatientForTests,
+  deletePatientsNamed,
+  formError,
+  signInWithoutTwoFactor,
+} from './fixtures';
 
 // Tenant resolution runs off the request Host, so each clinic gets a browser context on
 // its REAL hostname (Chromium maps *.localhost to the loopback address). Faking the host
@@ -71,6 +80,59 @@ test.describe('tenant resolution by hostname', () => {
     await expect(auroraPage).toHaveURL(/\/login$/);
 
     await auroraContext.close();
+  });
+});
+
+test.describe('a clinic on more than one address', () => {
+  // A clinic is reachable both under the product's domain (<clinic>.prumo.in) and under
+  // its own (app.<clinic>.com.br). In the seed the same shape exists locally: Tati
+  // answers on localhost:3100 and on tati.localhost:3100.
+  const OTHER_DOOR = 'tati.localhost:3100';
+  const PREFIX = 'Endereco Teste';
+
+  test.afterAll(async () => {
+    await deletePatientsNamed(PREFIX);
+  });
+
+  test('both hostnames open the same clinic, with the same data', async ({ browser }) => {
+    const name = `${PREFIX} ${Date.now()}`;
+    await createPatientForTests(name);
+
+    for (const host of [CLINICS.tati.host, OTHER_DOOR]) {
+      const context = await browser.newContext({ baseURL: clinicUrl(host) });
+      const page = await context.newPage();
+      await signInWithoutTwoFactor(page, USERS.reception.email);
+
+      await page.goto('/patients');
+      await page.getByRole('searchbox').fill(PREFIX);
+      await expect(page.getByText(name).first()).toBeVisible();
+
+      await context.close();
+    }
+  });
+
+  test('a link for a patient comes out on the clinic address, whichever door issued it', async ({
+    browser,
+  }) => {
+    // The reception was working on the other hostname; the patient still gets the
+    // address the clinic calls its own.
+    const context = await browser.newContext({ baseURL: clinicUrl(OTHER_DOOR) });
+    const page = await context.newPage();
+    const patientId = await createPatientForTests(`${PREFIX} Link ${Date.now()}`);
+
+    await signInWithoutTwoFactor(page, USERS.reception.email);
+    await page.goto(`/consents/new?patient=${patientId}`);
+    const option = page.getByLabel('Termo').locator('option').nth(1);
+    await page.getByLabel('Termo').selectOption((await option.getAttribute('value'))!);
+    await page.getByLabel('Paciente').selectOption(patientId);
+    await page.getByRole('button', { name: 'Emitir termo' }).click();
+    await expect(page).toHaveURL(/\/consents\/[0-9a-f-]+\?issued=1$/);
+
+    await page.getByRole('button', { name: 'Gerar link de assinatura' }).click();
+    const link = (await page.locator('code').filter({ hasText: '/consent/' }).first().innerText()).trim();
+    expect(link).toMatch(new RegExp(`^http://${CLINICS.tati.host}/consent/[\\w-]+$`));
+
+    await context.close();
   });
 });
 

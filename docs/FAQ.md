@@ -16,8 +16,16 @@ tela, o sistema está errado, não o texto — avise.
 
 ### Qual endereço eu uso?
 
-O endereço da sua clínica: `app.` + o domínio dela. Para a Dra. Tati Mayumi,
-`https://app.dratatimayumi.com.br`. Cada clínica tem o seu, com a sua marca e a sua cor.
+O endereço da sua clínica. Ele pode ter duas formas:
+
+- **no domínio do sistema**: `https://<nome-da-clinica>.prumo.in` — é o que sai por padrão, e não
+  exige que a clínica tenha domínio próprio;
+- **no domínio da clínica**: `app.` + o domínio dela, como `https://app.dratatimayumi.com.br`.
+
+Se a clínica tem domínio próprio, os dois endereços funcionam e abrem exatamente a mesma coisa —
+os mesmos pacientes, a mesma agenda. O endereço no domínio da clínica é o principal: é ele que
+aparece nos links que o sistema manda para a paciente. Cada clínica tem o seu, com a sua marca e a
+sua cor.
 
 Se digitar um endereço que não é de nenhuma clínica, a tela diz "Não há nada neste endereço" — não
 é erro seu, é o sistema não confirmando quais clínicas existem para quem fica testando endereços.

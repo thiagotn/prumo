@@ -127,8 +127,8 @@ Para ver que o menu não é a proteção: logado como recepção, digite `/setti
 ### Testes
 
 ```bash
-npm test          # 422 unitários + integração de RLS e sessão (precisa do db:up)
-npm run test:e2e  # 99 end-to-end no Playwright (sobe o dev server sozinho)
+npm test          # 431 unitários + integração de RLS e sessão (precisa do db:up)
+npm run test:e2e  # 101 end-to-end no Playwright (sobe o dev server sozinho)
 npm run test:all  # os dois
 npm run typecheck
 npm run lint
@@ -323,6 +323,20 @@ código precisa dele está transcrito em [`docs/regras-de-negocio.md`](docs/regr
 - Um login de paciente aponta para o cadastro por `users.patient_id`, com um trigger que recusa um
   vínculo entre clínicas — a única coisa que o RLS não conseguiria expressar sozinho.
 
+**`prumo.in`** — o domínio do produto (registrado em 2026-09-24):
+
+- Uma clínica é servida em `<clinica>.prumo.in` **ou** em `app.<dominio-da-clinica>`, e pode ter as
+  duas portas ao mesmo tempo — `tenant_domains` sempre foi N hostnames por clínica.
+- Sob o curinga `*.prumo.in`, criar clínica deixa de custar dois commits no repo `homelab` + CNAME
+  + `rollout restart` do cloudflared: passa a ser só o cadastro. `onboard-clinic.sh` detecta o
+  domínio do produto e pula o passo de DNS sozinho.
+- `TenantDomain.primary` deixou de ser enfeite: com duas portas, alguém tem que decidir qual
+  endereço vai no link que a paciente recebe. É o `primary`, com um índice parcial garantindo um
+  só por clínica, e `preferredHost` escolhendo entre os alcançáveis de onde a chamada parte.
+- Rótulos reservados (`admin`, `api`, `www`, `status`, `hml`…) não viram clínica num domínio nosso;
+  dentro do domínio da própria clínica, não é da nossa conta.
+- O painel da revenda fica em `admin.prumo.in`.
+
 **Etapa 8 concluída** — painel da revenda:
 
 - **Tela de Tenants** no host da plataforma (`PLATFORM_HOSTS`): clínicas ativas, MRR, atendimentos
@@ -353,6 +367,7 @@ Sem ordem de etapa; o que aparecer primeiro na operação vem primeiro.
 | WhatsApp | credenciais por clínica — hoje o número é do deployment, não do tenant |
 | Portal | recibos entre os documentos da paciente |
 | Marcação | trocar a checagem de conflito por uma constraint `EXCLUDE` (precisa de `btree_gist`) |
+| `prumo.in` | site do produto no apex (hoje sem registro); criar clínica por tela, em vez de script |
 
 ---
 

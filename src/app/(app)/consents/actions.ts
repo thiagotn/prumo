@@ -22,7 +22,7 @@ import {
   slugifyTitle,
 } from '@/lib/consent';
 import { withTenant } from '@/lib/db';
-import { requestHost } from '@/lib/tenant';
+import { canonicalHost, originFor, requestHost } from '@/lib/tenant';
 
 export type ConsentFormState = { error?: string; values?: Record<string, string> };
 
@@ -361,16 +361,15 @@ export async function createSigningLink(
     details: { expiresAt: link.tokenExpiresAt.toISOString() },
   });
 
-  const host = await requestHost();
-  // Local development is the only place this is not behind TLS.
-  const scheme = /^(localhost|127\.0\.0\.1|\[::1\])(:|$)|\.localhost(:|$)/.test(host)
-    ? 'http'
-    : 'https';
+  // The clinic's own address, not whichever of its hostnames the reception happens to be
+  // browsing: this link goes to a patient, and she should see the clinic she knows.
+  const from = await requestHost();
+  const host = (await canonicalHost(tenant.id, from)) ?? from;
 
   revalidatePath(`/consents/${id}`);
   revalidatePath('/consents');
   return {
-    link: `${scheme}://${host}/consent/${link.token}`,
+    link: `${originFor(host)}/consent/${link.token}`,
     expiresAt: link.tokenExpiresAt.toISOString(),
   };
 }

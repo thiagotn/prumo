@@ -120,6 +120,9 @@ model TenantDomain {
   tenantId String  @map("tenant_id") @db.Uuid
   /// Lowercased host, including the port when there is one (e.g. "tati.localhost:3100").
   host     String  @unique
+  /// The address the clinic calls its own: what goes into a link sent to a patient, and
+  /// where a support session lands. At most one per clinic, enforced by the partial
+  /// unique index `tenant_domains_one_primary` (Prisma cannot express it here).
   primary  Boolean @default(false)
 
   createdAt DateTime @default(now()) @map("created_at")

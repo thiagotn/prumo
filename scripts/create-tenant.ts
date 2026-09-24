@@ -25,7 +25,7 @@ import { Plan, BillingStatus, Role } from '@prisma/client';
 import { hashPassword } from '../src/lib/auth/password';
 import { validateAccentColor } from '../src/lib/color';
 import { DEFAULT_FLAGS } from '../src/lib/flags';
-import { normalizeHost } from '../src/lib/tenant';
+import { isReservedHost, normalizeHost } from '../src/lib/tenant';
 import { prisma, withPlatformScope } from '../src/lib/db';
 
 const { values } = parseArgs({
@@ -78,6 +78,16 @@ async function main() {
 
   // The primary domain already resolves; --host adds the extras (app.<domain>, etc.).
   const hosts = [...new Set((values.host ?? []).map(normalizeHost))].filter(Boolean);
+
+  // Under a wildcard domain of ours, every label is a clinic waiting to happen — and some
+  // of them belong to the product. Outside it, what a clinic calls a host in its own
+  // domain is the clinic's business.
+  for (const host of [domain, ...hosts]) {
+    if (isReservedHost(host)) {
+      console.error(`${host} is reserved for the platform. Pick another hostname.`);
+      process.exit(1);
+    }
+  }
   const password = initialPassword();
 
   await withPlatformScope(async (tx) => {

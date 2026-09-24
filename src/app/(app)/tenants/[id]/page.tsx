@@ -20,7 +20,7 @@ export default async function TenantPage({ params }: { params: Promise<{ id: str
     tx.tenant.findUnique({
       where: { id },
       include: {
-        domains: { orderBy: { createdAt: 'asc' } },
+        domains: { orderBy: [{ primary: 'desc' }, { createdAt: 'asc' }] },
         users: { orderBy: { createdAt: 'asc' }, select: { name: true, email: true, role: true, active: true } },
         _count: { select: { patients: true, appointments: true } },
       },
@@ -44,7 +44,12 @@ export default async function TenantPage({ params }: { params: Promise<{ id: str
       <div className="kicker">Plataforma</div>
       <h2 className={styles.title}>{tenant.name}</h2>
       <p className={styles.kpiNote} style={{ marginBottom: 'var(--space-5)' }}>
-        {tenant.domains.map((domain) => domain.host).join(' · ') || tenant.domain} ·{' '}
+        {tenant.domains.length > 0
+          ? tenant.domains
+              .map((domain) => (domain.primary ? `${domain.host} (principal)` : domain.host))
+              .join(' · ')
+          : tenant.domain}{' '}
+        ·{' '}
         {tenant._count.patients} paciente{tenant._count.patients === 1 ? '' : 's'} ·{' '}
         {tenant._count.appointments} horário{tenant._count.appointments === 1 ? '' : 's'} · desde{' '}
         {longDate(tenant.createdAt)}

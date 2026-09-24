@@ -27,6 +27,27 @@ Conferir: `kubectl -n argocd get app prumo` → quer `Synced` / `Healthy`.
 
 ## Criar uma clínica nova (tenant)
 
+Depende de onde a clínica vai morar.
+
+### Em `prumo.in` (o caminho padrão)
+
+**Um passo só.** O curinga `*.prumo.in` já cobre DNS, regra do túnel e host no Ingress, então não
+há nada a commitar e nada a reiniciar:
+
+```bash
+ssh <node> './onboard-clinic.sh \
+  --host aurora.prumo.in \
+  --name "Clínica Aurora" \
+  --monogram CA --color "#7d5411" \
+  --owner-name "Dra. Helena Prado" --owner-email helena@clinicaaurora.com.br'
+```
+
+O script detecta que o host está num domínio do produto (lê `PLATFORM_HOSTS` do ConfigMap), pula o
+passo de DNS e avisa que pulou. Ele **recusa** rótulo reservado (`admin`, `api`, `www`, `status`,
+`hml`…) e o domínio nu.
+
+### No domínio da própria clínica
+
 Três coisas, nesta ordem — só a terceira é deploy:
 
 1. **Regra no túnel** (repo homelab, `helm/cloudflared/configmap.yml`): copie o bloco de
@@ -178,25 +199,45 @@ COMMIT;
 Uma query sem nenhum dos dois `set_config` devolve **zero linhas**. Isso é o desenho, não um erro:
 o padrão é negar. Vale para toda tabela de negócio.
 
+## Endereços de uma clínica
+
+Uma clínica pode responder em mais de um hostname — tipicamente `<clinica>.prumo.in` **e**
+`app.<dominio-da-clinica>`. Todos ficam em `tenant_domains`; o que vale como endereço da clínica é
+o `primary`, e é de onde sai qualquer link mandado para a paciente (termo de consentimento) e onde
+o "entrar como" aterrissa. O banco garante **no máximo um** `primary` por clínica
+(`tenant_domains_one_primary`).
+
+Somar um endereço a uma clínica existente:
+
+```sql
+-- sem set_config: tenant_domains fica fora do RLS.
+INSERT INTO tenant_domains (id, tenant_id, host, "primary", created_at)
+VALUES (gen_random_uuid(), '<tenant-id>', 'tati.prumo.in', false, now());
+```
+
+Trocar qual é o principal exige tirar o antigo primeiro, na mesma transação — senão o índice
+recusa:
+
+```sql
+BEGIN;
+  UPDATE tenant_domains SET "primary" = false WHERE tenant_id = '<tenant-id>';
+  UPDATE tenant_domains SET "primary" = true  WHERE host = 'app.clinica.com.br';
+COMMIT;
+```
+
 ## Painel da revenda e "entrar como"
 
-O painel vive nos hostnames listados em `PLATFORM_HOSTS` (separados por vírgula). Um host dessa
-lista **não serve clínica nenhuma**: resolve para o painel de tenants e recusa login de usuário de
-clínica. Com a variável vazia o painel deixa de existir — e **em produção ela está vazia hoje**
-(`helm/apps/prumo/configmap.yml` no repo `homelab`), porque o domínio do produto de revenda ainda
-não foi decidido. Enquanto estiver assim, o super-admin não tem por onde entrar, que é o estado
-mais seguro para um deployment de clínica única.
+O painel vive nos hostnames listados em `PLATFORM_HOSTS` (separados por vírgula) — em produção,
+`admin.prumo.in`. Um host dessa lista **não serve clínica nenhuma**: resolve para o painel de
+tenants e recusa login de usuário de clínica. Com a variável vazia o painel deixa de existir, que
+é o estado certo para um deployment de clínica única.
 
-Para ligar o painel, na ordem:
+`PLATFORM_HOSTS` faz mais do que abrir o painel: é dele que sai a lista de domínios do produto
+(`admin.prumo.in` → `prumo.in`), e portanto quais hostnames o onboarding trata como cobertos pelo
+curinga e quais rótulos são reservados.
 
-1. escolher o domínio (o nome "Ateliê" é placeholder na especificação) e apontar o CNAME no
-   Cloudflare Tunnel;
-2. acrescentar o host ao `ingress.yml` do repo `homelab`;
-3. preencher `PLATFORM_HOSTS` no `configmap.yml` com esse host e reiniciar o Deployment;
-4. criar o super-admin: um `users` com `tenant_id IS NULL`, `role = 'SUPERADMIN'` e 2FA — o mesmo
-   caminho de "Criar uma clínica nova", sem tenant.
-
-2FA é obrigatório para ele, como para qualquer perfil com acesso a prontuário.
+O super-admin é um `users` com `tenant_id IS NULL` e `role = 'SUPERADMIN'`. 2FA é obrigatório para
+ele, como para qualquer perfil com acesso a prontuário.
 
 **Plano, cobrança, mensalidade e flags** por clínica saem de `/tenants/<id>`. Desativar uma clínica
 grava `deactivated_at` — é o que faz o churn do mês ser calculável; o CHECK

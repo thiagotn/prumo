@@ -17,9 +17,12 @@
 #   --dry-run     inspect and report, change nothing
 #   --only-dns    stop after the DNS record
 #
-# The remaining two steps of onboarding are in git, not here: the tunnel ingress rule in
-# helm/cloudflared/configmap.yml and the host in helm/apps/prumo/ingress.yml. Add those
-# and let Argo sync them BEFORE running this. See ADR 0010 in the homelab repo.
+# On a domain of the product's own (PLATFORM_HOSTS -> e.g. prumo.in), step 1 is skipped
+# entirely: a wildcard covers DNS, the tunnel and the Ingress, so registering the clinic
+# is the whole job. For a clinic on its OWN domain the two other steps are in git, not
+# here: the tunnel ingress rule in helm/cloudflared/configmap.yml and the host in
+# helm/apps/prumo/ingress.yml. Add those and let Argo sync them BEFORE running this.
+# See ADR 0010 in the homelab repo.
 # Uses bash features (here-strings, indirect expansion). Invoked as `sh script.sh`, the
 # shell would be dash, which reads line by line and only fails deep into the run with
 # "Syntax error: redirection unexpected". Re-exec under bash so `sh`, `bash` and `./`
@@ -87,6 +90,28 @@ step()    { printf '  ->    %s\n' "$1"; }
 # the zone is clinic.com while the clinic is something else entirely.
 [ -n "$CLINIC_DOMAIN" ] || CLINIC_DOMAIN="$ZONE"
 
+# The product's own domains, read from the running app so the two cannot disagree:
+# PLATFORM_HOSTS=admin.prumo.in means prumo.in is ours, served by a wildcard.
+PLATFORM_HOSTS=$(kubectl -n "$APP_NAMESPACE" get cm prumo-config -o jsonpath='{.data.PLATFORM_HOSTS}' 2>/dev/null || true)
+ON_PLATFORM_DOMAIN=false
+RESERVED_LABELS=" admin api app assets cdn docs help hml mail ns1 ns2 painel plataforma prumo smtp staging static status suporte www "
+LABEL="${HOSTNAME_APP%%.*}"
+for ph in ${PLATFORM_HOSTS//,/ }; do
+  ph="$(echo "$ph" | tr -d '[:space:]' | tr 'A-Z' 'a-z')"
+  [ -n "$ph" ] || continue
+  [ "$HOSTNAME_APP" = "$ph" ] && fail "${HOSTNAME_APP} is the platform's own panel, not a clinic."
+  pd="${ph#*.}"
+  if [ "$HOSTNAME_APP" = "$pd" ]; then
+    fail "${HOSTNAME_APP} is the platform domain itself, not a clinic."
+  fi
+  if [ "${HOSTNAME_APP#*.}" = "$pd" ]; then
+    ON_PLATFORM_DOMAIN=true
+    case "$RESERVED_LABELS" in
+      *" $LABEL "*) fail "${LABEL} is reserved on ${pd}. Pick another subdomain." ;;
+    esac
+  fi
+done
+
 heading "0. Prerequisites"
 for c in kubectl curl jq openssl python3; do
   command -v "$c" >/dev/null || fail "$c is not installed on this host."
@@ -104,6 +129,11 @@ ok "prumo Deployment ready (${READY} replica(s))"
 $DRY_RUN && warn "--dry-run: nothing will be changed"
 
 heading "1. DNS - CNAME for ${HOSTNAME_APP}"
+
+if $ON_PLATFORM_DOMAIN; then
+  ok "on the platform domain: the wildcard already covers DNS, the tunnel and the Ingress"
+  step "nothing to route - skipping to the public path check"
+else
 
 # Read the tunnel id from the cluster instead of carrying it in the repo. It also cannot
 # drift from what cloudflared is actually running.
@@ -180,6 +210,7 @@ else
   fi
 fi
 unset CF_TOKEN
+fi
 
 heading "2. Public path"
 if $DRY_RUN; then

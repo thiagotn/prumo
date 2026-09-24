@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import {
   enterUrl,
   handoffExpiresAt,
-  hostForHandoff,
   summarize,
   type TenantRow,
 } from './reseller';
@@ -79,17 +78,6 @@ describe('the impersonation ticket', () => {
   it('lives for a minute: it is spent at once', () => {
     const now = new Date('2026-09-24T12:00:00Z');
     expect(handoffExpiresAt(now).toISOString()).toBe('2026-09-24T12:01:00.000Z');
-  });
-
-  it('is minted for a host reachable from where the reseller is', () => {
-    // A clinic carries its real hostname and, in development, a .localhost one. Sending a
-    // developer to the real host would hand the session to production.
-    const hosts = ['app.dratatimayumi.com.br', 'tati.localhost:3100'];
-    expect(hostForHandoff(hosts, 'admin.localhost:3100')).toBe('tati.localhost:3100');
-    expect(hostForHandoff(hosts, 'admin.atelie.app')).toBe('app.dratatimayumi.com.br');
-    // With nothing matching, the first one is better than nothing.
-    expect(hostForHandoff(['app.clinic.com.br'], 'admin.localhost:3100')).toBe('app.clinic.com.br');
-    expect(hostForHandoff([], 'admin.localhost:3100')).toBeNull();
   });
 
   it('points at the clinic host, over TLS outside development', () => {

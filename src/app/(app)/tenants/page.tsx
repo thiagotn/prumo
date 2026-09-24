@@ -27,7 +27,8 @@ export default async function TenantsPage({
       orderBy: [{ active: 'desc' }, { name: 'asc' }],
       include: {
         _count: { select: { users: true } },
-        domains: { orderBy: { createdAt: 'asc' }, take: 1 },
+        // The canonical one first: it is the address the clinic calls its own.
+        domains: { orderBy: [{ primary: 'desc' }, { createdAt: 'asc' }], take: 1 },
       },
     }),
   );
