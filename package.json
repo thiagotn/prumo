@@ -2,7 +2,7 @@
   "name": "prumo",
   "version": "0.1.0",
   "private": true,
-  "description": "Sistema de gest\u00e3o cl\u00ednica white-label \u2014 multi-tenant",
+  "description": "Sistema de gestão clínica white-label — multi-tenant",
   "scripts": {
     "dev": "next dev --port 3100",
     "build": "prisma generate && next build",
@@ -34,6 +34,7 @@
     "@prisma/client": "^7.10.0",
     "lucide-react": "^1.47.0",
     "next": "^16.3.6",
+    "pdf-lib": "^1.17.1",
     "pg": "^8.23.0",
     "qrcode": "^1.5.4",
     "react": "^19.3.0",

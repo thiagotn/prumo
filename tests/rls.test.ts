@@ -249,6 +249,8 @@ describe('every business table is protected', () => {
       prisma.stockMovement.count(),
       prisma.encounter.count(),
       prisma.payment.count(),
+      prisma.consentTemplate.count(),
+      prisma.consent.count(),
     ]);
     expect(counts).toEqual(counts.map(() => 0));
   });
@@ -364,5 +366,144 @@ describe('clinical photos', () => {
     );
     // The row cascades. The OBJECT does not — that is what scripts/erase-patient.ts is for.
     expect(left).toBeNull();
+  });
+});
+
+describe('consent terms', () => {
+  // A signed term is a legal record: the database has to refuse a half-written one, keep
+  // one clinic's terms out of another's reach, and — the property the public signing page
+  // rests on — make a token useless outside the clinic that issued it.
+  const created: string[] = [];
+
+  async function makeConsent(tenantId: string, tokenHash?: string) {
+    return withTenant(tenantId, async (tx) => {
+      const patient = await tx.patient.create({
+        data: { tenantId, name: `Termo Teste RLS ${Date.now()}` },
+      });
+      created.push(patient.id);
+      const template = await tx.consentTemplate.create({
+        data: {
+          tenantId,
+          slug: `termo-teste-rls-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          title: 'Termo de teste',
+          body: 'Eu, {{paciente}}, concordo.',
+        },
+      });
+      const consent = await tx.consent.create({
+        data: {
+          tenantId,
+          templateId: template.id,
+          patientId: patient.id,
+          titleSnapshot: template.title,
+          bodySnapshot: 'Eu concordo.',
+          templateVersion: template.version,
+          ...(tokenHash ? { tokenHash, tokenExpiresAt: new Date(Date.now() + 3_600_000) } : {}),
+        },
+      });
+      return { consent, template, patientId: patient.id };
+    });
+  }
+
+  afterAll(async () => {
+    if (created.length === 0) return;
+    await withPlatformScope(async (tx) => {
+      await tx.patient.deleteMany({ where: { id: { in: created } } });
+      await tx.consentTemplate.deleteMany({ where: { slug: { startsWith: 'termo-teste-rls-' } } });
+    });
+  });
+
+  it("a term of one clinic is invisible to another, even by id", async () => {
+    const { consent } = await makeConsent(tatiId);
+
+    const fromAurora = await withTenant(auroraId, (tx) =>
+      tx.consent.findUnique({ where: { id: consent.id } }),
+    );
+    expect(fromAurora).toBeNull();
+
+    const fromTati = await withTenant(tatiId, (tx) =>
+      tx.consent.findUnique({ where: { id: consent.id } }),
+    );
+    expect(fromTati?.id).toBe(consent.id);
+  });
+
+  it('a signing token is useless at another clinic, even though it is unique', async () => {
+    // The public page resolves the clinic from the hostname and then looks the token up
+    // inside that slice. Opening the same link on another clinic's hostname has to find
+    // nothing — this is what makes that safe.
+    const tokenHash = `test-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const { consent } = await makeConsent(tatiId, tokenHash);
+
+    const atAurora = await withTenant(auroraId, (tx) => tx.consent.findUnique({ where: { tokenHash } }));
+    expect(atAurora).toBeNull();
+
+    const atTati = await withTenant(tatiId, (tx) => tx.consent.findUnique({ where: { tokenHash } }));
+    expect(atTati?.id).toBe(consent.id);
+  });
+
+  it('refuses a term marked signed without its proof', async () => {
+    const { consent } = await makeConsent(tatiId);
+
+    await expect(
+      withTenant(tatiId, (tx) =>
+        tx.consent.update({
+          where: { id: consent.id },
+          // No signer, no hash, no image: the CHECK constraint is what stops this.
+          data: { status: 'SIGNED', signedAt: new Date() },
+        }),
+      ),
+    ).rejects.toThrow(/consents_signed_is_complete/);
+  });
+
+  it('refuses a signature date on a term that is not signed', async () => {
+    const { consent } = await makeConsent(tatiId);
+
+    await expect(
+      withTenant(tatiId, (tx) =>
+        tx.consent.update({ where: { id: consent.id }, data: { signedAt: new Date() } }),
+      ),
+    ).rejects.toThrow(/consents_unsigned_has_no_date/);
+  });
+
+  it('refuses a token without an expiry', async () => {
+    const { consent } = await makeConsent(tatiId);
+
+    await expect(
+      withTenant(tatiId, (tx) =>
+        tx.consent.update({
+          where: { id: consent.id },
+          data: { tokenHash: `no-expiry-${Date.now()}` },
+        }),
+      ),
+    ).rejects.toThrow(/consents_token_has_expiry/);
+  });
+
+  it('allows only one edition in force per term', async () => {
+    const { template } = await makeConsent(tatiId);
+
+    await expect(
+      withTenant(tatiId, (tx) =>
+        tx.consentTemplate.create({
+          data: {
+            tenantId: tatiId,
+            slug: template.slug,
+            title: template.title,
+            body: 'Segunda edição.',
+            version: 2,
+            current: true,
+          },
+        }),
+      ),
+    ).rejects.toThrow(/consent_templates_one_current_per_slug/);
+  });
+
+  it('terms go away with the patient they belong to', async () => {
+    const { consent, patientId } = await makeConsent(tatiId);
+
+    await withTenant(tatiId, (tx) => tx.patient.delete({ where: { id: patientId } }));
+
+    const orphan = await withTenant(tatiId, (tx) =>
+      tx.consent.findUnique({ where: { id: consent.id } }),
+    );
+    expect(orphan).toBeNull();
   });
 });

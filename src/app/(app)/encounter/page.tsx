@@ -5,6 +5,8 @@ import { withTenant } from '@/lib/db';
 import { currency, longDate } from '@/lib/format';
 import { costBreakdown, quote, toCents } from '@/lib/pricing';
 import { currentPricingParams } from '@/lib/pricing-params';
+import { CONSENT_STATUS_LABELS, CONSENT_STATUS_TAG } from '@/lib/consent';
+import { canWrite } from '@/lib/rbac';
 import { slotLabel, STATUS_LABELS } from '@/lib/schedule';
 import { storageConfigured } from '@/lib/storage';
 import { PendingModule } from '../pending-module';
@@ -15,10 +17,7 @@ import styles from './encounter.module.css';
 export const metadata: Metadata = { title: 'Ficha de atendimento' };
 
 /** Product copy, pt-BR. */
-const ITEMS = [
-  'Anamnese versionada, com a resposta anterior ao lado da nova.',
-  'Termo de consentimento com assinatura em tela ou por link (etapa 5).',
-];
+const ITEMS = ['Anamnese versionada, com a resposta anterior ao lado da nova.'];
 
 export default async function EncounterPage({
   searchParams,
@@ -28,7 +27,7 @@ export default async function EncounterPage({
   const { appointment: appointmentId } = await searchParams;
 
   // Opening a record is itself an event: this both requires 2FA and writes to audit_log.
-  const { tenant, masked, level } = await requireSensitiveModule(
+  const { tenant, session, masked, level } = await requireSensitiveModule(
     'encounter',
     appointmentId ? { kind: 'appointment', id: appointmentId } : undefined,
   );
@@ -83,10 +82,16 @@ export default async function EncounterPage({
           })
         : [];
 
-    return { appointment, params, photos, previousPhotos };
+    const consents = await tx.consent.findMany({
+      where: { appointmentId },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true, titleSnapshot: true, status: true, signedAt: true },
+    });
+
+    return { appointment, params, photos, previousPhotos, consents };
   });
 
-  const { appointment, params, photos, previousPhotos } = data;
+  const { appointment, params, photos, previousPhotos, consents } = data;
   if (!appointment) return <p className="card-body">Atendimento não encontrado nesta clínica.</p>;
   if (appointment.isBlock) {
     return <p className="card-body">Este horário é um bloqueio, não um atendimento.</p>;
@@ -212,6 +217,38 @@ export default async function EncounterPage({
               storageReady={storageConfigured()}
               canUpload={!masked}
             />
+          </section>
+        ) : null}
+
+        {appointment.patientId ? (
+          <section style={{ marginTop: 'var(--space-6)' }}>
+            <div className="kicker">Termo de consentimento</div>
+            {consents.length === 0 ? (
+              <p className={styles.hint}>Nenhum termo emitido para este atendimento.</p>
+            ) : (
+              <ul style={{ listStyle: 'none', margin: 'var(--space-2) 0', padding: 0 }}>
+                {consents.map((consent) => (
+                  <li key={consent.id} style={{ margin: '0 0 var(--space-2)', fontSize: 13 }}>
+                    <Link href={`/consents/${consent.id}`}>{consent.titleSnapshot}</Link>{' '}
+                    <span className={`tag ${CONSENT_STATUS_TAG[consent.status]}`}>
+                      {CONSENT_STATUS_LABELS[consent.status]}
+                    </span>
+                    {consent.signedAt ? (
+                      <span className={styles.hint}> · {longDate(consent.signedAt)}</span>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {canWrite(session.role, 'consents') && !masked ? (
+              <Link
+                className="btn btn-secondary touch"
+                href={`/consents/new?patient=${appointment.patientId}&appointment=${appointment.id}`}
+                style={{ fontSize: 12 }}
+              >
+                Emitir termo
+              </Link>
+            ) : null}
           </section>
         ) : null}
 

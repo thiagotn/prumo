@@ -8,9 +8,9 @@ Prontuário, agenda, ficha de atendimento, financeiro, estoque, relatórios, ter
 lembretes por WhatsApp e portal da paciente — com dados sensíveis de saúde, o que define quase todas
 as decisões de arquitetura abaixo.
 
-> **Etapas 1 a 4 de 8 concluídas.** Login com perfis, tenant por hostname, cadastro de pacientes,
-> configurações, agenda com marcação de horário, estoque por lote e a ficha de atendimento com
-> fechamento financeiro estão de pé. As telas dos
+> **Etapas 1 a 5 de 8 concluídas.** Login com perfis, tenant por hostname, cadastro de pacientes,
+> configurações, agenda com marcação de horário, estoque por lote, a ficha de atendimento com
+> fechamento financeiro e os termos de consentimento com assinatura e PDF estão de pé. As telas dos
 > outros módulos são placeholders que já passam por guard, tenant e auditoria, e dizem qual etapa as
 > entrega. Ver [Estado](#estado).
 
@@ -61,8 +61,12 @@ guard (`src/lib/auth/guards.ts`). A matriz módulo × perfil é transcrita da
 **Tenant vem do hostname.** `app.<dominio-da-clinica>` resolve pela tabela `tenant_domains`, então
 abrir uma clínica é configuração, não deploy. Hostname desconhecido dá 404, não instância genérica.
 
-Ainda por escolher, nas etapas em que entram: storage S3-compatível para fotos e PDFs (etapa 4/5 —
-provável Cloudflare R2, ver ADR 0006 do homelab), WhatsApp Cloud API e fila de jobs (etapa 7).
+**Termos assinados não viram arquivo.** O PDF é montado a cada download a partir da linha do banco
+— texto, assinatura, instante, IP — e o hash impresso nele cobre esse conjunto. Não há objeto no
+bucket para sair de sincronia com o registro, e a via da paciente e a da clínica saem idênticas por
+construção.
+
+Ainda por escolher, nas etapas em que entram: WhatsApp Cloud API e fila de jobs (etapa 7).
 
 ---
 
@@ -112,8 +116,8 @@ Para ver que o menu não é a proteção: logado como recepção, digite `/setti
 ### Testes
 
 ```bash
-npm test          # 283 unitários + integração de RLS e sessão (precisa do db:up)
-npm run test:e2e  # 55 end-to-end no Playwright (sobe o dev server sozinho)
+npm test          # 314 unitários + integração de RLS e sessão (precisa do db:up)
+npm run test:e2e  # 60 end-to-end no Playwright (sobe o dev server sozinho)
 npm run test:all  # os dois
 npm run typecheck
 npm run lint
@@ -136,11 +140,15 @@ src/
     flags.ts        feature flags por tenant
     color.ts        validação de contraste da cor de acento
     patient.ts      dados de cadastro: CPF, telefone, nascimento (normalização e checagem)
+    consent.ts      termos: preenchimento do texto, hash da assinatura, validade do link
+    consent-pdf.ts  o PDF do termo assinado (pdf-lib, fontes padrão)
     audit.ts        gravação no audit_log
     format.ts       moeda, datas e nomes em pt-BR
     auth/           password (scrypt), totp (RFC 6238), session, guards
+  components/       UI compartilhada entre a casca autenticada e as telas públicas
   app/
     login/          login, 2FA e cadastro do autenticador
+    consent/        assinatura do termo por link — pública, sem sessão
     (app)/          casca autenticada + uma pasta por módulo
     healthz, readyz probes para o Kubernetes
   styles/
@@ -222,11 +230,28 @@ código precisa dele está transcrito em [`docs/regras-de-negocio.md`](docs/regr
 - Restrições no banco seguram o resto: estoque não fica negativo, parcelas só existem em crédito
   parcelado, e cobrança não é negativa.
 
+**Etapa 5 concluída** — termos de consentimento:
+
+- Modelos **versionados**: salvar publica a edição seguinte e nunca reescreve a anterior, porque o
+  texto que alguém assinou precisa continuar legível como estava. O termo emitido carrega uma
+  **cópia** do texto, não um ponteiro para ele.
+- Assinatura **em tela** (a paciente assina com o dedo na recepção) ou **por link**: uma página
+  pública em `/consent/{token}`, sem sessão, onde o token é a autorização e o tenant vem do
+  hostname como em todo o resto.
+- Do link só fica guardado o HMAC, como numa sessão: ele aparece uma vez, e gerar outro invalida o
+  anterior — que é como se cancela um link enviado por engano. Vale três dias.
+- **PDF gerado na hora** (`pdf-lib`), com o texto assinado, a imagem da assinatura, data, IP e o
+  **hash SHA-256** do conjunto impresso no rodapé de cada página. Nada é armazenado: as entradas
+  param de mudar no instante da assinatura, então o mesmo termo sempre produz o mesmo documento.
+- O banco segura o resto: um termo `SIGNED` sem assinatura, sem hash ou sem data é recusado por
+  CHECK, um token sem validade também, e um índice parcial garante **uma única edição em vigor**
+  por termo.
+- Escrever o texto é da doutora (`requireOwnerOf`); emitir, enviar e colher é da recepção.
+
 ### Ordem das próximas etapas
 
 | Etapa | Entrega |
 |---|---|
-| 5 | Termos com assinatura e PDF |
 | 6 | Financeiro e relatórios |
 | 7 | WhatsApp e portal da paciente |
 | 8 | Painel da revenda (tenants, flags, "entrar como") |

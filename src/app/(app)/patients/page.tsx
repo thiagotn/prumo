@@ -70,11 +70,19 @@ export default async function PatientsPage({
     ...(ownOnly ? { appointments: { some: { practitionerId: session.userId } } } : {}),
   };
 
-  const { patients, total } = await withTenant(tenant.id, async (tx) => ({
+  const { patients, total, consent } = await withTenant(tenant.id, async (tx) => ({
     patients: await tx.patient.findMany({ where, orderBy: { name: 'asc' }, take: 200 }),
     total: await tx.patient.count({
       where: ownOnly ? { appointments: { some: { practitionerId: session.userId } } } : {},
     }),
+    // The term in force for the patient on the panel: the most recent one she signed.
+    consent: selected
+      ? await tx.consent.findFirst({
+          where: { patientId: selected, status: 'SIGNED' },
+          orderBy: { signedAt: 'desc' },
+          select: { id: true, titleSnapshot: true, signedAt: true },
+        })
+      : null,
   }));
 
   const chosen = selected ? patients.find((p) => p.id === selected) : undefined;
@@ -222,6 +230,24 @@ export default async function PatientsPage({
               </p>
             ) : null}
 
+            <div className={styles.locked} style={{ borderStyle: 'solid' }}>
+              <strong>Termo vigente</strong>
+              <br />
+              {consent ? (
+                <>
+                  <Link href={`/consents/${consent.id}`}>{consent.titleSnapshot}</Link>
+                  {consent.signedAt ? ` · assinado em ${longDate(consent.signedAt)}` : ''}
+                </>
+              ) : (
+                <>
+                  Nenhum termo assinado.{' '}
+                  {mayWrite ? (
+                    <Link href={`/consents/new?patient=${chosen.id}`}>Emitir um</Link>
+                  ) : null}
+                </>
+              )}
+            </div>
+
             {mayWrite ? (
               <div className={styles.formActions}>
                 <Link
@@ -258,7 +284,7 @@ export default async function PatientsPage({
             Escolha uma paciente na lista para ver os dados dela.
             <br />
             <br />
-            O termo vigente e o antes e depois aparecem aqui conforme a etapa 5 entrar.
+            O antes e depois aparece aqui conforme as fotos do atendimento forem entrando.
           </p>
         )}
       </aside>

@@ -3,10 +3,11 @@
 Perguntas na linguagem de quem opera a clínica. Se algo aqui não corresponde ao que você vê na
 tela, o sistema está errado, não o texto — avise.
 
-> **Onde estamos:** etapas 1 a 4 prontas — entrar no sistema, perfis de acesso, uma instância por
+> **Onde estamos:** etapas 1 a 5 prontas — entrar no sistema, perfis de acesso, uma instância por
 > clínica, **cadastro de pacientes**, configurações, agenda com **marcação de horário**, **estoque
-> por lote**, a **ficha de atendimento com fechamento financeiro** e as **fotos clínicas**. Ainda em construção: anamnese versionada, termos,
-> relatórios e mensagens — ao abrir, cada uma informa em qual etapa entra. As
+> por lote**, a **ficha de atendimento com fechamento financeiro**, as **fotos clínicas** e os
+> **termos de consentimento com assinatura e PDF**. Ainda em construção: anamnese versionada,
+> financeiro, relatórios e mensagens — ao abrir, cada uma informa em qual etapa entra. As
 > perguntas sobre essas telas estão marcadas com **(em breve)**.
 
 ---
@@ -423,6 +424,73 @@ Entra junto com o financeiro (etapa 6). Hoje os lotes chegam pelo cadastro inici
 
 ---
 
+## Termos de consentimento
+
+### Quem escreve o texto do termo?
+
+A doutora, em **Termos**. A recepção emite, envia o link e colhe a assinatura, mas não mexe no
+texto — é decisão clínica, não de atendimento.
+
+### Como escrevo um termo novo?
+
+**Termos** → **Novo termo**. Dê um título, escreva o texto e publique. Uma linha em branco separa
+parágrafos. No meio do texto você pode usar os campos `{{paciente}}`, `{{procedimento}}`,
+`{{clinica}}` e `{{data}}`: eles são preenchidos na hora de emitir para cada paciente.
+
+### Preciso corrigir um termo que já usei. Perco as assinaturas?
+
+Não. Em **Nova edição**, o que você salva vira a **edição seguinte** e passa a valer daqui para
+frente. Tudo que já foi assinado continua com o texto do dia em que foi assinado — é para isso que
+as edições existem. Na tela de um termo antigo o sistema avisa: "o modelo já está na 2".
+
+### Como faço a paciente assinar?
+
+Emita o termo (em **Termos** → **Emitir termo**, ou pela ficha de atendimento, em **Emitir termo**)
+e escolha um dos dois caminhos:
+
+- **Na tela**: entregue o celular ou o tablet para ela assinar com o dedo, ali mesmo na recepção.
+- **Por link**: clique em **Gerar link de assinatura**, copie e mande para ela. Ela abre no celular
+  dela, lê e assina — sem precisar de senha nem de conta.
+
+### O link não aparece mais quando volto na tela
+
+Ele aparece **uma vez só**. O sistema guarda apenas uma impressão digital do link, não o link em
+si — do mesmo jeito que faz com as senhas. Se você fechou sem copiar, clique em **Gerar novo link**:
+o anterior deixa de funcionar na hora.
+
+### Mandei o link para a pessoa errada
+
+Gere outro. O link antigo para de valer no mesmo instante.
+
+### Quanto tempo o link dura?
+
+Três dias. Depois disso a paciente vê um aviso pedindo um link novo, e o termo continua aguardando
+assinatura.
+
+### O que é aquele código embaixo do PDF?
+
+A prova de que o documento não foi alterado. Ele é calculado a partir do texto, do nome de quem
+assinou, do instante da assinatura e do próprio traço. Mudar qualquer um deles muda o código — se
+alguém questionar o termo, é ele que responde.
+
+### Onde baixo a via assinada?
+
+Na lista de **Assinados**, coluna **PDF**, ou na tela do termo, em **Baixar PDF**. A paciente que
+assinou por link baixa a dela na própria tela, logo depois de assinar.
+
+### O texto saiu com uma linha em branco no lugar do procedimento
+
+O termo foi emitido fora de um atendimento, então o sistema não tinha o procedimento para escrever
+e deixou a linha para preencher à mão. Emitindo pela ficha do atendimento, o campo já vem
+preenchido.
+
+### Cancelei sem querer
+
+Um termo cancelado não pode ser reaberto — emita outro. O link do cancelado deixa de funcionar na
+hora, o que é justamente o motivo de existir o cancelamento.
+
+---
+
 ## Fotos clínicas
 
 ### Como tiro as fotos?
@@ -478,11 +546,6 @@ e PDF para o contador.
 Lembretes automáticos por WhatsApp: 24h antes, preparo 48h antes, pós-procedimento em 1 dia, retorno
 em 14 dias, política de falta e aniversário. A paciente responde "1" para confirmar e "2" para
 devolver o horário à lista de espera.
-
-### Termos de consentimento **(em breve, etapa 5)**
-Modelos versionados — uma versão nova nunca sobrescreve a anterior. Assinatura na tela ou por link,
-e o PDF guarda a versão assinada com hora, endereço de rede e um código que prova que o documento
-não foi alterado depois.
 
 ### Portal da paciente **(em breve, etapa 7)**
 A paciente confirma ou reagenda o próximo horário, lê as orientações de preparo e baixa termos e

@@ -10,8 +10,14 @@ import { NextResponse, type NextRequest } from 'next/server';
 
 const SESSION_COOKIE = 'prumo_session';
 
-/** Routes that never require a session. */
-const PUBLIC_PATHS = ['/login', '/healthz', '/readyz'];
+/**
+ * Routes that never require a session.
+ *
+ * `/consent` is the page a patient opens from the link the clinic sent her: she has no
+ * account, and the token in the URL is what authorises the request (the page checks it
+ * against the HMAC stored on the row).
+ */
+const PUBLIC_PATHS = ['/login', '/healthz', '/readyz', '/consent'];
 
 /**
  * API routes answer for themselves. Redirecting one to the sign-in page would hand a

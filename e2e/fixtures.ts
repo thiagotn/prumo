@@ -96,6 +96,39 @@ export async function deletePatientsNamed(prefix: string) {
   await prisma.$disconnect();
 }
 
+/**
+ * A patient created straight in the database, for specs that need one of their own.
+ * Faster than walking the form, and `deletePatientsNamed` takes it away afterwards —
+ * consents and appointments cascade from the row.
+ */
+export async function createPatientForTests(
+  name: string,
+  clinicName: string = CLINICS.tati.name,
+): Promise<string> {
+  const id = await withPlatformScope(async (tx) => {
+    const tenant = await tx.tenant.findFirst({
+      where: { name: clinicName },
+      select: { id: true },
+    });
+    if (!tenant) throw new Error('Seed is missing: run npm run db:seed');
+    const patient = await tx.patient.create({ data: { tenantId: tenant.id, name } });
+    return patient.id;
+  });
+  await prisma.$disconnect();
+  return id;
+}
+
+/**
+ * Removes consent templates a spec published, by slug prefix. Call it AFTER the patients,
+ * so the consents that point at them are already gone.
+ */
+export async function deleteConsentTemplatesNamed(slugPrefix: string) {
+  await withPlatformScope((tx) =>
+    tx.consentTemplate.deleteMany({ where: { slug: { startsWith: slugPrefix } } }),
+  );
+  await prisma.$disconnect();
+}
+
 /** Removes the appointments a spec booked, found by the marker it wrote in the notes. */
 export async function deleteAppointmentsNoted(marker: string) {
   await withPlatformScope((tx) => tx.appointment.deleteMany({ where: { notes: marker } }));

@@ -85,6 +85,54 @@ export const PROCEDURES: ProcedureSeed[] = [
   },
 ];
 
+export type ConsentTemplateSeed = {
+  slug: string;
+  title: string;
+  /** Matched to a seeded procedure by name, when there is one. */
+  procedureName?: string;
+  body: string;
+};
+
+/**
+ * Starting wordings, so the screen is not empty in development. They are a plausible
+ * starting point, not legal advice: the clinic rewrites them in its own words, and each
+ * rewrite publishes a new edition.
+ */
+export const CONSENT_TEMPLATES: ConsentTemplateSeed[] = [
+  {
+    slug: 'termo-preenchimento-labial',
+    title: 'Termo de consentimento — preenchimento labial',
+    procedureName: 'Preenchimento labial 1ml',
+    body: [
+      'Eu, {{paciente}}, declaro que fui informada de forma clara sobre o procedimento de {{procedimento}}, seus objetivos, a técnica empregada, o material utilizado e os cuidados necessários antes e depois da aplicação.',
+      'Estou ciente de que reações como edema, hematoma, sensibilidade local e assimetria temporária podem ocorrer nos primeiros dias, e de que o resultado varia conforme a resposta individual de cada organismo.',
+      'Informei à equipe da {{clinica}} todas as minhas condições de saúde, alergias e medicamentos em uso, em especial anticoagulantes, e me comprometo a seguir as orientações recebidas.',
+      'Tive a oportunidade de fazer perguntas e fui respondida. Autorizo a realização do procedimento nesta data, {{data}}.',
+    ].join('\n\n'),
+  },
+  {
+    slug: 'termo-toxina-botulinica',
+    title: 'Termo de consentimento — toxina botulínica',
+    procedureName: 'Toxina botulínica (full face)',
+    body: [
+      'Eu, {{paciente}}, declaro que fui informada sobre a aplicação de {{procedimento}}, incluindo a finalidade estética do tratamento, a duração esperada do efeito e a necessidade de novas aplicações ao longo do tempo.',
+      'Fui informada de que podem ocorrer hematomas nos pontos de aplicação, dor de cabeça nas primeiras horas e, com menor frequência, assimetria ou queda temporária da pálpebra, que regridem com o tempo.',
+      'Declaro não estar gestante ou amamentando e não ter doença neuromuscular diagnosticada, e informei à equipe da {{clinica}} os medicamentos que utilizo.',
+      'Autorizo a realização do procedimento nesta data, {{data}}, e me comprometo a comparecer à avaliação de retorno.',
+    ].join('\n\n'),
+  },
+  {
+    slug: 'termo-registro-fotografico',
+    title: 'Termo de consentimento — registro fotográfico',
+    body: [
+      'Eu, {{paciente}}, autorizo a {{clinica}} a realizar fotografias do antes e do depois dos procedimentos a que me submeto, para acompanhamento clínico e registro em prontuário.',
+      'Estou ciente de que as imagens ficam guardadas em meio seguro, com acesso restrito à equipe da clínica, e de que todo acesso é registrado.',
+      'Qualquer uso das imagens fora do prontuário — divulgação, ensino ou material de comunicação — depende de autorização específica e por escrito, que posso recusar sem prejuízo ao meu atendimento.',
+      'Esta autorização é dada nesta data, {{data}}, e pode ser revogada por mim a qualquer momento.',
+    ].join('\n\n'),
+  },
+];
+
 /** Fictional patients, as in the prototype. No real person is seeded. */
 export const PATIENTS: PatientSeed[] = [
   { name: 'Renata Yamada', birthDate: '1988-03-14', phone: '11987650001', email: 'renata@exemplo.com.br' },
@@ -157,6 +205,34 @@ export async function seedCatalog(tx: Tx, tenantId: string, withPatients: boolea
         },
       });
     }
+  }
+
+  // Consent terms: first edition of each, only when the tenant has none.
+  for (const template of CONSENT_TEMPLATES) {
+    const existing = await tx.consentTemplate.findFirst({
+      where: { tenantId, slug: template.slug },
+      select: { id: true },
+    });
+    if (existing) continue;
+
+    const procedure = template.procedureName
+      ? await tx.procedure.findFirst({
+          where: { tenantId, name: template.procedureName },
+          select: { id: true },
+        })
+      : null;
+
+    await tx.consentTemplate.create({
+      data: {
+        tenantId,
+        slug: template.slug,
+        title: template.title,
+        body: template.body,
+        version: 1,
+        current: true,
+        procedureId: procedure?.id ?? null,
+      },
+    });
   }
 
   if (!withPatients) return;

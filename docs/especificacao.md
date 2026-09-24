@@ -112,7 +112,10 @@ Desktop: canvas 1280 × 800. Mobile: 390 × 812. Layout do app = nav (sidebar 21
    falta, aniversário) com status e métricas; pré-visualização no formato WhatsApp. Resposta "1"
    confirma, "2" devolve à lista de espera.
 10. **Termos** — modelos versionados (versão nova nunca sobrescreve; o PDF guarda a versão
-    assinada) + pendências com "Reenviar link".
+    assinada) + pendências com "Reenviar link". O **texto** do termo é escrito só pela doutora;
+    emitir, enviar o link e colher a assinatura é da recepção. O link de assinatura é um token
+    opaco do qual só o HMAC é guardado: aparece uma vez, vale três dias, e gerar outro invalida o
+    anterior. O PDF traz o hash SHA-256 do texto + assinatura + instante.
 11. **Configurações** — identidade (nome, subtítulo, domínio, remetente, cor, logo) com prévia ao
     vivo do login; operação (expediente, duração padrão, antecedência, política de falta); feature
     flags; matriz de permissões.

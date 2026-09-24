@@ -36,17 +36,23 @@ export function DeniedNotice({ module }: { module: string | undefined }) {
 export function WriteDeniedNotice({
   denied,
   what,
+  code = 'write',
+  by = 'da recepção ou da doutora',
 }: {
   denied: string | undefined;
   /** What was refused, as the sentence's subject: "Cadastrar e corrigir pacientes". */
   what: string;
+  /** Which refusal this notice answers: `write` from requireModuleWrite, `owner` from requireOwnerOf. */
+  code?: 'write' | 'owner';
+  /** Whose job it is, as the sentence's predicate. */
+  by?: string;
 }) {
-  if (denied !== 'write') return null;
+  if (denied !== code) return null;
 
   return (
     <div role="status" style={NOTICE_STYLE}>
-      <strong>{what}</strong> é da recepção ou da doutora. Seu perfil abre esta tela para consulta.
-      A tentativa ficou registrada no log de auditoria.
+      <strong>{what}</strong> é {by}. Seu perfil abre esta tela para consulta. A tentativa ficou
+      registrada no log de auditoria.
     </div>
   );
 }

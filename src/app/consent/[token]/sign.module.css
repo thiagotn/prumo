@@ -1,0 +1,78 @@
+/* The page the patient opens on her phone. One column, generous targets, no app shell. */
+
+.page {
+  min-height: 100dvh;
+  display: flex;
+  justify-content: center;
+  padding: var(--space-5) var(--space-4) var(--space-8);
+  background: var(--color-neutral-100);
+}
+
+.sheet {
+  width: 100%;
+  max-width: 44em;
+  background: var(--color-bg);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  padding: var(--space-6) var(--space-5) var(--space-7);
+}
+
+.monogram {
+  width: 44px;
+  height: 44px;
+  font-size: 15px;
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 27px;
+  line-height: 1.15;
+  margin: var(--space-2) 0 var(--space-2);
+}
+
+.meta {
+  margin: 0 0 var(--space-5);
+  font-size: 13px;
+  color: var(--color-neutral-600);
+}
+
+.term {
+  border-top: 1px solid var(--color-divider);
+  border-bottom: 1px solid var(--color-divider);
+  padding: var(--space-4) 0;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.term p {
+  margin: 0 0 var(--space-3);
+}
+
+.term p:last-child {
+  margin-bottom: 0;
+}
+
+.note {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--color-neutral-600);
+  margin: var(--space-4) 0 var(--space-5);
+}
+
+.body {
+  font-size: 14px;
+  line-height: 1.7;
+  margin: var(--space-3) 0 var(--space-5);
+}
+
+.done {
+  margin: var(--space-3) 0;
+  padding: var(--space-3);
+  border: 1px solid var(--color-accent-400);
+  border-left: 3px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  background: var(--color-accent-100);
+  font-size: 13px;
+  color: var(--color-accent-800);
+}

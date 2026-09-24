@@ -95,6 +95,8 @@ model Tenant {
   encounters    Encounter[]
   payments      Payment[]
   clinicalPhotos ClinicalPhoto[]
+  consentTemplates ConsentTemplate[]
+  consents      Consent[]
 
   @@map("tenants")
 }
@@ -311,9 +313,10 @@ model Procedure {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  products     Product[]
-  appointments Appointment[]
+  tenant           Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  products         Product[]
+  appointments     Appointment[]
+  consentTemplates ConsentTemplate[]
 
   @@unique([tenantId, name])
   @@index([tenantId])
@@ -384,6 +387,7 @@ model Patient {
   appointments Appointment[]
   encounters   Encounter[]
   photos       ClinicalPhoto[]
+  consents     Consent[]
 
   @@unique([tenantId, document])
   @@index([tenantId, name])
@@ -442,6 +446,7 @@ model Appointment {
   product      Product?   @relation(fields: [productId], references: [id], onDelete: SetNull)
   practitioner User?      @relation("AppointmentPractitioner", fields: [practitionerId], references: [id], onDelete: SetNull)
   encounter    Encounter?
+  consents     Consent[]
 
   // The day view reads a date range for one tenant; the patient panel reads one patient's
   // history. Both are covered here.
@@ -676,4 +681,107 @@ model ClinicalPhoto {
   @@index([encounterId])
   @@index([patientId, framing])
   @@map("clinical_photos")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Stage 5 — consent terms, signed and turned into a PDF
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// A consent term the clinic offers, in one edition. Editing never overwrites: a new
+/// edition is a new row, because the wording someone agreed to has to stay readable
+/// exactly as it was on the day, years later.
+model ConsentTemplate {
+  id       String @id @default(uuid()) @db.Uuid
+  tenantId String @map("tenant_id") @db.Uuid
+
+  /// Stable across editions: what "the lip filler term" is, whatever its wording today.
+  slug  String
+  title String
+  /// The wording. Blank lines separate paragraphs; `{{paciente}}`, `{{procedimento}}`,
+  /// `{{clinica}}` and `{{data}}` are filled when the term is issued.
+  body    String
+  version Int    @default(1)
+  /// The edition offered today. The others stay for what was already signed.
+  current Boolean @default(true)
+
+  /// Optional: the procedure this term covers, so the encounter can suggest it.
+  procedureId     String? @map("procedure_id") @db.Uuid
+  createdByUserId String? @map("created_by_user_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tenant    Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  procedure Procedure? @relation(fields: [procedureId], references: [id], onDelete: SetNull)
+  consents  Consent[]
+
+  @@unique([tenantId, slug, version])
+  @@index([tenantId, current])
+  @@map("consent_templates")
+}
+
+/// Where a term stands for one patient.
+enum ConsentStatus {
+  PENDING // issued, waiting for a signature
+  SIGNED
+  CANCELLED
+
+  @@map("consent_status")
+}
+
+/// A term issued to a patient, and — once she signs — the record of that signature.
+///
+/// The title and the body are copied in at issue time and never recomputed: a template
+/// edited afterwards must not change what a signed PDF says. The hash covers exactly what
+/// was shown and signed, so a tampered row stops matching its own PDF.
+model Consent {
+  id         String @id @default(uuid()) @db.Uuid
+  tenantId   String @map("tenant_id") @db.Uuid
+  templateId String @map("template_id") @db.Uuid
+  patientId  String @map("patient_id") @db.Uuid
+
+  /// The appointment it was issued for, when it was issued from the encounter.
+  appointmentId String? @map("appointment_id") @db.Uuid
+
+  status ConsentStatus @default(PENDING)
+
+  /// The term as issued — not a pointer to wording that can change underneath it.
+  titleSnapshot   String @map("title_snapshot")
+  bodySnapshot    String @map("body_snapshot")
+  templateVersion Int    @map("template_version")
+
+  /// Signing by link: an opaque 256-bit token, of which only the HMAC is stored — the
+  /// same shape as a session, for the same reason.
+  tokenHash      String?   @unique @map("token_hash")
+  tokenExpiresAt DateTime? @map("token_expires_at")
+
+  signedAt DateTime? @map("signed_at")
+  /// Who signed: the patient, or the person who signed for her.
+  signerName String? @map("signer_name")
+  /// "Responsável legal", when it is not the patient herself.
+  signerNote String? @map("signer_note")
+  /// The drawn signature, as PNG. Small, and part of the signed record, so it lives with
+  /// the row under RLS rather than in a bucket.
+  signatureImage Bytes?  @map("signature_image")
+  /// SHA-256 over the wording, the signer, the instant and the signature image.
+  signatureHash String? @map("signature_hash")
+  signedIp      String? @map("signed_ip")
+  signedUserAgent String? @map("signed_user_agent")
+
+  /// Who collected the signature on screen. Null when the patient signed by link.
+  collectedByUserId String? @map("collected_by_user_id") @db.Uuid
+  createdByUserId   String? @map("created_by_user_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tenant      Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  template    ConsentTemplate @relation(fields: [templateId], references: [id])
+  patient     Patient         @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  appointment Appointment?    @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, status, createdAt])
+  @@index([patientId, createdAt])
+  @@index([appointmentId])
+  @@map("consents")
 }

@@ -1,0 +1,193 @@
+/* Consent terms (docs/especificacao.md, screen 10): what is waiting for a signature,
+   what has been signed, and the editions of each term. */
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 26px;
+  align-items: start;
+}
+
+.section {
+  margin-bottom: var(--space-7);
+}
+
+.sectionHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.sectionTitle {
+  font-family: var(--font-heading);
+  font-weight: 500;
+  font-size: 19px;
+  margin: 0;
+}
+
+.spacer {
+  margin-left: auto;
+}
+
+.tableWrap {
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.empty {
+  padding: var(--space-6);
+  text-align: center;
+  font-size: 13px;
+  color: var(--color-neutral-600);
+}
+
+.panel {
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  position: sticky;
+  top: 26px;
+}
+
+.templateRow {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-divider);
+}
+
+.templateRow:last-child {
+  border-bottom: 0;
+}
+
+.templateName {
+  font-size: 13px;
+}
+
+.templateMeta {
+  font-size: 11px;
+  color: var(--color-neutral-600);
+}
+
+/* ── one term ─────────────────────────────────────────────────────────────── */
+
+.title {
+  font-family: var(--font-heading);
+  font-weight: 500;
+  font-size: 23px;
+  line-height: 1.2;
+  margin: var(--space-1) 0 var(--space-2);
+}
+
+.meta {
+  font-size: 13px;
+  color: var(--color-neutral-600);
+  margin: 0 0 var(--space-5);
+}
+
+.term {
+  border-top: 1px solid var(--color-divider);
+  border-bottom: 1px solid var(--color-divider);
+  padding: var(--space-4) 0;
+  font-size: 14px;
+  line-height: 1.75;
+  max-width: 44em;
+}
+
+.term p {
+  margin: 0 0 var(--space-3);
+}
+
+.term p:last-child {
+  margin-bottom: 0;
+}
+
+.linkBox {
+  margin-top: var(--space-4);
+  padding: var(--space-3);
+  border: 1px dashed var(--color-divider);
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--color-neutral-700);
+}
+
+.linkValue {
+  display: block;
+  margin: var(--space-2) 0;
+  padding: var(--space-2);
+  background: var(--color-neutral-100);
+  border-radius: var(--radius-md);
+  font-size: 11px;
+  word-break: break-all;
+}
+
+.signature {
+  margin-top: var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  max-width: 44em;
+}
+
+.signatureImage {
+  display: block;
+  max-width: 260px;
+  height: auto;
+}
+
+.hash {
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--color-neutral-600);
+  word-break: break-all;
+}
+
+.saved {
+  margin-bottom: var(--space-4);
+  padding: var(--space-3);
+  border: 1px solid var(--color-accent-400);
+  border-left: 3px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  background: var(--color-accent-100);
+  font-size: 13px;
+  color: var(--color-accent-800);
+}
+
+.form {
+  max-width: 720px;
+}
+
+.formActions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+}
+
+.formHint {
+  margin: var(--space-1) 0 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--color-neutral-600);
+}
+
+@media (max-width: 1000px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .panel {
+    position: static;
+  }
+}
+
+@media (max-width: 720px) {
+  /* :global because .btn comes from the Classical tokens, not from this module. */
+  .formActions :global(.btn) {
+    flex: 1;
+    min-height: 44px;
+  }
+}

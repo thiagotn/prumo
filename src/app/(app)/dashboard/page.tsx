@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { requireModule } from '@/lib/auth/guards';
 import { FLAG_LABELS } from '@/lib/flags';
 import { contrastRatio } from '@/lib/color';
@@ -8,7 +9,7 @@ import styles from './dashboard.module.css';
 
 export const metadata: Metadata = { title: 'Painel' };
 
-/** The four KPIs in the band (docs/especificacao.md, screen 2). Values arrive in stage 4/6. */
+/** The four KPIs in the band (docs/especificacao.md, screen 2). Values arrive in stage 6. */
 const KPIS = [
   { label: 'Atendimentos no mês', note: 'meta definida em Configurações' },
   { label: 'Faturamento', note: 'ticket médio' },
@@ -49,8 +50,8 @@ export default async function DashboardPage({
           <div className="card-kicker">Próximos atendimentos de hoje</div>
           <div className="card-title">Agenda do dia</div>
           <p className="card-body">
-            A lista aparece quando a agenda entrar (etapa 3). Os cadastros de salas, materiais e
-            pacientes vêm antes, na etapa 2, a partir da planilha de precificação.
+            O dia inteiro está em <Link href="/schedule">Agenda</Link>, com as visões de dia, semana
+            e lista. Os números e as pendências desta tela entram com o financeiro, na etapa 6.
           </p>
         </div>
 

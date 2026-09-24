@@ -112,6 +112,28 @@ export async function requireModuleWrite(
 }
 
 /**
+ * For what is the doctor's decision rather than the clinic's routine — the wording of a
+ * consent term, for one. Reception issues and collects terms; it does not rewrite them.
+ */
+export async function requireOwnerOf(
+  module: Module,
+): Promise<AuthContext & { level: AccessLevel }> {
+  const ctx = await requireModule(module);
+  if (ctx.session.role !== Role.OWNER) {
+    await audit({
+      tenantId: ctx.tenant?.id ?? null,
+      userId: ctx.session.userId,
+      action: 'access.denied',
+      resource: 'module.owner',
+      resourceId: module,
+      details: { role: ctx.session.role },
+    });
+    redirect(`${MODULE_DEFS[module].path}?denied=owner`);
+  }
+  return ctx;
+}
+
+/**
  * For medical records, anamneses and photos: on top of the permission, record the
  * access. While the reseller is impersonating, the record stays masked unless
  * explicitly authorised — the caller decides what to show based on `masked`.
