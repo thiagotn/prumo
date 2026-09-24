@@ -10,7 +10,12 @@ import { hashPassword } from '../src/lib/auth/password';
 import { validateAccentColor } from '../src/lib/color';
 import { prisma, withPlatformScope } from '../src/lib/db';
 import type { Flags } from '../src/lib/flags';
-import { seedAppointments, seedCatalog, seedStockLots } from './seed-catalog';
+import {
+  seedAppointments,
+  seedCatalog,
+  seedClosedEncounters,
+  seedStockLots,
+} from './seed-catalog';
 
 const DEV_PASSWORD = 'prumo1234';
 
@@ -160,6 +165,7 @@ async function main() {
       if (seed.domain !== 'verticesaude.com.br') {
         await seedStockLots(tx, tenant.id);
         await seedAppointments(tx, tenant.id);
+        await seedClosedEncounters(tx, tenant.id);
       }
 
       const counts = await Promise.all([
@@ -169,11 +175,13 @@ async function main() {
         tx.patient.count({ where: { tenantId: tenant.id } }),
         tx.appointment.count({ where: { tenantId: tenant.id } }),
         tx.stockLot.count({ where: { tenantId: tenant.id } }),
+        tx.payment.count({ where: { tenantId: tenant.id } }),
       ]);
       console.log(
         `✅ ${seed.name} — ${seed.hosts.length} host(s), ${seed.users.length} user(s), ` +
           `${counts[0]} room(s), ${counts[1]} procedure(s), ${counts[2]} product(s), ` +
-          `${counts[3]} patient(s), ${counts[4]} appointment(s), ${counts[5]} lot(s)`,
+          `${counts[3]} patient(s), ${counts[4]} appointment(s), ${counts[5]} lot(s), ` +
+          `${counts[6]} closing(s)`,
       );
     }
 

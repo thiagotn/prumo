@@ -8,11 +8,12 @@ Prontuário, agenda, ficha de atendimento, financeiro, estoque, relatórios, ter
 lembretes por WhatsApp e portal da paciente — com dados sensíveis de saúde, o que define quase todas
 as decisões de arquitetura abaixo.
 
-> **Etapas 1 a 5 de 8 concluídas.** Login com perfis, tenant por hostname, cadastro de pacientes,
+> **Etapas 1 a 6 de 8 concluídas.** Login com perfis, tenant por hostname, cadastro de pacientes,
 > configurações, agenda com marcação de horário, estoque por lote, a ficha de atendimento com
-> fechamento financeiro e os termos de consentimento com assinatura e PDF estão de pé. As telas dos
-> outros módulos são placeholders que já passam por guard, tenant e auditoria, e dizem qual etapa as
-> entrega. Ver [Estado](#estado).
+> fechamento financeiro, os termos de consentimento com assinatura e PDF, o financeiro e os
+> relatórios estão de pé. Faltam as telas de mensagens e do portal da paciente (etapa 7) e o painel
+> da revenda (etapa 8), que já passam por guard, tenant e auditoria e dizem qual etapa as entrega.
+> Ver [Estado](#estado).
 
 ---
 
@@ -116,8 +117,8 @@ Para ver que o menu não é a proteção: logado como recepção, digite `/setti
 ### Testes
 
 ```bash
-npm test          # 314 unitários + integração de RLS e sessão (precisa do db:up)
-npm run test:e2e  # 60 end-to-end no Playwright (sobe o dev server sozinho)
+npm test          # 335 unitários + integração de RLS e sessão (precisa do db:up)
+npm run test:e2e  # 70 end-to-end no Playwright (sobe o dev server sozinho)
 npm run test:all  # os dois
 npm run typecheck
 npm run lint
@@ -141,7 +142,11 @@ src/
     color.ts        validação de contraste da cor de acento
     patient.ts      dados de cadastro: CPF, telefone, nascimento (normalização e checagem)
     consent.ts      termos: preenchimento do texto, hash da assinatura, validade do link
+    finance.ts      meses no fuso da clínica, somatórios do mês e CSV para o contador
+    pdf.ts          mecânica compartilhada dos PDFs (página, quebra de linha, WinAnsi)
     consent-pdf.ts  o PDF do termo assinado (pdf-lib, fontes padrão)
+    report-pdf.ts   o relatório mensal em PDF
+    report-data.ts  o período e as linhas por trás das duas exportações
     audit.ts        gravação no audit_log
     format.ts       moeda, datas e nomes em pt-BR
     auth/           password (scrypt), totp (RFC 6238), session, guards
@@ -248,11 +253,29 @@ código precisa dele está transcrito em [`docs/regras-de-negocio.md`](docs/regr
   por termo.
 - Escrever o texto é da doutora (`requireOwnerOf`); emitir, enviar e colher é da recepção.
 
+**Etapa 6 concluída** — financeiro, relatórios e o painel com números:
+
+- **Financeiro**: o mês em cinco KPIs, um lançamento por atendimento fechado com o custo
+  decomposto, e os dois cards que explicam os números — reservas (10% recompra, 5% emergência,
+  resto retirada) e os parâmetros em vigor. Margem realizada abaixo de 28% sai destacada.
+- Nada é recalculado na leitura: cada lançamento mostra o que foi gravado no fechamento, com os
+  parâmetros daquele dia. Mudar a tabela de preços hoje não reescreve março.
+- **Relatórios**: seis meses em barras (faturamento em contorno, lucro preenchido), mix por linha de
+  procedimento e o guia de margem, com a faixa do período marcada.
+- **Exportação para o contador**: CSV no formato que o Excel pt-BR abre sem perguntar nada (ponto e
+  vírgula, vírgula decimal, BOM) e PDF de uma página. Nenhum dos dois leva nome de paciente, e toda
+  exportação vai para o `audit_log`.
+- **Painel** deixou de ter travessões: KPIs do mês, próximos atendimentos de hoje, lucro por hora
+  por procedimento e as pendências (estoque a repor ou vencendo, termos sem assinatura) — cada card
+  aparecendo só para quem a matriz de permissões alcança. O financeiro, que não tem agenda, não
+  recebe a lista do dia nem a consulta que a produz.
+- O seed passou a criar seis meses de atendimentos fechados, com as fórmulas reais, para que as
+  telas tenham história em desenvolvimento.
+
 ### Ordem das próximas etapas
 
 | Etapa | Entrega |
 |---|---|
-| 6 | Financeiro e relatórios |
 | 7 | WhatsApp e portal da paciente |
 | 8 | Painel da revenda (tenants, flags, "entrar como") |
 

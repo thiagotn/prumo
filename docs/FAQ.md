@@ -3,12 +3,12 @@
 Perguntas na linguagem de quem opera a clínica. Se algo aqui não corresponde ao que você vê na
 tela, o sistema está errado, não o texto — avise.
 
-> **Onde estamos:** etapas 1 a 5 prontas — entrar no sistema, perfis de acesso, uma instância por
+> **Onde estamos:** etapas 1 a 6 prontas — entrar no sistema, perfis de acesso, uma instância por
 > clínica, **cadastro de pacientes**, configurações, agenda com **marcação de horário**, **estoque
 > por lote**, a **ficha de atendimento com fechamento financeiro**, as **fotos clínicas** e os
-> **termos de consentimento com assinatura e PDF**. Ainda em construção: anamnese versionada,
-> financeiro, relatórios e mensagens — ao abrir, cada uma informa em qual etapa entra. As
-> perguntas sobre essas telas estão marcadas com **(em breve)**.
+> **termos de consentimento com assinatura e PDF**, o **financeiro** e os **relatórios**. Ainda em
+> construção: anamnese versionada, mensagens por WhatsApp e o portal da paciente — ao abrir, cada
+> uma informa em qual etapa entra. As perguntas sobre essas telas estão marcadas com **(em breve)**.
 
 ---
 
@@ -531,16 +531,72 @@ operação de administração; peça a quem cuida do sistema.
 
 ---
 
+## Financeiro
+
+### O que aparece no Financeiro?
+
+O mês corrente, com cinco números no topo — faturamento, custos, impostos e taxas, lucro líquido e
+margem realizada — e, abaixo, um lançamento por atendimento fechado. As setas andam mês a mês e
+**Este mês** traz você de volta.
+
+### De onde vêm esses valores?
+
+Do fechamento de cada atendimento. Cada lançamento guarda o que foi cobrado, o custo decomposto
+(material, sala, descartáveis e rateio), o imposto, a taxa da maquininha e o lucro — como estavam no
+dia. Mudar os parâmetros em Configurações **não reescreve** o passado: um lançamento antigo continua
+explicável pelos números que valiam quando aconteceu.
+
+### Por que uma margem aparece destacada?
+
+Porque ficou **abaixo de 28%**. É o limite a partir do qual qualquer imprevisto — um lote perdido,
+uma sala mais cara — come o lucro daquele atendimento.
+
+### O que é o card de reservas?
+
+A separação do lucro líquido do mês: **10%** para recompra de insumos, **5%** para emergência, e o
+restante é a retirada. Se o mês fechar no vermelho, os três números ficam negativos — é a conta
+dizendo que não há o que reservar.
+
+### Sou da recepção e não vejo custo nem margem
+
+É o perfil funcionando como previsto. Você confere data, paciente, procedimento, forma de pagamento
+e o valor cobrado; custo, imposto, lucro e margem ficam com a doutora e com o financeiro.
+
+---
+
+## Relatórios
+
+### O que o gráfico mostra?
+
+Os últimos seis meses. A barra **em contorno** é o faturamento do mês; a **preenchida** ao lado é o
+lucro líquido — quanto daquele faturamento ficou. O mês corrente aparece menor porque ainda está
+acontecendo.
+
+### Para que serve o guia de margem?
+
+Para situar a clínica: abaixo de 15% é zona de risco, 15% a 30% é a faixa mínima saudável, 30% a 40%
+é a faixa-alvo para injetáveis, acima de 40% é folga. A faixa onde a clínica está no período fica
+marcada.
+
+### Como mando os números para o contador?
+
+**Exportar CSV** baixa um arquivo que abre direto no Excel em português — ponto e vírgula entre
+colunas, vírgula nos centavos e acentos corretos. **Exportar PDF** gera o mesmo período em uma
+página, para anexar num e-mail.
+
+### O arquivo tem o nome das pacientes?
+
+Não. O que sai é data, mês, procedimento, produto, forma de pagamento e os valores. Quem foi
+atendida não é assunto da contabilidade, e uma planilha viaja mais longe do que se planeja.
+
+### Exportei e o Excel embaralhou as colunas
+
+Abra pelo Excel em português (o arquivo já vem no formato dele). Se sua planilha estiver configurada
+em inglês, importe escolhendo **ponto e vírgula** como separador.
+
+---
+
 ## Telas em construção
-
-### Financeiro **(em breve, etapa 6)**
-Lançamentos com valor cobrado, custos, imposto e taxa da maquininha, lucro e margem. Margem abaixo
-de 28% fica destacada. Reserva automática: 10% para recompra, 5% para emergência, o restante para
-retirada.
-
-### Relatórios **(em breve, etapa 6)**
-Seis meses de faturamento e lucro, mix por linha de procedimento, guia de margem e exportação em CSV
-e PDF para o contador.
 
 ### Mensagens **(em breve, etapa 7)**
 Lembretes automáticos por WhatsApp: 24h antes, preparo 48h antes, pós-procedimento em 1 dia, retorno

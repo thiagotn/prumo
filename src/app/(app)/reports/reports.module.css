@@ -1,0 +1,216 @@
+/* Relatórios (docs/especificacao.md, screen 8): six months of revenue and profit, the
+   procedure mix, and the margin guide. Shapes follow the prototype. */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-5);
+}
+
+.spacer {
+  margin-left: auto;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 26px;
+  align-items: start;
+}
+
+.card {
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.cardTitle {
+  font-family: var(--font-heading);
+  font-weight: 500;
+  font-size: 17px;
+  margin: var(--space-1) 0 0;
+}
+
+/* ── six-month bars ───────────────────────────────────────────────────────── */
+
+.chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  height: 250px;
+  margin-top: 22px;
+  padding-bottom: 26px;
+  border-bottom: 1px solid var(--color-divider);
+  position: relative;
+}
+
+.month {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.monthValue {
+  font-size: 10px;
+  line-height: 1;
+  color: var(--color-neutral-700);
+}
+
+.bars {
+  width: 100%;
+  display: flex;
+  gap: 4px;
+  align-items: flex-end;
+  min-height: 1px;
+}
+
+/* Revenue: outline. Profit: filled. The two together read as "how much of it stayed". */
+.barRevenue {
+  flex: 1;
+  /* Full height of the column: the column IS the month's revenue, and the filled bar
+     beside it is the part of it that stayed. */
+  height: 100%;
+  border: 1px solid var(--brand);
+  background: color-mix(in srgb, var(--brand) 12%, transparent);
+  min-height: 1px;
+}
+
+.barProfit {
+  flex: 1;
+  background: var(--brand);
+  min-height: 1px;
+}
+
+/* A month that lost money: the profit bar has nothing to show, so say it in words. */
+.barLoss {
+  flex: 1;
+  border: 1px dashed var(--color-accent-700);
+  min-height: 3px;
+}
+
+.monthName {
+  position: absolute;
+  bottom: 6px;
+  font-size: 10px;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-neutral-600);
+}
+
+.legend {
+  display: flex;
+  gap: 20px;
+  margin-top: 14px;
+  font-size: 11px;
+  color: var(--color-neutral-700);
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.swatchOutline {
+  width: 12px;
+  height: 9px;
+  border: 1px solid var(--brand);
+  display: inline-block;
+}
+
+.swatchSolid {
+  width: 12px;
+  height: 9px;
+  background: var(--brand);
+  display: inline-block;
+}
+
+/* ── procedure mix ────────────────────────────────────────────────────────── */
+
+.mix {
+  margin-top: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.mixLine {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11.5px;
+  line-height: 1.3;
+  gap: var(--space-3);
+}
+
+.mixValue {
+  color: var(--color-neutral-700);
+  white-space: nowrap;
+}
+
+.mixTrack {
+  height: 4px;
+  background: var(--color-neutral-200);
+  margin-top: 5px;
+}
+
+.mixFill {
+  height: 100%;
+  background: var(--brand);
+}
+
+/* ── margin guide ─────────────────────────────────────────────────────────── */
+
+.band {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-divider);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.band:last-child {
+  border-bottom: 0;
+}
+
+.bandRange {
+  font-size: 12px;
+  min-width: 74px;
+  color: var(--color-neutral-700);
+}
+
+.bandHere {
+  border-left: 3px solid var(--color-accent);
+  padding-left: var(--space-3);
+  margin-left: calc(var(--space-3) * -1 - 3px);
+  background: color-mix(in srgb, var(--color-accent) 7%, transparent);
+}
+
+.empty {
+  padding: var(--space-6);
+  text-align: center;
+  font-size: 13px;
+  color: var(--color-neutral-600);
+}
+
+.note {
+  margin: var(--space-3) 0 0;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--color-neutral-600);
+}
+
+@media (max-width: 1100px) {
+  .columns {
+    grid-template-columns: 1fr;
+  }
+}

@@ -8,17 +8,9 @@
 // the inputs are immutable once signed, so the same consent always produces the same
 // document.
 import 'server-only';
-import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf-lib';
+import { PDFDocument, StandardFonts, type PDFFont, type PDFPage } from 'pdf-lib';
 import { formatHash, paragraphs } from './consent';
-
-/** A4, in points. */
-const PAGE = { width: 595.28, height: 841.89 };
-const MARGIN = 56;
-const CONTENT_WIDTH = PAGE.width - MARGIN * 2;
-
-const INK = rgb(0.1, 0.1, 0.1);
-const MUTED = rgb(0.45, 0.45, 0.45);
-const RULE = rgb(0.8, 0.8, 0.8);
+import { CONTENT_WIDTH, INK, MARGIN, MUTED, PAGE, RULE, toWinAnsi, wrap } from './pdf';
 
 export type ConsentPdfInput = {
   clinicName: string;
@@ -45,64 +37,6 @@ function longDateTime(date: Date): string {
     timeStyle: 'short',
     timeZone: 'America/Sao_Paulo',
   }).format(date);
-}
-
-/**
- * Breaks a paragraph into lines that fit the column.
- *
- * A word longer than the whole column (a pasted URL) is broken by character rather than
- * left to run off the page.
- */
-function wrap(text: string, font: PDFFont, size: number, width: number): string[] {
-  const lines: string[] = [];
-  let line = '';
-
-  const push = () => {
-    if (line) lines.push(line);
-    line = '';
-  };
-
-  for (const word of text.split(/\s+/)) {
-    const candidate = line ? `${line} ${word}` : word;
-    if (font.widthOfTextAtSize(candidate, size) <= width) {
-      line = candidate;
-      continue;
-    }
-    push();
-    if (font.widthOfTextAtSize(word, size) <= width) {
-      line = word;
-      continue;
-    }
-    let chunk = '';
-    for (const char of word) {
-      if (font.widthOfTextAtSize(chunk + char, size) > width) {
-        lines.push(chunk);
-        chunk = char;
-      } else {
-        chunk += char;
-      }
-    }
-    line = chunk;
-  }
-  push();
-  return lines;
-}
-
-/**
- * WinAnsi — what the standard fonts can encode — covers Portuguese, but not the
- * typographic dashes and quotes a clinic pastes in from a word processor. Those are
- * folded rather than allowed to throw halfway through generating the document.
- */
-function toWinAnsi(text: string): string {
-  return text
-    .replace(/[‘’‛]/g, "'")
-    .replace(/[“”]/g, '"')
-    .replace(/[–—]/g, '-')
-    .replace(/…/g, '...')
-    .replace(/ /g, ' ')
-    // Anything still outside Latin-1 would make the encoder throw; a visible box beats a
-    // 500 on a document the patient is waiting for.
-    .replace(/[^\u0000-ÿ]/g, '?');
 }
 
 export async function renderConsentPdf(input: ConsentPdfInput): Promise<Uint8Array> {

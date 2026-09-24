@@ -94,6 +94,19 @@ As abas **"Materiais"** e **"Salas"** da planilha viram seed do banco na etapa 2
 `rooms`). A aba **"Orientação"** tem as faixas de margem que a tela de Relatórios exibe como guia
 (etapa 6).
 
+### Faixas de margem (guia de Relatórios)
+
+| Faixa | Leitura |
+|---|---|
+| abaixo de 15% | zona de risco — qualquer imprevisto consome o lucro |
+| 15% a 30% | faixa mínima saudável para clínica em crescimento |
+| 30% a 40% | faixa-alvo recomendada para injetáveis |
+| acima de 40% | alta — possível em procedimentos de alto valor percebido |
+
+> **A conferir contra a planilha.** Estas faixas estão em `src/lib/pricing.ts` (`marginBand`) desde
+> a etapa 2, mas a aba "Orientação" nunca foi transcrita aqui. Se os números dela forem outros, é a
+> planilha que manda: ajuste a tabela acima e o código no mesmo commit.
+
 ---
 
 ## Operação

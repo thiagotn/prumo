@@ -107,7 +107,8 @@ Desktop: canvas 1280 × 800. Mobile: 390 × 812. Layout do app = nav (sidebar 21
    quantidade, lote/validade, status (OK/Baixo/Vence/Repor). Botão "Entrada de nota".
 8. **Relatórios** — gráfico de barras de 6 meses (faturamento em contorno, lucro preenchido), mix
    por linha de procedimento, guia de margem (faixas da aba "Orientação" da planilha). Exportar
-   CSV / PDF para o contador.
+   CSV / PDF para o contador — **sem nome de paciente**: a contabilidade recebe os valores, não
+   quem foi atendida, e toda exportação grava em `audit_log`.
 9. **Mensagens** — automações (24h antes, 48h preparo, pós 1 dia, retorno 14 dias, política de
    falta, aniversário) com status e métricas; pré-visualização no formato WhatsApp. Resposta "1"
    confirma, "2" devolve à lista de espera.

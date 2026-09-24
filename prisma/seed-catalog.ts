@@ -356,3 +356,139 @@ export async function seedStockLots(tx: Tx, tenantId: string) {
   }
   return created;
 }
+
+/**
+ * Six months of closed encounters, so the financial screens have a history to show in
+ * development. The figures are computed with the real formulas (src/lib/pricing.ts), not
+ * invented: a seeded month has to add up the same way a real one does.
+ *
+ * Stock is deliberately left alone. These closings are backdated, and taking units off
+ * today's lots to pay for last April's appointments would make the stock screen lie.
+ */
+export async function seedClosedEncounters(tx: Tx, tenantId: string) {
+  const existing = await tx.payment.count({ where: { tenantId } });
+  if (existing > 0) return existing;
+
+  const [patients, rooms, procedures, params, tenant] = await Promise.all([
+    tx.patient.findMany({ where: { tenantId }, orderBy: { name: 'asc' } }),
+    tx.room.findMany({ where: { tenantId }, orderBy: { name: 'asc' } }),
+    tx.procedure.findMany({ where: { tenantId }, include: { products: true }, orderBy: { name: 'asc' } }),
+    tx.pricingParams.findFirst({ where: { tenantId }, orderBy: { createdAt: 'desc' } }),
+    tx.tenant.findUnique({ where: { id: tenantId }, select: { defaultUnit: true } }),
+  ]);
+  if (patients.length === 0 || rooms.length === 0 || procedures.length === 0 || !params) return 0;
+
+  const room = rooms.find((r) => r.name === tenant?.defaultUnit) ?? rooms[0]!;
+  const { costBreakdown, quote, realized, overheadPerAppointment, toCents } = await import(
+    '../src/lib/pricing'
+  );
+  const parameters = {
+    taxRate: Number(params.taxRate),
+    cardFeeUpfront: Number(params.cardFeeUpfront),
+    cardFeeInstallment: Number(params.cardFeeInstallment),
+    fixedMonthlyCosts: Number(params.fixedMonthlyCosts),
+    expectedAppointments: params.expectedAppointments,
+    defaultMargin: Number(params.defaultMargin),
+  };
+  const overhead = overheadPerAppointment(parameters);
+
+  // Cash flow as the clinic actually sees it: mostly card and Pix.
+  const METHODS = ['PIX', 'CREDIT_UPFRONT', 'CREDIT_INSTALLMENT', 'CASH', 'DEBIT'] as const;
+  const now = new Date();
+  let created = 0;
+
+  // Six months back, up to today. The current month only gets the days that have already
+  // happened — a closing dated next week would be a lie the screens would repeat.
+  for (let monthsAgo = 6; monthsAgo >= 0; monthsAgo--) {
+    // A gentle upward trend, so the six-month chart is not a flat wall.
+    const howMany = 4 + ((6 - monthsAgo) % 3);
+
+    for (let i = 0; i < howMany; i++) {
+      const day = 4 + i * 4;
+      const startsAt = new Date(
+        Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - monthsAgo, day, 12 + (i % 5), 0, 0),
+      );
+      if (startsAt.getTime() > now.getTime()) continue;
+      const procedure = procedures[(monthsAgo + i) % procedures.length]!;
+      const product = procedure.products[i % Math.max(procedure.products.length, 1)];
+      if (!product) continue;
+
+      const durationHours = Number(procedure.defaultDurationHours);
+      const endsAt = new Date(startsAt.getTime() + durationHours * 3_600_000);
+      const patient = patients[(monthsAgo * 3 + i) % patients.length]!;
+      const method = METHODS[(monthsAgo + i) % METHODS.length]!;
+
+      const cost = costBreakdown({
+        purchaseCost: Number(product.purchaseCost),
+        yieldPerUnit: Number(product.yieldPerUnit),
+        roomHourlyRate: Number(room.hourlyRate),
+        durationHours,
+        disposablesCost: Number(procedure.disposablesCost),
+        overheadPerAppointment: overhead,
+      });
+      const suggested = quote(
+        {
+          purchaseCost: Number(product.purchaseCost),
+          yieldPerUnit: Number(product.yieldPerUnit),
+          roomHourlyRate: Number(room.hourlyRate),
+          durationHours,
+          disposablesCost: Number(procedure.disposablesCost),
+          overheadPerAppointment: overhead,
+        },
+        parameters,
+      );
+      // Some months the clinic gives a discount; one of them lands below the 28% line,
+      // which is exactly the case the Financeiro screen has to highlight.
+      const discount = i === 2 ? 0.88 : i === 3 ? 0.95 : 1;
+      const charged =
+        method === 'CREDIT_INSTALLMENT' ? suggested.installment * discount : suggested.upfront * discount;
+      const outcome = realized(charged, cost.total, method, parameters);
+
+      const appointment = await tx.appointment.create({
+        data: {
+          tenantId,
+          patientId: patient.id,
+          roomId: room.id,
+          procedureId: procedure.id,
+          productId: product.id,
+          startsAt,
+          endsAt,
+          status: 'ATTENDED',
+        },
+      });
+      const encounter = await tx.encounter.create({
+        data: {
+          tenantId,
+          appointmentId: appointment.id,
+          patientId: patient.id,
+          productId: product.id,
+          closedAt: endsAt,
+          createdAt: endsAt,
+        },
+      });
+      await tx.payment.create({
+        data: {
+          tenantId,
+          encounterId: encounter.id,
+          method,
+          installments: method === 'CREDIT_INSTALLMENT' ? 3 : null,
+          charged: toCents(charged).toFixed(2),
+          materialCost: toCents(cost.material).toFixed(2),
+          roomCost: toCents(cost.room).toFixed(2),
+          disposablesCost: toCents(cost.disposables).toFixed(2),
+          overheadCost: toCents(cost.overhead).toFixed(2),
+          totalCost: toCents(cost.total).toFixed(2),
+          taxAmount: toCents(outcome.tax).toFixed(2),
+          cardFeeAmount: toCents(outcome.cardFee).toFixed(2),
+          netProfit: toCents(outcome.netProfit).toFixed(2),
+          margin: outcome.margin.toFixed(4),
+          pricingParamsId: params.id,
+          // The cash date is the day of the appointment, not the day of the seed.
+          createdAt: endsAt,
+        },
+      });
+      created++;
+    }
+  }
+  return created;
+}

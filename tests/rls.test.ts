@@ -261,12 +261,23 @@ describe('clinical photos', () => {
   // thing RLS cannot do: keep the object key inside the tenant's prefix in the bucket,
   // where R2 has no idea what a tenant is (ADR 0011).
   const ulidish = () => 'Z'.repeat(26);
+  const madePatients: string[] = [];
+
+  // These tests create patients, and without this they pile up in the development
+  // database — where they then show up on the dashboard and in every patient list.
+  afterAll(async () => {
+    if (madePatients.length === 0) return;
+    await withPlatformScope((tx) =>
+      tx.patient.deleteMany({ where: { id: { in: madePatients } } }),
+    );
+  });
 
   async function makeEncounter(tenantId: string) {
     return withTenant(tenantId, async (tx) => {
       const patient = await tx.patient.create({
         data: { tenantId, name: `Foto Teste ${Date.now()}` },
       });
+      madePatients.push(patient.id);
       const room = await tx.room.findFirst({ where: { tenantId } });
       const procedure = await tx.procedure.findFirst({ where: { tenantId } });
       const appointment = await tx.appointment.create({

@@ -25,6 +25,7 @@ export type AuditAction =
   | 'photo.delete'
   | 'photo.download'
   | 'settings.save'
+  | 'report.export'
   | 'consent.template.save'
   | 'consent.issue'
   | 'consent.sign'

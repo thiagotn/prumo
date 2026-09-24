@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   belowCost,
+  MARGIN_ALERT,
   cardFeeFor,
   costBreakdown,
   marginBand,
@@ -170,6 +171,13 @@ describe('belowCost', () => {
     expect(belowCost(600, 679.5)).toBe(true);
     expect(belowCost(679.5, 679.5)).toBe(false);
     expect(belowCost(700, 679.5)).toBe(false);
+  });
+});
+
+describe('margin alert', () => {
+  it('is the 28% the clinic asked to be warned about', () => {
+    // docs/regras-de-negocio.md: below this the Financeiro screen highlights the margin.
+    expect(MARGIN_ALERT).toBe(0.28);
   });
 });
 

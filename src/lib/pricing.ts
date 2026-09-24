@@ -195,6 +195,13 @@ export function toCents(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
+/**
+ * Below this, a realised margin is shown in accent-700 on the Financeiro screen
+ * (docs/regras-de-negocio.md). It is not one of the bands below: it is the line the
+ * clinic asked to be warned about.
+ */
+export const MARGIN_ALERT = 0.28;
+
 /** Margin bands from the spreadsheet's guidance tab, used by the reports screen. */
 export type MarginBand = 'risk' | 'minimum' | 'target' | 'high';
 
