@@ -254,6 +254,8 @@ describe('every business table is protected', () => {
       prisma.messageTemplate.count(),
       prisma.messageJob.count(),
       prisma.messageReply.count(),
+      prisma.anamnesisTemplate.count(),
+      prisma.anamnesis.count(),
     ]);
     expect(counts).toEqual(counts.map(() => 0));
   });
@@ -618,5 +620,135 @@ describe('messages and the portal login', () => {
         tx.user.update({ where: { id: tatiUser!.id }, data: { patientId: auroraPatient.id } }),
       ),
     ).rejects.toThrow(/another clinic/);
+  });
+});
+
+describe('the anamnesis', () => {
+  // The most personal rows the clinic keeps after the photos. Beyond the tenant slice,
+  // these assert what makes it a record rather than a form: it cannot be rewritten.
+  const created: string[] = [];
+
+  afterAll(async () => {
+    if (created.length === 0) return;
+    await withPlatformScope((tx) => tx.patient.deleteMany({ where: { id: { in: created } } }));
+  });
+
+  async function makeAnamnesis(tenantId: string) {
+    return withTenant(tenantId, async (tx) => {
+      const patient = await tx.patient.create({
+        data: { tenantId, name: `Anamnese RLS ${Date.now()}` },
+      });
+      created.push(patient.id);
+      const template = await tx.anamnesisTemplate.create({
+        data: {
+          tenantId,
+          questions: [{ id: 'alergia', label: 'Tem alergia?', type: 'boolean', alert: true }],
+          version: Math.floor(Math.random() * 1_000_000),
+          current: false,
+        },
+      });
+      const anamnesis = await tx.anamnesis.create({
+        data: {
+          tenantId,
+          patientId: patient.id,
+          templateId: template.id,
+          questionsSnapshot: [{ id: 'alergia', label: 'Tem alergia?', type: 'boolean' }],
+          answers: { alergia: { value: true, detail: 'dipirona' } },
+          alertCount: 1,
+          templateVersion: template.version,
+        },
+      });
+      return { anamnesis, patient };
+    });
+  }
+
+  it("an anamnesis of one clinic is invisible to another, even by id", async () => {
+    const { anamnesis } = await makeAnamnesis(tatiId);
+
+    expect(
+      await withTenant(auroraId, (tx) => tx.anamnesis.findUnique({ where: { id: anamnesis.id } })),
+    ).toBeNull();
+    expect(
+      (await withTenant(tatiId, (tx) => tx.anamnesis.findUnique({ where: { id: anamnesis.id } })))?.id,
+    ).toBe(anamnesis.id);
+  });
+
+  it('refuses to rewrite an answer that was already given', async () => {
+    // Versioned means exactly this: answering again writes a new row, and what she said
+    // on a day that has passed stays as it was.
+    const { anamnesis } = await makeAnamnesis(tatiId);
+
+    await expect(
+      withTenant(tatiId, (tx) =>
+        tx.anamnesis.update({
+          where: { id: anamnesis.id },
+          data: { answers: { alergia: { value: false } } },
+        }),
+      ),
+    ).rejects.toThrow(/nao aceita UPDATE/);
+  });
+
+  it('goes away with the patient, so an erasure request can reach it', async () => {
+    // The append-only guard must not turn into "impossible to erase" (LGPD).
+    const { anamnesis, patient } = await makeAnamnesis(tatiId);
+
+    await withTenant(tatiId, (tx) => tx.patient.delete({ where: { id: patient.id } }));
+
+    expect(
+      await withTenant(tatiId, (tx) => tx.anamnesis.findUnique({ where: { id: anamnesis.id } })),
+    ).toBeNull();
+  });
+
+  it('refuses a filling with no questions attached to it', async () => {
+    const { patient } = await makeAnamnesis(tatiId);
+    const template = await withTenant(tatiId, (tx) =>
+      tx.anamnesisTemplate.findFirst({ where: { tenantId: tatiId }, orderBy: { createdAt: 'desc' } }),
+    );
+
+    await expect(
+      withTenant(tatiId, (tx) =>
+        tx.$executeRaw`
+          INSERT INTO anamneses (id, tenant_id, patient_id, template_id, questions_snapshot, answers, template_version)
+          VALUES (gen_random_uuid(), ${tatiId}::uuid, ${patient.id}::uuid, ${template!.id}::uuid,
+                  '"nao e uma lista"'::jsonb, '{}'::jsonb, 1)
+        `,
+      ),
+    ).rejects.toThrow(/anamneses_has_questions_and_answers/);
+  });
+
+  it('allows only one questionnaire in force per clinic', async () => {
+    // Clear leftovers from an earlier run before claiming the reserved version range.
+    await withPlatformScope((tx) =>
+      tx.anamnesisTemplate.deleteMany({ where: { tenantId: tatiId, version: { gte: 900_000 } } }),
+    );
+    await withTenant(tatiId, (tx) =>
+      tx.anamnesisTemplate.updateMany({ where: { tenantId: tatiId }, data: { current: false } }),
+    );
+    await withTenant(tatiId, (tx) =>
+      tx.anamnesisTemplate.create({
+        data: { tenantId: tatiId, questions: [], version: 900_001, current: true },
+      }),
+    );
+
+    await expect(
+      withTenant(tatiId, (tx) =>
+        tx.anamnesisTemplate.create({
+          data: { tenantId: tatiId, questions: [], version: 900_002, current: true },
+        }),
+      ),
+    ).rejects.toThrow(/anamnesis_templates_one_current/);
+
+    // Leave the clinic with a questionnaire in force, as the screens expect.
+    await withPlatformScope((tx) =>
+      tx.anamnesisTemplate.deleteMany({ where: { tenantId: tatiId, version: { gte: 900_000 } } }),
+    );
+    const survivor = await withPlatformScope((tx) =>
+      tx.anamnesisTemplate.findFirst({ where: { tenantId: tatiId }, orderBy: { version: 'desc' } }),
+    );
+    if (survivor) {
+      await withPlatformScope((tx) =>
+        tx.anamnesisTemplate.update({ where: { id: survivor.id }, data: { current: true } }),
+      );
+    }
   });
 });

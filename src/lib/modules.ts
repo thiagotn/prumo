@@ -90,7 +90,10 @@ export const MODULE_DEFS: Record<Module, ModuleDefinition> = {
   // inside the encounter and the patient panel. They exist in the catalogue because
   // the guards and the audit log check them.
   medicalRecord: {
-    path: '/patients',
+    // The anamnesis screen. Opened from the patient panel and from the ficha, so it has
+    // no menu entry of its own — but the route has to resolve to a module, or the header
+    // has nothing to call the page.
+    path: '/anamnesis',
     label: 'Prontuário',
     title: 'Prontuário',
     crumb: 'Clínica',

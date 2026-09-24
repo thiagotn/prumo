@@ -58,6 +58,9 @@ enabled_modules (jsonb), billing_status`.
 | Configurações | total | — | — | — |
 | Ajuda (este FAQ) | total | total | total | total |
 
+O **questionário** da anamnese é escrito só pela doutora, como o texto dos termos; preencher é de
+quem alcança o prontuário.
+
 Mais: **Super-admin revenda** (tenants, config, painel, ajuda) e **Paciente** (só portal — a ajuda é
 escrita na linguagem de quem opera a clínica, não da paciente).
 
@@ -96,7 +99,9 @@ Desktop: canvas 1280 × 800. Mobile: 390 × 812. Layout do app = nav (sidebar 21
    telefone, último, próximo, LTV) + painel lateral da paciente (dados, alerta clínico, termo
    vigente, antes & depois).
 5. **Ficha de atendimento** — variação **Etapas** (stepper de 5 passos; mobile com barra de
-   progresso e botão "Próxima: X") ou **Tela única** (seções empilhadas). Seções: Anamnese;
+   progresso e botão "Próxima: X") ou **Tela única** (seções empilhadas). Seções: Anamnese
+   (questionário por clínica, **versionado**: responder de novo grava uma versão nova e o banco
+   recusa alteração da anterior; respostas marcadas como alerta sobem para a ficha);
    Procedimento (procedimento, produto/marca, lote, validade, volume, técnica, evolução; baixa
    automática no estoque); Fotos (4 enquadramentos padronizados, guia fantasma da foto anterior);
    Fechamento (forma de pagamento, decomposição de custos, lucro e margem); Termo (assinatura em

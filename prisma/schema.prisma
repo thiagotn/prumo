@@ -100,6 +100,8 @@ model Tenant {
   messageTemplates MessageTemplate[]
   messageJobs   MessageJob[]
   messageReplies MessageReply[]
+  anamnesisTemplates AnamnesisTemplate[]
+  anamneses     Anamnesis[]
 
   @@map("tenants")
 }
@@ -399,6 +401,7 @@ model Patient {
   /// The portal login, when the patient has one.
   login        User?
   messageJobs  MessageJob[]
+  anamneses    Anamnesis[]
 
   @@unique([tenantId, document])
   @@index([tenantId, name])
@@ -572,6 +575,7 @@ model Encounter {
   patient     Patient     @relation(fields: [patientId], references: [id], onDelete: Cascade)
   product     Product?    @relation(fields: [productId], references: [id], onDelete: SetNull)
   lot         StockLot?   @relation(fields: [lotId], references: [id], onDelete: SetNull)
+  anamneses  Anamnesis[]
   payment     Payment?
   photos      ClinicalPhoto[]
 
@@ -906,4 +910,72 @@ model MessageReply {
 
   @@index([tenantId, receivedAt])
   @@map("message_replies")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Stage 4, finished late — the anamnesis
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// The clinic's questionnaire, in one edition.
+///
+/// Versioned for the same reason a consent term is: an answer has to stay legible next
+/// to the question that was actually asked. Rewriting a question in place would turn a
+/// "sim" from last year into an answer to a question nobody put.
+model AnamnesisTemplate {
+  id       String @id @default(uuid()) @db.Uuid
+  tenantId String @map("tenant_id") @db.Uuid
+
+  /// The questions, as [{ id, label, type, detailLabel?, alert? }] — see src/lib/anamnesis.ts.
+  questions Json
+  version   Int     @default(1)
+  /// The edition asked today. The others stay for what was already answered.
+  current   Boolean @default(true)
+
+  createdByUserId String? @map("created_by_user_id") @db.Uuid
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  tenant    Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  anamneses Anamnesis[]
+
+  @@unique([tenantId, version])
+  @@index([tenantId, current])
+  @@map("anamnesis_templates")
+}
+
+/// One filling of the questionnaire for one patient.
+///
+/// Never updated: answering again writes a new row, and the previous one stays exactly as
+/// it was. That is what "versionada" means here — a record of what she said on the day,
+/// not a form that drifts.
+model Anamnesis {
+  id       String @id @default(uuid()) @db.Uuid
+  tenantId String @map("tenant_id") @db.Uuid
+
+  patientId  String  @map("patient_id") @db.Uuid
+  templateId String  @map("template_id") @db.Uuid
+  /// The encounter it was filled during, when it was filled from the ficha.
+  encounterId String? @map("encounter_id") @db.Uuid
+
+  /// The questions as they were asked, copied in. The answers below are meaningless
+  /// without them.
+  questionsSnapshot Json @map("questions_snapshot")
+  /// { [questionId]: { value: boolean | string, detail?: string } }
+  answers Json
+  /// How many answers came back as the thing the clinic has to notice.
+  alertCount Int @default(0) @map("alert_count")
+
+  templateVersion Int     @map("template_version")
+  filledByUserId  String? @map("filled_by_user_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  tenant    Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  patient   Patient           @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  template  AnamnesisTemplate @relation(fields: [templateId], references: [id])
+  encounter Encounter?        @relation(fields: [encounterId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, createdAt])
+  @@index([patientId, createdAt])
+  @@map("anamneses")
 }

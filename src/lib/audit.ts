@@ -20,6 +20,7 @@ export type AuditAction =
   | 'session.expired'
   | 'medicalRecord.view'
   | 'anamnesis.view'
+  | 'anamnesis.fill'
   | 'photo.view'
   | 'photo.upload'
   | 'photo.delete'

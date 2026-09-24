@@ -7,8 +7,8 @@ tela, o sistema está errado, não o texto — avise.
 > clínica, **cadastro de pacientes**, configurações, agenda com **marcação de horário**, **estoque
 > por lote**, a **ficha de atendimento com fechamento financeiro**, as **fotos clínicas** e os
 > **termos de consentimento com assinatura e PDF**, o **financeiro**, os **relatórios**, as
-> **mensagens no WhatsApp** e o **portal da paciente**. Falta a anamnese versionada e o painel da
-> revenda (etapa 8).
+> **mensagens no WhatsApp**, o **portal da paciente** e a **anamnese versionada**. Falta o painel
+> da revenda (etapa 8).
 
 ---
 
@@ -546,6 +546,52 @@ preenchido.
 
 Um termo cancelado não pode ser reaberto — emita outro. O link do cancelado deixa de funcionar na
 hora, o que é justamente o motivo de existir o cancelamento.
+
+---
+
+## Anamnese
+
+### Onde eu preencho?
+
+Pela ficha de atendimento, em **Anamnese**, ou pelo painel da paciente em **Pacientes → Ver
+anamnese**. Só perfis que alcançam prontuário abrem: a doutora e o profissional convidado (nas
+próprias pacientes). A recepção não vê.
+
+### Ela apaga a resposta anterior?
+
+Nunca. Cada vez que você salva, o sistema grava uma **versão nova** e mantém a anterior exatamente
+como foi respondida. O banco recusa alteração de uma anamnese já gravada — nem por engano, nem por
+comando.
+
+### Por que as respostas antigas vêm preenchidas?
+
+Porque o normal é não ter mudado nada. Cada pergunta mostra ao lado o que ela respondeu da última
+vez; você confirma ou corrige, e o que mudou fica marcado na tela depois de salvar.
+
+### O que são as respostas "que exigem atenção"?
+
+As perguntas marcadas como alerta no questionário — gravidez, alergia, anticoagulante, isotretinoína,
+doença autoimune, queloide, medicamento contínuo. Um **sim** em qualquer uma delas aparece em
+destaque na anamnese e também na ficha de atendimento, antes de você aplicar qualquer coisa.
+
+### Isso é o mesmo que o alerta clínico do cadastro?
+
+Não, e a diferença é proposital. O **alerta clínico** é a linha curta do cadastro, que aparece em
+qualquer tela que mostre a paciente. A **anamnese** é o questionário inteiro, com data e versão. Uma
+resposta de atenção na anamnese costuma virar também uma linha no alerta clínico — isso você decide
+e escreve.
+
+### Posso mudar as perguntas?
+
+Sim, só a doutora: em **Anamnese → Editar o questionário**. Salvar publica a **edição seguinte**; o
+que já foi respondido continua com as perguntas de quando foi respondido — senão um "sim" de um ano
+atrás viraria resposta a uma pergunta que ninguém fez. Deixar o texto de uma pergunta em branco a
+remove das próximas.
+
+### "Vale perguntar de novo"
+
+Aparece quando a última anamnese tem mais de seis meses. É um lembrete, não um bloqueio: o sistema
+não impede de atender.
 
 ---
 

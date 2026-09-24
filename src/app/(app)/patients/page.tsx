@@ -5,7 +5,7 @@ import { requireModule } from '@/lib/auth/guards';
 import { withTenant } from '@/lib/db';
 import { longDate } from '@/lib/format';
 import { ageLabel, formatBirthDate, formatCpf, formatPhone } from '@/lib/patient';
-import { canWrite } from '@/lib/rbac';
+import { canAccess, canWrite } from '@/lib/rbac';
 import { WriteDeniedNotice } from '../denied-notice';
 import styles from './patients.module.css';
 
@@ -267,9 +267,19 @@ export default async function PatientsPage({
               </div>
             ) : null}
 
+            {canAccess(session.role, 'medicalRecord') ? (
+              <Link
+                className="btn btn-secondary btn-block touch"
+                href={`/anamnesis?patient=${chosen.id}`}
+                style={{ fontSize: 12, marginTop: 'var(--space-3)' }}
+              >
+                Ver anamnese
+              </Link>
+            ) : null}
+
             <div className={styles.locked}>
-              <strong>Prontuário, anamnese e fotos</strong> abrem pela ficha de atendimento, na
-              agenda. Cada acesso exige 2FA e fica registrado no log de auditoria.
+              <strong>Prontuário, anamnese e fotos</strong> exigem 2FA e cada acesso fica registrado
+              no log de auditoria. A ficha do dia abre pela agenda.
               {level === 'own' ? (
                 <>
                   <br />

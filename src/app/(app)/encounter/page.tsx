@@ -5,19 +5,16 @@ import { withTenant } from '@/lib/db';
 import { currency, longDate } from '@/lib/format';
 import { costBreakdown, quote, toCents } from '@/lib/pricing';
 import { currentPricingParams } from '@/lib/pricing-params';
+import { alertsIn, freshnessLabel, isStale, parseAnswers, parseQuestions } from '@/lib/anamnesis';
 import { CONSENT_STATUS_LABELS, CONSENT_STATUS_TAG } from '@/lib/consent';
 import { canWrite } from '@/lib/rbac';
 import { slotLabel, STATUS_LABELS } from '@/lib/schedule';
 import { storageConfigured } from '@/lib/storage';
-import { PendingModule } from '../pending-module';
 import { CloseForm } from './close-form';
 import { Photos } from './photos';
 import styles from './encounter.module.css';
 
 export const metadata: Metadata = { title: 'Ficha de atendimento' };
-
-/** Product copy, pt-BR. */
-const ITEMS = ['Anamnese versionada, com a resposta anterior ao lado da nova.'];
 
 export default async function EncounterPage({
   searchParams,
@@ -27,7 +24,7 @@ export default async function EncounterPage({
   const { appointment: appointmentId } = await searchParams;
 
   // Opening a record is itself an event: this both requires 2FA and writes to audit_log.
-  const { tenant, session, masked, level } = await requireSensitiveModule(
+  const { tenant, session, masked } = await requireSensitiveModule(
     'encounter',
     appointmentId ? { kind: 'appointment', id: appointmentId } : undefined,
   );
@@ -35,14 +32,11 @@ export default async function EncounterPage({
 
   if (!appointmentId) {
     return (
-      <>
-        <p className="card-body" style={{ maxWidth: '54em' }}>
-          Escolha um atendimento na <Link href="/schedule">agenda</Link> para abrir a ficha. O que já
-          funciona aqui: registro do procedimento, baixa do lote no estoque e fechamento financeiro
-          com o preço calculado a partir dos parâmetros da clínica.
-        </p>
-        <PendingModule stage={4} delivers="O que ainda falta na ficha" level={level} items={ITEMS} />
-      </>
+      <p className="card-body" style={{ maxWidth: '54em' }}>
+        Escolha um atendimento na <Link href="/schedule">agenda</Link> para abrir a ficha: anamnese,
+        registro do procedimento, fotos, termo e o fechamento financeiro com o preço calculado a
+        partir dos parâmetros da clínica.
+      </p>
     );
   }
 
@@ -82,16 +76,23 @@ export default async function EncounterPage({
           })
         : [];
 
+    const anamnesis = appointment?.patientId
+      ? await tx.anamnesis.findFirst({
+          where: { patientId: appointment.patientId },
+          orderBy: { createdAt: 'desc' },
+        })
+      : null;
+
     const consents = await tx.consent.findMany({
       where: { appointmentId },
       orderBy: { createdAt: 'desc' },
       select: { id: true, titleSnapshot: true, status: true, signedAt: true },
     });
 
-    return { appointment, params, photos, previousPhotos, consents };
+    return { appointment, params, photos, previousPhotos, consents, anamnesis };
   });
 
-  const { appointment, params, photos, previousPhotos, consents } = data;
+  const { appointment, params, photos, previousPhotos, consents, anamnesis } = data;
   if (!appointment) return <p className="card-body">Atendimento não encontrado nesta clínica.</p>;
   if (appointment.isBlock) {
     return <p className="card-body">Este horário é um bloqueio, não um atendimento.</p>;
@@ -145,6 +146,12 @@ export default async function EncounterPage({
 
   const closed = appointment.encounter?.closedAt;
   const payment = appointment.encounter?.payment;
+
+  // The answers the practitioner must not miss, read against the questions that were
+  // actually asked at the time.
+  const anamnesisAlerts = anamnesis
+    ? alertsIn(parseQuestions(anamnesis.questionsSnapshot), parseAnswers(anamnesis.answers))
+    : [];
 
   return (
     <div className={styles.layout}>
@@ -200,6 +207,37 @@ export default async function EncounterPage({
               </p>
             ) : null}
           </div>
+        ) : null}
+
+        {appointment.patientId && !masked ? (
+          <section style={{ marginTop: 'var(--space-6)' }}>
+            <div className="kicker">Anamnese</div>
+            {anamnesisAlerts.length > 0 ? (
+              <p className={styles.alert} role="note">
+                <strong>
+                  A anamnese tem {anamnesisAlerts.length} resposta
+                  {anamnesisAlerts.length === 1 ? '' : 's'} que exige atenção:
+                </strong>{' '}
+                {anamnesisAlerts.map((alert) => alert.label.replace(/\?$/, '')).join(' · ')}
+              </p>
+            ) : null}
+            <p className={styles.hint}>
+              {anamnesis
+                ? `${freshnessLabel(anamnesis.createdAt)}${
+                    isStale(anamnesis.createdAt) ? ' — vale perguntar de novo' : ''
+                  }${anamnesisAlerts.length === 0 ? ' · nenhuma resposta de atenção' : ''}`
+                : 'Ainda não respondida por esta paciente.'}
+            </p>
+            <Link
+              className={anamnesis ? 'btn btn-secondary touch' : 'btn btn-primary touch'}
+              href={`/anamnesis?patient=${appointment.patientId}&appointment=${appointment.id}${
+                appointment.encounter ? `&encounter=${appointment.encounter.id}` : ''
+              }${anamnesis ? '' : '&fill=1'}`}
+              style={{ fontSize: 12, marginTop: 'var(--space-2)' }}
+            >
+              {anamnesis ? 'Ver e atualizar anamnese' : 'Preencher anamnese'}
+            </Link>
+          </section>
         ) : null}
 
         {appointment.encounter ? (

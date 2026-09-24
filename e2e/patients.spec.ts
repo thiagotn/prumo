@@ -34,9 +34,9 @@ test.describe('patients', () => {
     const panel = page.getByRole('complementary', { name: 'Detalhes da paciente' });
     await expect(panel.getByRole('heading', { name: 'Juliana Prado' })).toBeVisible();
     await expect(panel.getByRole('note')).toContainText('Alergia a lidocaína');
-    // The medical record itself is not here yet, and the panel says so rather than
-    // pretending it is missing.
-    await expect(panel).toContainText('ficha de atendimento');
+    // Reception sees the short line, and the panel says what it would take to reach the
+    // record itself.
+    await expect(panel).toContainText('exigem 2FA');
   });
 
   test('a patient from another clinic never appears', async ({ browser }) => {

@@ -122,8 +122,8 @@ Para ver que o menu não é a proteção: logado como recepção, digite `/setti
 ### Testes
 
 ```bash
-npm test          # 390 unitários + integração de RLS e sessão (precisa do db:up)
-npm run test:e2e  # 89 end-to-end no Playwright (sobe o dev server sozinho)
+npm test          # 413 unitários + integração de RLS e sessão (precisa do db:up)
+npm run test:e2e  # 94 end-to-end no Playwright (sobe o dev server sozinho)
 npm run test:all  # os dois
 npm run typecheck
 npm run lint
@@ -146,6 +146,7 @@ src/
     flags.ts        feature flags por tenant
     color.ts        validação de contraste da cor de acento
     patient.ts      dados de cadastro: CPF, telefone, nascimento (normalização e checagem)
+    anamnesis.ts    questionário, normalização das respostas, alertas e o que mudou entre versões
     consent.ts      termos: preenchimento do texto, hash da assinatura, validade do link
     finance.ts      meses no fuso da clínica, somatórios do mês e CSV para o contador
     messages.ts     automações: texto, quando cada uma vence, E.164, leitura da resposta
@@ -247,6 +248,17 @@ código precisa dele está transcrito em [`docs/regras-de-negocio.md`](docs/regr
 - **Entrada de nota** (entregue depois, junto da etapa 7): lançar o lote que chegou — e cadastrar a
   marca, quando é a primeira vez — numa transação só, com o movimento de entrada no ledger. Pede
   acesso total ao módulo: a entrada digita o que a clínica pagou.
+
+**Anamnese versionada** (dívida da etapa 4, entregue depois):
+
+- Questionário por clínica, editável pela doutora, com edições: o que foi respondido continua
+  preso às perguntas de quando foi respondido.
+- Responder de novo grava uma **versão nova**, com a resposta anterior ao lado de cada pergunta —
+  o normal é não ter mudado nada. O que mudou fica marcado depois de salvar.
+- O banco recusa `UPDATE` em `anamneses` por trigger; `DELETE` continua permitido, porque um pedido
+  de apagamento (LGPD) precisa alcançar o registro junto com a paciente.
+- Respostas marcadas como alerta — gravidez, alergia, anticoagulante, isotretinoína — sobem para a
+  ficha de atendimento, antes de qualquer aplicação.
 
 **Etapa 5 concluída** — termos de consentimento:
 

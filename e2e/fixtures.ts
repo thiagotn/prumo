@@ -278,3 +278,6 @@ export async function signInWithTwoFactor(page: Page, email: string) {
 
   await expect(page.getByRole('navigation', { name: 'Módulos' })).toBeVisible();
 }
+
+/** Re-exported so specs can type their own fixtures without importing Playwright twice. */
+export type { Page };
