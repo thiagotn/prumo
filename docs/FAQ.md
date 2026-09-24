@@ -436,6 +436,25 @@ O rendimento é quantos atendimentos uma unidade comprada cobre: um frasco que a
 1; um que atende uma e meia é 1,5. Custo e rendimento juntos dão o custo por atendimento, que entra
 no preço sugerido — por isso o sistema não deixa nenhum dos dois em branco.
 
+### O produto está como "Repor". Preciso cadastrar de novo?
+
+Não. **Repor** quer dizer que a quantidade utilizável chegou a zero — os lotes acabaram, ou o que
+sobrou está vencido. O produto continua no catálogo.
+
+Faça uma **Entrada de nota** escolhendo o produto **que já existe na lista** e informando o lote
+novo: número, validade e quantidade. A quantidade sobe e o status sai de Repor sozinho.
+
+Cadastrar produto novo só quando mudar a coisa: outra marca, ou a mesma marca em outra
+apresentação — Frasco 50U e Frasco 100U são produtos diferentes, porque o rendimento e o custo por
+atendimento são diferentes. Tentar cadastrar a mesma marca no mesmo procedimento é recusado.
+
+### Por que cada compra vira um lote novo, em vez de somar no que já existe?
+
+Porque o lote é o que liga o frasco à paciente. Se o fornecedor recolher um lote, ou se alguma
+paciente tiver uma reação, a pergunta é "quem recebeu deste lote" — somar a compra nova dentro do
+lote antigo apagaria essa resposta. É também o que faz a baixa automática consumir primeiro o que
+vence antes.
+
 ### Este lote veio por outro preço
 
 Preencha **Custo deste lote**. Em branco, ele assume o custo cadastrado no produto. O lote guarda o
@@ -444,8 +463,16 @@ mudar de preço.
 
 ### "Já existe um lote com esse número para este produto"
 
-Esse lote já foi lançado. Se chegou mais do mesmo lote, o certo é corrigir a quantidade do lote
-existente — ainda não há tela para isso; por enquanto fale com quem administra o sistema.
+Esse lote já foi lançado — lote é único por produto. Se chegou mais caixa do **mesmo** lote, o certo
+é corrigir a quantidade do lote existente, e para isso ainda não há tela: fale com quem administra o
+sistema. Se o número na caixa é outro, é outro lote: lance normalmente.
+
+### O fornecedor mudou o preço. Onde eu atualizo?
+
+No lançamento, **Custo deste lote** guarda o que você pagou nesta compra — é isso que mantém um
+atendimento antigo explicável. Mas o **custo cadastrado no produto**, que é o que alimenta o preço
+sugerido, ainda **não é editável por tela**: ele é definido quando o produto nasce. Enquanto não
+houver essa tela, mudanças definitivas de preço passam por quem administra o sistema.
 
 ### Lancei sem validade
 
