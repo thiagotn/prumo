@@ -63,7 +63,8 @@ jobs:
       - run: npm test
       - run: npx next build
 
-      # End-to-end: Playwright starts the dev server itself (see playwright.config.ts).
+      # End-to-end. Playwright serves the build produced by the step above rather than
+      # starting a dev server — see the webServer note in playwright.config.ts.
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
 

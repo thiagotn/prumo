@@ -48,7 +48,15 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'npm run dev',
+    // In CI, serve the build the previous step already produced. Two reasons: the dev
+    // server compiles each route on first request, which on a cold runner turns a
+    // 90-second suite into a twenty-minute one; and `next dev` and `next build` share the
+    // .next directory, so running dev after a build has it read an import map the other
+    // mode wrote — which surfaces as repeated
+    // "next/font/google queries have exactly one entry" and every page failing to render.
+    //
+    // Locally the dev server stays, so a watched run still picks up edits.
+    command: process.env.CI ? 'npm start' : 'npm run dev',
     url: `${BASE_URL}/healthz`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
