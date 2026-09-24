@@ -89,6 +89,18 @@ export function canAccess(role: Role, module: Module): boolean {
   return accessLevel(role, module) !== 'none';
 }
 
+/**
+ * Permission to CREATE or CHANGE a record in the module, as opposed to opening it.
+ *
+ * 'partial' writes: reception registers a patient and records a payment, it just does
+ * not see cost or margin. 'own' does not: a guest practitioner reads their own diary and
+ * their own patients, and the front desk is who books and registers.
+ */
+export function canWrite(role: Role, module: Module): boolean {
+  const level = accessLevel(role, module);
+  return level === 'full' || level === 'partial';
+}
+
 /** True if the role reaches any module holding health data. */
 export function reachesSensitiveData(role: Role): boolean {
   return MODULES.some((m) => MODULE_DEFS[m].sensitive && canAccess(role, m));

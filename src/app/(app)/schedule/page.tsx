@@ -4,6 +4,7 @@ import { Prisma, Role } from '@prisma/client';
 import { requireModule } from '@/lib/auth/guards';
 import { withTenant } from '@/lib/db';
 import { longDate } from '@/lib/format';
+import { canWrite } from '@/lib/rbac';
 import {
   addDays,
   dayBounds,
@@ -17,6 +18,7 @@ import {
   todayKey,
   weekDays,
 } from '@/lib/schedule';
+import { WriteDeniedNotice } from '../denied-notice';
 import styles from './schedule.module.css';
 
 export const metadata: Metadata = { title: 'Agenda' };
@@ -34,10 +36,16 @@ const WEEKDAY_NAMES = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 export default async function SchedulePage({
   searchParams,
 }: {
-  searchParams: Promise<{ view?: string; day?: string; room?: string }>;
+  searchParams: Promise<{
+    view?: string;
+    day?: string;
+    room?: string;
+    denied?: string;
+    saved?: string;
+  }>;
 }) {
   const { tenant, session, level } = await requireModule('schedule');
-  const { view, day, room } = await searchParams;
+  const { view, day, room, denied, saved } = await searchParams;
 
   if (!tenant) return <p className="card-body">Esta tela pertence a uma clínica.</p>;
 
@@ -48,6 +56,7 @@ export default async function SchedulePage({
   // A guest practitioner sees only their own diary — the matrix says 'own', and this is
   // where that is enforced, not by hiding anything.
   const ownOnly = level === 'own' && session.role === Role.PRACTITIONER;
+  const mayWrite = canWrite(session.role, 'schedule');
 
   const range =
     activeView === 'day'
@@ -85,6 +94,13 @@ export default async function SchedulePage({
 
   return (
     <div>
+      <WriteDeniedNotice denied={denied} what="Agendar e remarcar" />
+      {saved ? (
+        <p className={styles.saved} role="status">
+          Agendamento gravado.
+        </p>
+      ) : null}
+
       <div className={styles.toolbar}>
         {VIEWS.map((v) => (
           <Link
@@ -111,6 +127,16 @@ export default async function SchedulePage({
         {activeDay !== today ? (
           <Link className="btn btn-ghost" href={href({ day: today })} style={{ fontSize: 12 }}>
             Hoje
+          </Link>
+        ) : null}
+
+        {mayWrite ? (
+          <Link
+            className="btn btn-primary touch"
+            href={`/schedule/new?day=${activeDay}${room ? `&room=${room}` : ''}`}
+            style={{ fontSize: 12 }}
+          >
+            Novo agendamento
           </Link>
         ) : null}
 
@@ -158,7 +184,18 @@ export default async function SchedulePage({
                 <div className={`${styles.slotHour} num`}>{slot.hour}h</div>
                 <div className={styles.slotBody}>
                   {inSlot.length === 0 ? (
-                    <span className={styles.free}>Livre</span>
+                    mayWrite ? (
+                      // A free slot is the shortest path to booking: it carries the day,
+                      // the hour and the room filter into the form.
+                      <Link
+                        className={styles.free}
+                        href={`/schedule/new?day=${activeDay}&hour=${slot.hour}${room ? `&room=${room}` : ''}`}
+                      >
+                        Livre · agendar
+                      </Link>
+                    ) : (
+                      <span className={styles.free}>Livre</span>
+                    )
                   ) : (
                     inSlot.map((a) =>
                       a.isBlock ? (

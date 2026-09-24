@@ -1,15 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import {
   addDays,
+  appointmentWindow,
   clashesIn,
   dayBounds,
   dayKey,
   daySlots,
+  durationMinutes,
   groupByDay,
   hourIn,
   instantAt,
+  instantAtTime,
   overlaps,
   slotLabel,
+  timeInputValue,
   weekDays,
 } from './schedule';
 
@@ -245,5 +249,52 @@ describe('slotLabel', () => {
     const from = instantAt('2026-09-23', 14);
     const to = new Date(from.getTime() + 90 * 60 * 1000);
     expect(slotLabel(from, to)).toBe('14h–15h30');
+  });
+});
+
+describe('instantAtTime / appointmentWindow', () => {
+  it('maps a half hour to the right absolute instant', () => {
+    // 14:30 in São Paulo is 17:30 UTC.
+    expect(instantAtTime('2026-09-23', '14:30')!.toISOString()).toBe('2026-09-23T17:30:00.000Z');
+    expect(instantAtTime('2026-09-23', '08:00')!.toISOString()).toBe('2026-09-23T11:00:00.000Z');
+  });
+
+  it('refuses what is not a time, instead of booking at midnight', () => {
+    expect(instantAtTime('2026-09-23', '')).toBeNull();
+    expect(instantAtTime('2026-09-23', '25:00')).toBeNull();
+    expect(instantAtTime('2026-09-23', '14:70')).toBeNull();
+    expect(instantAtTime('2026-09-23', '14h')).toBeNull();
+  });
+
+  it('round-trips through the time input value', () => {
+    expect(timeInputValue(instantAtTime('2026-09-23', '09:30')!)).toBe('09:30');
+    expect(timeInputValue(instantAtTime('2026-09-23', '00:00')!)).toBe('00:00');
+  });
+
+  it('closes the window after the duration', () => {
+    const window = appointmentWindow('2026-09-23', '14:30', 90)!;
+    expect(window.startsAt.toISOString()).toBe('2026-09-23T17:30:00.000Z');
+    expect(window.endsAt.toISOString()).toBe('2026-09-23T19:00:00.000Z');
+    expect(durationMinutes(window.startsAt, window.endsAt)).toBe(90);
+  });
+
+  it('lets a late appointment run into the next day without losing an hour', () => {
+    const window = appointmentWindow('2026-09-23', '23:30', 60)!;
+    expect(dayKey(window.startsAt)).toBe('2026-09-23');
+    expect(dayKey(window.endsAt)).toBe('2026-09-24');
+  });
+
+  it('keeps the duration across a daylight-saving change', () => {
+    // Lisbon puts the clock forward at 01:00 on 29 March 2026. An appointment booked at
+    // 00:30 for 60 minutes lasts 60 minutes — the wall clock is what jumps, not the care.
+    const window = appointmentWindow('2026-03-29', '00:30', 60, 'Europe/Lisbon')!;
+    expect(durationMinutes(window.startsAt, window.endsAt)).toBe(60);
+    expect(window.startsAt.toISOString()).toBe('2026-03-29T00:30:00.000Z');
+  });
+
+  it('refuses a malformed day or a duration that is not positive', () => {
+    expect(appointmentWindow('23/09/2026', '14:00', 60)).toBeNull();
+    expect(appointmentWindow('2026-09-23', '14:00', 0)).toBeNull();
+    expect(appointmentWindow('2026-09-23', '14:00', Number.NaN)).toBeNull();
   });
 });

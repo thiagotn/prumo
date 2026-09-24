@@ -9,8 +9,8 @@ lembretes por WhatsApp e portal da paciente — com dados sensíveis de saúde, 
 as decisões de arquitetura abaixo.
 
 > **Etapas 1 a 4 de 8 concluídas.** Login com perfis, tenant por hostname, cadastro de pacientes,
-> configurações, agenda, estoque por lote e a ficha de atendimento com fechamento financeiro estão
-> de pé. As telas dos
+> configurações, agenda com marcação de horário, estoque por lote e a ficha de atendimento com
+> fechamento financeiro estão de pé. As telas dos
 > outros módulos são placeholders que já passam por guard, tenant e auditoria, e dizem qual etapa as
 > entrega. Ver [Estado](#estado).
 
@@ -112,8 +112,8 @@ Para ver que o menu não é a proteção: logado como recepção, digite `/setti
 ### Testes
 
 ```bash
-npm test          # 142 unitários + integração de RLS e sessão (precisa do db:up)
-npm run test:e2e  # 24 end-to-end no Playwright (sobe o dev server sozinho)
+npm test          # 283 unitários + integração de RLS e sessão (precisa do db:up)
+npm run test:e2e  # 55 end-to-end no Playwright (sobe o dev server sozinho)
 npm run test:all  # os dois
 npm run typecheck
 npm run lint
@@ -135,6 +135,7 @@ src/
     navigation.ts   monta menu e tab bar a partir da matriz + flags
     flags.ts        feature flags por tenant
     color.ts        validação de contraste da cor de acento
+    patient.ts      dados de cadastro: CPF, telefone, nascimento (normalização e checagem)
     audit.ts        gravação no audit_log
     format.ts       moeda, datas e nomes em pt-BR
     auth/           password (scrypt), totp (RFC 6238), session, guards
@@ -186,7 +187,9 @@ código precisa dele está transcrito em [`docs/regras-de-negocio.md`](docs/regr
 - Motor de precificação em `src/lib/pricing.ts`, com as fórmulas da planilha e o caso de referência
   (Restylane Kysse / Tatuapé → R$ 1.142,02 à vista, R$ 1.386,73 parcelado) coberto por teste.
 - Parâmetros versionados: salvar cria uma versão nova, então um preço antigo continua explicável.
-- Cadastros de salas, procedimentos, produtos e pacientes, todos sob RLS.
+- Cadastros de salas, procedimentos, produtos e pacientes, todos sob RLS. **Nova paciente** e
+  **Editar cadastro** validam CPF (dígitos verificadores), telefone e data de nascimento no
+  servidor, e uma recusa devolve o formulário preenchido.
 - Tela de Configurações: identidade com prévia do login e validação de contraste ao vivo, parâmetros
   de preço com rateio recalculado na hora, feature flags e a matriz de permissões.
 - Tela de Pacientes: filtros, busca, e painel lateral com o alerta clínico em destaque.
@@ -200,7 +203,14 @@ código precisa dele está transcrito em [`docs/regras-de-negocio.md`](docs/regr
   impede um bloqueio com paciente.
 - `src/lib/schedule.ts` trabalha no fuso da clínica, não no do servidor — com testes que cobrem
   horário de verão e a virada de dia.
-- Detecção de conflito de sala pronta (`clashesIn`), coberta por teste, para o agendamento da etapa 4.
+- **Novo agendamento** pelo botão da barra ou clicando na faixa "Livre" da hora desejada, que já
+  leva dia, hora e sala. O procedimento preenche a duração típica, e o alerta clínico da paciente
+  aparece assim que ela é escolhida.
+- Conflito de sala detectado por sobreposição, não por hora cheia (`clashesIn`): a recusa diz com
+  quem e em que horário é o choque, e o formulário volta preenchido.
+- **Ler não é escrever**: `canWrite` separa consultar de cadastrar/agendar. O profissional
+  convidado abre a agenda e as próprias pacientes; quem marca e cadastra é a recepção ou a doutora,
+  e o guard nega pelo servidor (`requireModuleWrite`).
 
 **Etapa 4 concluída** — atendimento, estoque e fechamento:
 

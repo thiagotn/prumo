@@ -4,8 +4,8 @@ Perguntas na linguagem de quem opera a clínica. Se algo aqui não corresponde a
 tela, o sistema está errado, não o texto — avise.
 
 > **Onde estamos:** etapas 1 a 4 prontas — entrar no sistema, perfis de acesso, uma instância por
-> clínica, pacientes, configurações, agenda, **estoque por lote**, a **ficha de atendimento com
-> fechamento financeiro** e as **fotos clínicas**. Ainda em construção: anamnese versionada, termos,
+> clínica, **cadastro de pacientes**, configurações, agenda com **marcação de horário**, **estoque
+> por lote**, a **ficha de atendimento com fechamento financeiro** e as **fotos clínicas**. Ainda em construção: anamnese versionada, termos,
 > relatórios e mensagens — ao abrir, cada uma informa em qual etapa entra. As
 > perguntas sobre essas telas estão marcadas com **(em breve)**.
 
@@ -102,6 +102,10 @@ proteção — o servidor confere a permissão a cada acesso. E a tentativa fica
 Você abre a tela, mas não vê tudo. A recepção, por exemplo, lança um pagamento no caixa mas não vê
 custo nem margem.
 
+Há também telas que você abre para **consultar** e não para **alterar**: o profissional convidado vê
+a própria agenda e as próprias pacientes, mas quem cadastra e marca horário é a recepção ou a
+doutora. Tentar pelo endereço direto devolve um aviso — e fica registrado.
+
 ### Sou profissional convidado e não acho uma paciente
 
 Você vê apenas as suas. As pacientes de outro profissional não aparecem na sua busca.
@@ -172,6 +176,36 @@ consultar fora da clínica. A edição fica no computador.
 
 ## Pacientes
 
+### Como cadastro uma paciente?
+
+Em **Pacientes**, botão **Nova paciente**, no alto da lista. Só o nome completo é obrigatório —
+telefone, e-mail, nascimento e CPF podem entrar depois, quando ela chegar. Ao salvar, o sistema
+volta para a lista já com a ficha dela aberta no painel lateral.
+
+Quem cadastra é a recepção ou a doutora. O profissional convidado consulta, mas não cadastra.
+
+### Preciso do CPF?
+
+Não. Se você preencher, o sistema confere os dígitos e recusa um número inválido na hora — é o
+tipo de erro que só aparece na nota fiscal, meses depois. E a mesma paciente não pode ser
+cadastrada duas vezes com o mesmo CPF, para o histórico não se partir em duas fichas.
+
+### Errei um dado. Como corrijo?
+
+Abra a paciente na lista e clique em **Editar cadastro**. Corrigir contato não mexe em nada do
+histórico de atendimentos.
+
+### Cadastrei e o sistema recusou
+
+A mensagem diz o que falta, e **nada do que você digitou se perde** — corrija só o campo apontado e
+salve de novo. As recusas mais comuns: nome com menos de três letras, telefone sem DDD, data de
+nascimento no futuro e CPF com dígito errado.
+
+### Como tiro uma paciente da lista?
+
+Em **Editar cadastro**, desmarque **Paciente ativa**. Ela sai do filtro "Ativas" e da lista de quem
+pode ser agendada, mas nada é apagado: atendimentos, fotos e termos continuam no lugar.
+
 ### Como encontro uma paciente?
 
 Em **Pacientes**. A lista vem em ordem alfabética e a busca aceita nome, telefone ou e-mail — digite
@@ -185,8 +219,8 @@ prontuário** — é o aviso curto que precisa saltar aos olhos.
 
 ### Onde está o prontuário da paciente?
 
-Entra na etapa 4, junto com a ficha de atendimento. Quando entrar, abrir prontuário, anamnese ou
-fotos vai exigir 2FA e ficar registrado no log de auditoria.
+Na ficha de atendimento: abra a **Agenda** e clique no nome dela. Abrir prontuário, anamnese ou
+fotos exige 2FA e fica registrado no log de auditoria.
 
 ### Sou profissional convidado e não vejo todas as pacientes
 
@@ -262,6 +296,36 @@ setas andam um dia para trás ou para frente, e o botão **Hoje** aparece assim 
 - **Semana** — segunda a sábado lado a lado, com hoje destacado, para enxergar a carga da semana.
 - **Lista** — os próximos 14 dias em tabela, com data, hora, paciente, procedimento, sala e status.
 
+### Como marco um horário?
+
+Duas formas, as duas em **Agenda**:
+
+- o botão **Novo agendamento**, que abre o formulário no dia em que você está;
+- ou, na visão **Dia**, clicar direto na faixa **Livre · agendar** da hora que você quer — ela já
+  leva o dia, a hora e a sala filtrada para o formulário.
+
+Escolha a paciente, o dia, o horário e a sala. O procedimento é opcional e, quando escolhido, já
+preenche a duração típica daquele atendimento — que você pode mudar. A situação nasce como
+**Aguardando**; marque **Confirmado** se a paciente já confirmou.
+
+Se a paciente tiver **alerta clínico**, ele aparece em destaque assim que você a escolhe.
+
+### "A sala já tem um atendimento nesse horário"
+
+Uma sala atende uma paciente por vez, então o sistema recusa e diz **com quem** é o choque e **em
+que horário**. Mude a hora ou a sala e agende de novo — o resto do formulário continua preenchido.
+A conferência é por sobreposição, não por hora cheia: um atendimento de 1h30 que começa às 14h
+bloqueia também as 15h.
+
+### Posso agendar fora do horário de funcionamento?
+
+Não. A agenda vai das 8h às 19h, e um horário fora disso é recusado — ele existiria no banco mas
+não apareceria na grade do dia.
+
+### Quem pode agendar?
+
+A recepção e a doutora. O profissional convidado enxerga a própria agenda, mas não marca horário.
+
 ### O que é um "Bloqueio"?
 
 Uma faixa listrada sem paciente: almoço, deslocamento, ou uma sala que não foi contratada naquela
@@ -277,9 +341,9 @@ aparecem também, quando for o caso.
 O filtro mostra só o que está marcado naquela sala. Volte em **Todas as salas** para ver a agenda
 inteira.
 
-### Cliquei numa paciente e não abriu a ficha
+### Cliquei numa paciente e abriu a ficha de atendimento
 
-A ficha de atendimento entra na etapa 4. Até lá, o clique leva para a tela que avisa isso.
+É isso mesmo: na agenda, o nome da paciente é o caminho para a ficha do dia.
 
 ### Sou profissional convidado e vejo pouca coisa
 

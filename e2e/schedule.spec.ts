@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { USERS, signInWithoutTwoFactor } from './fixtures';
+import { USERS, deleteAppointmentsNoted, signInWithoutTwoFactor } from './fixtures';
 
 test.describe('schedule', () => {
   test('opens on the day view with the working-hour grid', async ({ page }) => {
@@ -76,5 +76,80 @@ test.describe('schedule', () => {
     await expect(page.getByText('Nenhum atendimento nos próximos 14 dias.')).toBeVisible();
 
     await context.close();
+  });
+});
+
+test.describe('booking an appointment', () => {
+  // Serial: the second test books over the slot the first one took.
+  test.describe.configure({ mode: 'serial' });
+
+  // The marker goes in the appointment's notes, and the cleanup finds the rows by it.
+  const MARKER = `e2e ${Date.now()}`;
+  // Far enough ahead that the seeded week never reaches it, and in the room the seed
+  // leaves free, so the clash under test is the one this spec creates.
+  const DAY = '2027-03-15';
+  const ROOM = 'Coworking Parque do Carmo';
+
+  test.afterAll(async () => {
+    await deleteAppointmentsNoted(MARKER);
+  });
+
+  test('reception books a patient into a free slot', async ({ page }) => {
+    await signInWithoutTwoFactor(page, USERS.reception.email);
+    await page.goto(`/schedule?day=${DAY}`);
+
+    await page.getByRole('link', { name: 'Novo agendamento' }).click();
+    await expect(page).toHaveURL(/\/schedule\/new/);
+
+    await page.getByLabel('Paciente').selectOption({ label: 'Carla Bueno' });
+    await page.getByLabel('Dia').fill(DAY);
+    await page.getByLabel('Horário').selectOption('14:00');
+    await page.getByLabel('Sala').selectOption({ label: ROOM });
+    await page.getByLabel('Situação').selectOption('CONFIRMED');
+    await page.getByLabel('Observações').fill(MARKER);
+    await page.getByRole('button', { name: 'Agendar' }).click();
+
+    await expect(page).toHaveURL(new RegExp(`/schedule\\?day=${DAY}&saved=1`));
+    await expect(page.getByRole('status')).toContainText('Agendamento gravado');
+    // And it is in the diary, in the hour it was booked for.
+    await expect(page.getByRole('link', { name: /Carla Bueno/ })).toBeVisible();
+    await expect(page.getByText('Confirmado')).toBeVisible();
+  });
+
+  test('the same room at the same hour is refused, with the clash named', async ({ page }) => {
+    await signInWithoutTwoFactor(page, USERS.reception.email);
+    await page.goto(`/schedule/new?day=${DAY}`);
+
+    await page.getByLabel('Paciente').selectOption({ label: 'Renata Yamada' });
+    await page.getByLabel('Dia').fill(DAY);
+    // Half an hour later: it overlaps the hour already taken, which is exactly the case
+    // a per-hour check would miss.
+    await page.getByLabel('Horário').selectOption('14:30');
+    await page.getByLabel('Sala').selectOption({ label: ROOM });
+    await page.getByLabel('Observações').fill(MARKER);
+    await page.getByRole('button', { name: 'Agendar' }).click();
+
+    const error = page.locator('form').getByRole('alert');
+    await expect(error).toContainText(ROOM);
+    await expect(error).toContainText('Carla Bueno');
+    await expect(page).toHaveURL(/\/schedule\/new/);
+  });
+
+  test('the other room at the same hour is free, and a free slot books it', async ({ page }) => {
+    await signInWithoutTwoFactor(page, USERS.reception.email);
+    await page.goto(`/schedule?day=${DAY}`);
+
+    // The empty slots carry the day, the hour and the room filter into the form.
+    await page.getByRole('link', { name: 'Livre · agendar' }).first().click();
+    await expect(page).toHaveURL(new RegExp(`/schedule/new\\?day=${DAY}&hour=`));
+
+    await page.getByLabel('Paciente').selectOption({ label: 'Renata Yamada' });
+    await page.getByLabel('Horário').selectOption('14:00');
+    await page.getByLabel('Sala').selectOption({ label: 'Coworking Tatuapé' });
+    await page.getByLabel('Observações').fill(MARKER);
+    await page.getByRole('button', { name: 'Agendar' }).click();
+
+    await expect(page.getByRole('status')).toContainText('Agendamento gravado');
+    await expect(page.getByRole('link', { name: /Renata Yamada/ })).toBeVisible();
   });
 });

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { USERS, menuLabels, signInWithoutTwoFactor } from './fixtures';
+import { USERS, menuLabels, signInWithTwoFactor, signInWithoutTwoFactor } from './fixtures';
 
 test.describe('role-filtered navigation', () => {
   test('reception sees the schedule but neither reports nor settings', async ({ page }) => {
@@ -46,6 +46,20 @@ test.describe('server-side permission', () => {
     await page.goto('/finance');
     await expect(page).toHaveURL(/\/finance$/);
     await expect(page.getByText('acesso parcial')).toBeVisible();
+  });
+
+  test('a guest practitioner reads the diary but cannot book into it', async ({ page }) => {
+    // Reading is not writing: the matrix gives the practitioner 'own' on the schedule and
+    // on patients, and 'own' does not create. The form URL is refused, not just hidden.
+    await signInWithTwoFactor(page, USERS.practitioner.email);
+
+    await page.goto('/schedule/new');
+    await expect(page).toHaveURL(/\/schedule\?denied=write$/);
+    await expect(page.getByRole('status')).toContainText('é da recepção ou da doutora');
+    await expect(page.getByRole('status')).toContainText('log de auditoria');
+
+    await page.goto('/patients/new');
+    await expect(page).toHaveURL(/\/patients\?denied=write$/);
   });
 
   test('finance cannot reach the schedule', async ({ page }) => {

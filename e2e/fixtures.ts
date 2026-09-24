@@ -74,6 +74,35 @@ export async function menuLabels(page: Page): Promise<string[]> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Cleanup. The specs that create rows remove their own, so the suite is repeatable
+// against a database that is not reset between runs. Writing directly is safe here:
+// global-setup.ts refuses to run against anything but a local database.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Removes patients whose name starts with `prefix`, and their appointments. */
+export async function deletePatientsNamed(prefix: string) {
+  await withPlatformScope(async (tx) => {
+    const patients = await tx.patient.findMany({
+      where: { name: { startsWith: prefix } },
+      select: { id: true },
+    });
+    const ids = patients.map((p) => p.id);
+    if (ids.length === 0) return;
+    // Appointments first: the foreign key nulls the patient rather than cascading, which
+    // would leave an appointment with nobody in it.
+    await tx.appointment.deleteMany({ where: { patientId: { in: ids } } });
+    await tx.patient.deleteMany({ where: { id: { in: ids } } });
+  });
+  await prisma.$disconnect();
+}
+
+/** Removes the appointments a spec booked, found by the marker it wrote in the notes. */
+export async function deleteAppointmentsNoted(marker: string) {
+  await withPlatformScope((tx) => tx.appointment.deleteMany({ where: { notes: marker } }));
+  await prisma.$disconnect();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // TOTP, implemented independently of src/lib/auth/totp.ts on purpose: if the
 // application's implementation breaks, these tests have to fail rather than agree
 // with it.

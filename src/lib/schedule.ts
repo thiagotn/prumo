@@ -55,10 +55,15 @@ export function hourIn(date: Date, timeZone = CLINIC_TIME_ZONE): number {
  * saving, but the tenant may not stay there, and a hardcoded -03:00 would be a bug that
  * only shows up once a year.
  */
-export function instantAt(day: string, hour: number, timeZone = CLINIC_TIME_ZONE): Date {
+export function instantAt(
+  day: string,
+  hour: number,
+  timeZone = CLINIC_TIME_ZONE,
+  minute = 0,
+): Date {
   const [year, month, date] = day.split('-').map(Number) as [number, number, number];
   // Start from the wall-clock time treated as UTC, then correct by the observed offset.
-  const naive = Date.UTC(year, month - 1, date, hour, 0, 0);
+  const naive = Date.UTC(year, month - 1, date, hour, minute, 0);
   const guess = new Date(naive);
   const p = partsIn(guess, timeZone);
   const asSeen = Date.UTC(
@@ -69,6 +74,51 @@ export function instantAt(day: string, hour: number, timeZone = CLINIC_TIME_ZONE
     Number(p.minute),
   );
   return new Date(naive + (naive - asSeen));
+}
+
+/** `HH:MM` as the time input submits it, into an instant in the clinic's timezone. */
+export function instantAtTime(day: string, time: string, timeZone = CLINIC_TIME_ZONE): Date | null {
+  const match = /^(\d{1,2}):(\d{2})$/.exec(time.trim());
+  if (!match) return null;
+  const hour = Number(match[1]);
+  const minute = Number(match[2]);
+  if (hour > 23 || minute > 59) return null;
+  return instantAt(day, hour, timeZone, minute);
+}
+
+/** Minutes offered when booking: the half hours of the working day. */
+export const BOOKING_STEP_MINUTES = 30;
+
+/**
+ * The slot a booking occupies, from the day, the start time and a duration in minutes.
+ * Returns null when the form sent something that is not a time — the caller turns that
+ * into a message, never into a row.
+ */
+export function appointmentWindow(
+  day: string,
+  time: string,
+  durationMinutes: number,
+  timeZone = CLINIC_TIME_ZONE,
+): { startsAt: Date; endsAt: Date } | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return null;
+  if (!Number.isFinite(durationMinutes) || durationMinutes <= 0) return null;
+  const startsAt = instantAtTime(day, time, timeZone);
+  if (!startsAt) return null;
+  // Added as elapsed time, not as wall clock: an appointment lasts its duration even on
+  // the night the clock changes.
+  return { startsAt, endsAt: new Date(startsAt.getTime() + durationMinutes * 60_000) };
+}
+
+/** The `HH:MM` a time input expects, from an instant, in the clinic's timezone. */
+export function timeInputValue(date: Date, timeZone = CLINIC_TIME_ZONE): string {
+  const p = partsIn(date, timeZone);
+  const hour = p.hour === '24' ? '00' : p.hour;
+  return `${hour}:${p.minute}`;
+}
+
+/** Whole minutes between two instants — the duration of an existing appointment. */
+export function durationMinutes(startsAt: Date, endsAt: Date): number {
+  return Math.round((endsAt.getTime() - startsAt.getTime()) / 60_000);
 }
 
 /** The hour slots of a day, as absolute instants. */

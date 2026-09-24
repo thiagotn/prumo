@@ -6,7 +6,7 @@ import { Role } from '@prisma/client';
 import { notFound, redirect } from 'next/navigation';
 import { audit, type AuditAction } from '../audit';
 import { MODULE_DEFS, type Module } from '../modules';
-import { accessLevel, canAccess, initialModule, type AccessLevel } from '../rbac';
+import { accessLevel, canAccess, canWrite, initialModule, type AccessLevel } from '../rbac';
 import { isPlatformHost, requestHost, currentTenant, type ResolvedTenant } from '../tenant';
 import { currentSession, type ActiveSession } from './session';
 
@@ -83,6 +83,32 @@ export async function requireModule(
   }
 
   return { ...ctx, level: accessLevel(session.role, module) };
+}
+
+/**
+ * Permission to CREATE or CHANGE something in the module — the guard behind "Nova
+ * paciente" and "Novo agendamento". Read access is not write access: a guest
+ * practitioner opens the diary and is still not who books into it.
+ *
+ * Both the form page and the server action call this. The page alone would be a menu
+ * hidden from view, which is not a permission (CLAUDE.md).
+ */
+export async function requireModuleWrite(
+  module: Module,
+): Promise<AuthContext & { level: AccessLevel }> {
+  const ctx = await requireModule(module);
+  if (!canWrite(ctx.session.role, module)) {
+    await audit({
+      tenantId: ctx.tenant?.id ?? null,
+      userId: ctx.session.userId,
+      action: 'access.denied',
+      resource: 'module.write',
+      resourceId: module,
+      details: { role: ctx.session.role, level: ctx.level },
+    });
+    redirect(`${MODULE_DEFS[module].path}?denied=write`);
+  }
+  return ctx;
 }
 
 /**

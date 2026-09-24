@@ -1,9 +1,12 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Prisma } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 import { requireModule } from '@/lib/auth/guards';
 import { withTenant } from '@/lib/db';
 import { longDate } from '@/lib/format';
+import { ageLabel, formatBirthDate, formatCpf, formatPhone } from '@/lib/patient';
+import { canWrite } from '@/lib/rbac';
+import { WriteDeniedNotice } from '../denied-notice';
 import styles from './patients.module.css';
 
 export const metadata: Metadata = { title: 'Pacientes' };
@@ -16,24 +19,6 @@ const FILTERS = [
 ] as const;
 
 type FilterKey = (typeof FILTERS)[number]['key'];
-
-function age(birthDate: Date | null): string {
-  if (!birthDate) return '—';
-  const now = new Date();
-  let years = now.getUTCFullYear() - birthDate.getUTCFullYear();
-  const monthDiff = now.getUTCMonth() - birthDate.getUTCMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && now.getUTCDate() < birthDate.getUTCDate())) years--;
-  return `${years} anos`;
-}
-
-/** Formats a Brazilian mobile number for reading: (11) 98765-0001. */
-function phone(raw: string | null): string {
-  if (!raw) return '—';
-  const digits = raw.replace(/\D/g, '');
-  if (digits.length === 11) return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
-  if (digits.length === 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
-  return raw;
-}
 
 /**
  * Search clauses for a term. The phone clause is only added when the term actually has
@@ -53,10 +38,16 @@ function searchClauses(search: string): Prisma.PatientWhereInput[] {
 export default async function PatientsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ filter?: string; selected?: string; q?: string }>;
+  searchParams: Promise<{
+    filter?: string;
+    selected?: string;
+    q?: string;
+    denied?: string;
+    saved?: string;
+  }>;
 }) {
-  const { tenant, level } = await requireModule('patients');
-  const { filter, selected, q } = await searchParams;
+  const { tenant, session, level } = await requireModule('patients');
+  const { filter, selected, q, denied, saved } = await searchParams;
 
   if (!tenant) {
     return <p className="card-body">Esta tela pertence a uma clínica.</p>;
@@ -66,16 +57,24 @@ export default async function PatientsPage({
     ? (filter as FilterKey)
     : 'all';
   const search = (q ?? '').trim();
+  const mayWrite = canWrite(session.role, 'patients');
+
+  // A guest practitioner reaches only their own patients — the matrix says 'own', and
+  // this is where that is enforced, not by hiding anything.
+  const ownOnly = level === 'own' && session.role === Role.PRACTITIONER;
 
   const where: Prisma.PatientWhereInput = {
     ...(activeFilter === 'active' ? { active: true } : {}),
     ...(activeFilter === 'alert' ? { clinicalAlert: { not: null } } : {}),
     ...(search ? { OR: searchClauses(search) } : {}),
+    ...(ownOnly ? { appointments: { some: { practitionerId: session.userId } } } : {}),
   };
 
   const { patients, total } = await withTenant(tenant.id, async (tx) => ({
     patients: await tx.patient.findMany({ where, orderBy: { name: 'asc' }, take: 200 }),
-    total: await tx.patient.count(),
+    total: await tx.patient.count({
+      where: ownOnly ? { appointments: { some: { practitionerId: session.userId } } } : {},
+    }),
   }));
 
   const chosen = selected ? patients.find((p) => p.id === selected) : undefined;
@@ -93,6 +92,13 @@ export default async function PatientsPage({
   return (
     <div className={styles.layout}>
       <div>
+        <WriteDeniedNotice denied={denied} what="Cadastrar e corrigir pacientes" />
+        {saved ? (
+          <p className={styles.saved} role="status">
+            Cadastro salvo.
+          </p>
+        ) : null}
+
         <div className={styles.filters}>
           {FILTERS.map((f) => (
             <Link
@@ -122,6 +128,11 @@ export default async function PatientsPage({
           <span className={styles.count}>
             {patients.length} de {total} paciente{total === 1 ? '' : 's'}
           </span>
+          {mayWrite ? (
+            <Link className="btn btn-primary touch" href="/patients/new" style={{ fontSize: 12 }}>
+              Nova paciente
+            </Link>
+          ) : null}
         </div>
 
         <div className={styles.tableWrap}>
@@ -157,10 +168,8 @@ export default async function PatientsPage({
                         ) : null}
                       </Link>
                     </td>
-                    <td className="num">
-                      {patient.birthDate ? longDate(patient.birthDate) : '—'}
-                    </td>
-                    <td className="num">{phone(patient.phone)}</td>
+                    <td className="num">{formatBirthDate(patient.birthDate)}</td>
+                    <td className="num">{formatPhone(patient.phone)}</td>
                     <td>
                       <span className={`tag ${patient.active ? 'tag-neutral' : 'tag-outline'}`}>
                         {patient.active ? 'Ativa' : 'Inativa'}
@@ -189,14 +198,19 @@ export default async function PatientsPage({
             <dl className={styles.definitions}>
               <dt>Nascimento</dt>
               <dd className="num">
-                {chosen.birthDate ? `${longDate(chosen.birthDate)} · ${age(chosen.birthDate)}` : '—'}
+                {chosen.birthDate
+                  ? `${formatBirthDate(chosen.birthDate)} · ${ageLabel(chosen.birthDate)}`
+                  : '—'}
               </dd>
 
               <dt>Telefone</dt>
-              <dd className="num">{phone(chosen.phone)}</dd>
+              <dd className="num">{formatPhone(chosen.phone)}</dd>
 
               <dt>E-mail</dt>
               <dd>{chosen.email ?? '—'}</dd>
+
+              <dt>CPF</dt>
+              <dd className="num">{formatCpf(chosen.document)}</dd>
 
               <dt>Cadastro</dt>
               <dd className="num">{longDate(chosen.createdAt)}</dd>
@@ -208,10 +222,28 @@ export default async function PatientsPage({
               </p>
             ) : null}
 
+            {mayWrite ? (
+              <div className={styles.formActions}>
+                <Link
+                  className="btn btn-secondary touch"
+                  href={`/patients/${chosen.id}/edit`}
+                  style={{ fontSize: 12 }}
+                >
+                  Editar cadastro
+                </Link>
+                <Link
+                  className="btn btn-primary touch"
+                  href={`/schedule/new?patient=${chosen.id}`}
+                  style={{ fontSize: 12 }}
+                >
+                  Agendar
+                </Link>
+              </div>
+            ) : null}
+
             <div className={styles.locked}>
-              <strong>Prontuário, anamnese e fotos</strong> entram na etapa 4, junto com a ficha de
-              atendimento. Quando entrarem, abrir qualquer um deles exige 2FA e fica registrado no
-              log de auditoria.
+              <strong>Prontuário, anamnese e fotos</strong> abrem pela ficha de atendimento, na
+              agenda. Cada acesso exige 2FA e fica registrado no log de auditoria.
               {level === 'own' ? (
                 <>
                   <br />
@@ -226,8 +258,7 @@ export default async function PatientsPage({
             Escolha uma paciente na lista para ver os dados dela.
             <br />
             <br />
-            O histórico de atendimentos, o termo vigente e o antes e depois aparecem aqui conforme as
-            etapas 4 e 5 entrarem.
+            O termo vigente e o antes e depois aparecem aqui conforme a etapa 5 entrar.
           </p>
         )}
       </aside>

@@ -78,6 +78,7 @@
   border-radius: 3px;
   display: flex;
   align-items: center;
+  text-decoration: none;
   padding: 0 12px;
   min-height: 62px;
   font-size: 11px;
@@ -176,4 +177,74 @@
   .slot { grid-template-columns: 58px 1fr; }
   .weekGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .listWrap { overflow-x: auto; }
+}
+
+/* ── booking form (novo agendamento) ──────────────────────────────────────── */
+
+.formTitle {
+  font-family: var(--font-heading);
+  font-weight: 500;
+  font-size: 21px;
+  line-height: 1.2;
+  margin: var(--space-1) 0 var(--space-3);
+}
+
+.form {
+  max-width: 720px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3) var(--space-4);
+}
+
+.formHint {
+  margin: var(--space-1) 0 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--color-neutral-600);
+}
+
+.formActions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+}
+
+/* The clinical alert, shown the moment the patient is chosen — the same treatment it
+   gets on the patient panel, because it is the line that must not be missed. */
+.alert {
+  margin: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--color-accent-400);
+  border-left: 3px solid var(--color-accent-700);
+  border-radius: var(--radius-md);
+  background: var(--color-accent-100);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-accent-800);
+}
+
+.saved {
+  margin-bottom: var(--space-4);
+  padding: var(--space-3);
+  border: 1px solid var(--color-accent-400);
+  border-left: 3px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  background: var(--color-accent-100);
+  font-size: 13px;
+  color: var(--color-accent-800);
+}
+
+@media (max-width: 720px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  /* :global because .btn comes from the Classical tokens, not from this module. */
+  .formActions :global(.btn) {
+    flex: 1;
+    min-height: 44px;
+  }
 }

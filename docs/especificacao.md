@@ -48,6 +48,7 @@ enabled_modules (jsonb), billing_status`.
 | Módulo | Doutora (owner) | Recepção | Financeiro | Prof. convidado |
 |---|---|---|---|---|
 | Agenda | total | total | — | própria |
+| Pacientes (cadastro) | total | parcial | — | próprias |
 | Prontuário/anamnese | total | — | — | próprios pacientes |
 | Fotos clínicas | total | — | — | parcial |
 | Valores e caixa | total | parcial (lançar) | total | — |
@@ -58,6 +59,9 @@ enabled_modules (jsonb), billing_status`.
 
 Mais: **Super-admin revenda** (tenants, config, painel) e **Paciente** (só portal).
 
+- **Ler não é escrever**: criar ou alterar (nova paciente, novo agendamento) exige acesso *total* ou
+  *parcial*. *Própria/próprios* é leitura — o profissional convidado abre a sua agenda e as suas
+  pacientes, mas quem cadastra e agenda é a recepção ou a doutora (`canWrite` em `src/lib/rbac.ts`).
 - Menu lateral e tab bar mobile filtram itens pelo perfil — mas **esconder menu não é permissão**:
   quem nega é o guard de servidor (`src/lib/auth/guards.ts`).
 - **2FA obrigatório** para perfis com acesso a prontuário.

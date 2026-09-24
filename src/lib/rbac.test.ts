@@ -1,7 +1,7 @@
 import { Role } from '@prisma/client';
 import { describe, expect, it } from 'vitest';
 import { MODULES, MODULE_DEFS } from './modules';
-import { accessLevel, canAccess, initialModule, requiresTwoFactor } from './rbac';
+import { accessLevel, canAccess, canWrite, initialModule, requiresTwoFactor } from './rbac';
 
 // The "Perfis e permissões" table from docs/especificacao.md, transcribed literally. If the
 // code's matrix drifts from it, this test fails — it is the contract with the specification.
@@ -11,6 +11,7 @@ const SPEC_TABLE: Array<[string, Role, Record<string, string>]> = [
     Role.OWNER,
     {
       schedule: 'full',
+      patients: 'full',
       medicalRecord: 'full',
       photos: 'full',
       finance: 'full',
@@ -25,6 +26,7 @@ const SPEC_TABLE: Array<[string, Role, Record<string, string>]> = [
     Role.RECEPTION,
     {
       schedule: 'full',
+      patients: 'partial',
       medicalRecord: 'none',
       photos: 'none',
       finance: 'partial',
@@ -39,6 +41,7 @@ const SPEC_TABLE: Array<[string, Role, Record<string, string>]> = [
     Role.FINANCE,
     {
       schedule: 'none',
+      patients: 'none',
       medicalRecord: 'none',
       photos: 'none',
       finance: 'full',
@@ -53,6 +56,7 @@ const SPEC_TABLE: Array<[string, Role, Record<string, string>]> = [
     Role.PRACTITIONER,
     {
       schedule: 'own',
+      patients: 'own',
       medicalRecord: 'own',
       photos: 'partial',
       finance: 'none',
@@ -105,6 +109,35 @@ describe('role boundaries', () => {
       canAccess(r, 'settings'),
     );
     expect(withSettings).toEqual([Role.OWNER]);
+  });
+});
+
+describe('who may create and change records', () => {
+  it('the front desk registers a patient and books; the owner too', () => {
+    for (const role of [Role.OWNER, Role.RECEPTION]) {
+      expect(canWrite(role, 'patients')).toBe(true);
+      expect(canWrite(role, 'schedule')).toBe(true);
+    }
+  });
+
+  it('a guest practitioner reads their own diary but does not book into it', () => {
+    expect(canAccess(Role.PRACTITIONER, 'schedule')).toBe(true);
+    expect(canWrite(Role.PRACTITIONER, 'schedule')).toBe(false);
+    expect(canAccess(Role.PRACTITIONER, 'patients')).toBe(true);
+    expect(canWrite(Role.PRACTITIONER, 'patients')).toBe(false);
+  });
+
+  it('finance never touches the diary or the patient register', () => {
+    expect(canWrite(Role.FINANCE, 'schedule')).toBe(false);
+    expect(canWrite(Role.FINANCE, 'patients')).toBe(false);
+  });
+
+  it('no role writes where it has no access at all', () => {
+    for (const role of Object.values(Role)) {
+      for (const moduleName of MODULES) {
+        if (!canAccess(role, moduleName)) expect(canWrite(role, moduleName)).toBe(false);
+      }
+    }
   });
 });
 
