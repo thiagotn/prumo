@@ -420,7 +420,38 @@ paga no produto.
 
 ### Como dou entrada de nota?
 
-Entra junto com o financeiro (etapa 6). Hoje os lotes chegam pelo cadastro inicial.
+Em **Estoque**, botão **Entrada de nota**. Escolha o produto na lista — ou **Produto novo**, se a
+marca chega pela primeira vez — e informe o número do lote (como está impresso na caixa), a
+validade, quantas unidades vieram e, se quiser, a nota fiscal.
+
+Quem lança é a doutora ou o financeiro. A recepção abre o Estoque para consultar quantidade e
+validade, mas não vê custo e não dá entrada — é o mesmo motivo: custo não é do perfil dela.
+
+### Produto novo: o que o sistema pede?
+
+Marca, procedimento, unidade de compra (o que está escrito na nota: "Frasco 50U", "Seringa 1ml"),
+**custo de compra** e **rendimento**.
+
+O rendimento é quantos atendimentos uma unidade comprada cobre: um frasco que atende uma paciente é
+1; um que atende uma e meia é 1,5. Custo e rendimento juntos dão o custo por atendimento, que entra
+no preço sugerido — por isso o sistema não deixa nenhum dos dois em branco.
+
+### Este lote veio por outro preço
+
+Preencha **Custo deste lote**. Em branco, ele assume o custo cadastrado no produto. O lote guarda o
+que foi pago por ele, então um atendimento antigo continua explicável mesmo depois de o fornecedor
+mudar de preço.
+
+### "Já existe um lote com esse número para este produto"
+
+Esse lote já foi lançado. Se chegou mais do mesmo lote, o certo é corrigir a quantidade do lote
+existente — ainda não há tela para isso; por enquanto fale com quem administra o sistema.
+
+### Lancei sem validade
+
+O lote entra, mas nunca aparece como "vence" e não participa da regra de usar primeiro o que vence
+antes. Vale voltar e preencher assim que tiver a caixa em mãos — hoje isso também é pela
+administração do sistema.
 
 ---
 

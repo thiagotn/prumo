@@ -1,15 +1,22 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { requireModule } from '@/lib/auth/guards';
 import { withTenant } from '@/lib/db';
 import { currency, longDate } from '@/lib/format';
 import { materialCost } from '@/lib/pricing';
 import { lotStatus, productStatus, STATUS_LABELS, STATUS_TAG, usableQuantity } from '@/lib/stock';
+import { WriteDeniedNotice } from '../denied-notice';
 import styles from './inventory.module.css';
 
 export const metadata: Metadata = { title: 'Estoque' };
 
-export default async function InventoryPage() {
+export default async function InventoryPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ saved?: string; denied?: string }>;
+}) {
   const { tenant, level } = await requireModule('inventory');
+  const { saved, denied } = await searchParams;
   if (!tenant) return <p className="card-body">Esta tela pertence a uma clínica.</p>;
 
   const products = await withTenant(tenant.id, (tx) =>
@@ -30,6 +37,26 @@ export default async function InventoryPage() {
 
   return (
     <div>
+      <WriteDeniedNotice
+        denied={denied}
+        what="Dar entrada de nota"
+        by="da doutora ou do financeiro"
+      />
+      {saved ? (
+        <p className={styles.saved} role="status">
+          Entrada lançada: {saved} já aparece no estoque.
+        </p>
+      ) : null}
+
+      <div className={styles.toolbar}>
+        <div className={styles.spacer} />
+        {showsCost ? (
+          <Link className="btn btn-primary touch" href="/inventory/entry" style={{ fontSize: 12 }}>
+            Entrada de nota
+          </Link>
+        ) : null}
+      </div>
+
       <div className={styles.summary}>
         <div>
           <div className="kicker">Produtos cadastrados</div>
@@ -41,7 +68,8 @@ export default async function InventoryPage() {
         </div>
         <p className={styles.summaryNote}>
           A baixa acontece ao fechar o atendimento: sai do lote que vence primeiro, para não perder
-          produto na validade. A entrada de nota entra junto com o financeiro (etapa 6).
+          produto na validade. A entrada é lançada em <strong>Entrada de nota</strong>, e cada
+          movimento fica registrado.
         </p>
       </div>
 

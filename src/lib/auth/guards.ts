@@ -95,16 +95,25 @@ export async function requireModule(
  */
 export async function requireModuleWrite(
   module: Module,
+  options: {
+    /**
+     * Demand complete access, not merely write access. For what only makes sense with
+     * the whole picture: a stock entry types in what the clinic paid, and reception has
+     * `partial` on Estoque precisely because cost is not theirs to see.
+     */
+    full?: boolean;
+  } = {},
 ): Promise<AuthContext & { level: AccessLevel }> {
   const ctx = await requireModule(module);
-  if (!canWrite(ctx.session.role, module)) {
+  const allowed = options.full ? ctx.level === 'full' : canWrite(ctx.session.role, module);
+  if (!allowed) {
     await audit({
       tenantId: ctx.tenant?.id ?? null,
       userId: ctx.session.userId,
       action: 'access.denied',
       resource: 'module.write',
       resourceId: module,
-      details: { role: ctx.session.role, level: ctx.level },
+      details: { role: ctx.session.role, level: ctx.level, needsFull: options.full === true },
     });
     redirect(`${MODULE_DEFS[module].path}?denied=write`);
   }

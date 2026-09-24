@@ -8,6 +8,13 @@ export const EXPIRY_WARNING_DAYS = 90;
 /** Below this many units, a product is flagged as running low. */
 export const LOW_STOCK_THRESHOLD = 2;
 
+/**
+ * What the stock entry form sends when the brand is not in the catalogue yet. Lives here
+ * rather than beside the action because a "use server" file may only export async
+ * functions, and both the form and the action need to agree on it.
+ */
+export const NEW_PRODUCT = 'new';
+
 export type LotLike = {
   quantityRemaining: number;
   expiresAt: Date | null;

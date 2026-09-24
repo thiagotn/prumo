@@ -104,7 +104,10 @@ Desktop: canvas 1280 × 800. Mobile: 390 × 812. Layout do app = nav (sidebar 21
    (margem < 28% em `--color-accent-700`); card de parâmetros; card de reservas (10% recompra,
    5% emergência, restante retirada).
 7. **Estoque** — tabela: produto, procedimento, unidade, custo, rendimento, custo/atendimento,
-   quantidade, lote/validade, status (OK/Baixo/Vence/Repor). Botão "Entrada de nota".
+   quantidade, lote/validade, status (OK/Baixo/Vence/Repor). Botão **"Entrada de nota"**: lança o
+   lote (número, validade, quantidade, custo do lote, NF) e, quando a marca é nova, cadastra o
+   produto na mesma transação. Exige acesso **total** ao módulo — a recepção tem *parcial* porque
+   custo não é dela. Toda entrada grava em `stock_movements` e em `audit_log`.
 8. **Relatórios** — gráfico de barras de 6 meses (faturamento em contorno, lucro preenchido), mix
    por linha de procedimento, guia de margem (faixas da aba "Orientação" da planilha). Exportar
    CSV / PDF para o contador — **sem nome de paciente**: a contabilidade recebe os valores, não

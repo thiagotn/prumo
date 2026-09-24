@@ -123,7 +123,7 @@ Para ver que o menu não é a proteção: logado como recepção, digite `/setti
 
 ```bash
 npm test          # 368 unitários + integração de RLS e sessão (precisa do db:up)
-npm run test:e2e  # 80 end-to-end no Playwright (sobe o dev server sozinho)
+npm run test:e2e  # 84 end-to-end no Playwright (sobe o dev server sozinho)
 npm run test:all  # os dois
 npm run typecheck
 npm run lint
@@ -243,6 +243,9 @@ código precisa dele está transcrito em [`docs/regras-de-negocio.md`](docs/regr
   para que um lançamento antigo continue explicável.
 - Restrições no banco seguram o resto: estoque não fica negativo, parcelas só existem em crédito
   parcelado, e cobrança não é negativa.
+- **Entrada de nota** (entregue depois, junto da etapa 7): lançar o lote que chegou — e cadastrar a
+  marca, quando é a primeira vez — numa transação só, com o movimento de entrada no ledger. Pede
+  acesso total ao módulo: a entrada digita o que a clínica pagou.
 
 **Etapa 5 concluída** — termos de consentimento:
 

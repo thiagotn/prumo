@@ -35,6 +35,7 @@ export type AuditAction =
   | 'patient.create'
   | 'patient.update'
   | 'appointment.create'
+  | 'stock.entry'
   | 'appointment.status'
   | 'message.queued'
   | 'message.sent'
