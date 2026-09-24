@@ -195,7 +195,9 @@ export async function requireSuperadmin(): Promise<AuthContext> {
       resource: 'platform',
       details: { role: ctx.session.role },
     });
-    redirect(MODULE_DEFS[initialModule(ctx.session.role)].path);
+    // With the reason, like every other refusal: the screen the person lands on explains
+    // what happened instead of looking like a mis-click.
+    redirect(`${MODULE_DEFS[initialModule(ctx.session.role)].path}?denied=tenants`);
   }
   return ctx;
 }

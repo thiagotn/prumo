@@ -1,0 +1,177 @@
+/* Painel da revenda (docs/especificacao.md, tela 12): quantas clínicas, quanto entra,
+   quem saiu — e a porta de entrada para dar suporte dentro de uma delas. */
+
+.kpiBand {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-6);
+  overflow: hidden;
+}
+
+.kpi {
+  padding: var(--space-4);
+  border-right: 1px solid var(--color-divider);
+}
+
+.kpi:last-child {
+  border-right: 0;
+}
+
+.kpiValue {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 25px;
+  line-height: 1.1;
+  margin: var(--space-2) 0 var(--space-1);
+}
+
+.kpiNote {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--color-neutral-600);
+}
+
+.tableWrap {
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: none;
+  border: 1px solid var(--color-divider);
+}
+
+.inactive {
+  color: var(--color-neutral-600);
+}
+
+.rowActions {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.note {
+  margin: var(--space-4) 0 0;
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--color-neutral-600);
+  max-width: 54em;
+}
+
+/* ── uma clínica ──────────────────────────────────────────────────────────── */
+
+.title {
+  font-family: var(--font-heading);
+  font-weight: 500;
+  font-size: 23px;
+  line-height: 1.2;
+  margin: var(--space-1) 0 var(--space-2);
+}
+
+.form {
+  max-width: 720px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3) var(--space-4);
+}
+
+.flags {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.flag {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: 13px;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.flag input {
+  margin-top: 3px;
+  accent-color: var(--color-accent);
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+}
+
+.saved {
+  margin-bottom: var(--space-4);
+  padding: var(--space-3);
+  border: 1px solid var(--color-accent-400);
+  border-left: 3px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  background: var(--color-accent-100);
+  font-size: 13px;
+  color: var(--color-accent-800);
+}
+
+.danger {
+  margin-top: var(--space-5);
+  padding: var(--space-3);
+  border: 1px dashed var(--color-accent-400);
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--color-neutral-700);
+}
+
+@media (max-width: 1100px) {
+  .kpiBand {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .kpi {
+    border-bottom: 1px solid var(--color-divider);
+  }
+}
+
+@media (max-width: 720px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* :global porque .btn vem dos tokens do Classical, não deste módulo. */
+  .actions :global(.btn) {
+    flex: 1;
+    min-height: 44px;
+  }
+}
+
+/* Aviso de "não dá para entrar nessa clínica". Mesma sobriedade do DeniedNotice:
+   traço de acento, sem vermelho de alarme. */
+.warning {
+  margin-bottom: var(--space-6);
+  padding: var(--space-3);
+  border: 1px solid var(--color-accent-400);
+  border-left: 3px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  background: var(--color-accent-100);
+  font-size: 13px;
+  color: var(--color-accent-800);
+}

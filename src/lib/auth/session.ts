@@ -94,6 +94,65 @@ function build(session: LoadedSession, token: string): ActiveSession {
 }
 
 /**
+ * How long a support session lasts. Far shorter than a clinic's own: somebody from the
+ * platform is inside someone else's record, and that should end by itself.
+ */
+export const IMPERSONATION_DURATION_MS = 60 * 60 * 1000;
+
+/**
+ * Creates an impersonation session WITHOUT touching the cookie jar.
+ *
+ * The cookie belongs to the clinic's host and this runs on the reseller's — a cookie set
+ * here would never be sent there. The ticket in `impersonation_handoffs` is what carries
+ * the session across, and `setSessionCookie` finishes the job on the other side.
+ *
+ * `twoFactorOk` starts true on purpose: the reseller has already cleared their own second
+ * factor to reach the panel, and the clinic's authenticator is not theirs to hold. What
+ * bounds this session is its hour, the banner, the masked record and the audit trail.
+ */
+export async function createImpersonationSession(params: {
+  userId: string;
+  tenantId: string;
+  byUserId: string;
+  ip?: string | null;
+  userAgent?: string | null;
+}): Promise<{ sessionId: string; token: string; expiresAt: Date }> {
+  const token = randomBytes(32).toString('base64url');
+  const expiresAt = new Date(Date.now() + IMPERSONATION_DURATION_MS);
+
+  const session = await withTenant(params.tenantId, (tx) =>
+    tx.session.create({
+      data: {
+        tokenHash: hashToken(token),
+        userId: params.userId,
+        tenantId: params.tenantId,
+        twoFactorOk: true,
+        impersonatedByUserId: params.byUserId,
+        medicalRecordUnlocked: false,
+        ip: params.ip ?? null,
+        userAgent: params.userAgent ?? null,
+        expiresAt,
+      },
+      select: { id: true },
+    }),
+  );
+
+  return { sessionId: session.id, token, expiresAt };
+}
+
+/** Puts an already-created session into the cookie jar of the host being served. */
+export async function setSessionCookie(token: string, expiresAt: Date): Promise<void> {
+  const jar = await cookies();
+  jar.set(SESSION_COOKIE, token, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    expires: expiresAt,
+  });
+}
+
+/**
  * Creates the session and sets the cookie. `twoFactorOk` starts false for anyone who
  * requires 2FA — the login is only complete after the second step.
  */

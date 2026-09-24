@@ -4,6 +4,7 @@
 # and registers the clinic plus its owner user. Run this ON THE CLUSTER NODE.
 #
 #   ./onboard-clinic.sh --host app.clinic.example --name "Clinic" --monogram CL \
+#     [--zone clinic.example] [--domain clinic.example] \
 #     --color '#b68235' --owner-name "Dr. Someone" --owner-email someone@clinic.example
 #
 # It uses only what a k3s node already has: kubectl, curl, jq, openssl and python3 — no
@@ -34,6 +35,7 @@ set -euo pipefail
 HOSTNAME_APP=""
 ZONE=""
 CLINIC_NAME=""
+CLINIC_DOMAIN=""
 CLINIC_SUBTITLE=""
 CLINIC_MONOGRAM=""
 CLINIC_COLOR=""
@@ -53,6 +55,7 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --host)        HOSTNAME_APP="$2"; shift 2 ;;
     --zone)        ZONE="$2"; shift 2 ;;
+    --domain)      CLINIC_DOMAIN="$2"; shift 2 ;;
     --name)        CLINIC_NAME="$2"; shift 2 ;;
     --subtitle)    CLINIC_SUBTITLE="$2"; shift 2 ;;
     --monogram)    CLINIC_MONOGRAM="$2"; shift 2 ;;
@@ -76,8 +79,13 @@ fail()    { printf '  \033[31mERROR\033[0m %s\n' "$1" >&2; exit 1; }
 step()    { printf '  ->    %s\n' "$1"; }
 
 [ -n "$HOSTNAME_APP" ] || fail "--host is required (e.g. app.clinic.example)."
-# The zone defaults to the hostname without its first label: app.clinic.example -> clinic.example
+# The Cloudflare zone defaults to the hostname without its first label:
+# app.clinic.example -> clinic.example
 [ -n "$ZONE" ] || ZONE="${HOSTNAME_APP#*.}"
+# The clinic's own domain is a separate thing, even though the two usually coincide. For
+# app.clinic.com.br the zone IS the clinic's domain; for hml.clinic.com — a staging host —
+# the zone is clinic.com while the clinic is something else entirely.
+[ -n "$CLINIC_DOMAIN" ] || CLINIC_DOMAIN="$ZONE"
 
 heading "0. Prerequisites"
 for c in kubectl curl jq openssl python3; do
@@ -221,9 +229,9 @@ ok "accent colour accepted (contrast ${CONTRAST}:1)"
 
 psql_prumo() { kubectl -n "$PG_NAMESPACE" exec -i sts/postgres -- psql -U postgres -d prumo -v ON_ERROR_STOP=1 "$@"; }
 
-EXISTS=$(psql_prumo -tAc "SELECT count(*) FROM tenants WHERE domain = '${ZONE}'" 2>/dev/null | tr -d '[:space:]' || echo 0)
+EXISTS=$(psql_prumo -tAc "SELECT count(*) FROM tenants WHERE domain = '${CLINIC_DOMAIN}'" 2>/dev/null | tr -d '[:space:]' || echo 0)
 if [ "${EXISTS:-0}" != "0" ]; then
-  ok "clinic ${ZONE} is already registered - nothing to do"
+  ok "clinic ${CLINIC_DOMAIN} is already registered - nothing to do"
 elif $DRY_RUN; then
   warn "--dry-run: would register ${CLINIC_NAME} and owner ${OWNER_EMAIL}"
 else
@@ -248,7 +256,7 @@ PY
   # which psql quotes - nothing is concatenated into the statement.
   psql_prumo \
     -v name="$CLINIC_NAME" -v subtitle="$CLINIC_SUBTITLE" -v monogram="$CLINIC_MONOGRAM" \
-    -v color="$CLINIC_COLOR" -v domain="$ZONE" -v host="$HOSTNAME_APP" -v unit="$CLINIC_UNIT" \
+    -v color="$CLINIC_COLOR" -v domain="$CLINIC_DOMAIN" -v host="$HOSTNAME_APP" -v unit="$CLINIC_UNIT" \
     -v plan="$CLINIC_PLAN" -v billing="$CLINIC_BILLING" \
     -v owner_name="$OWNER_NAME" -v owner_email="$OWNER_EMAIL" -v hash="$HASH" <<'SQL'
 BEGIN;

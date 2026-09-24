@@ -134,7 +134,14 @@ Desktop: canvas 1280 × 800. Mobile: 390 × 812. Layout do app = nav (sidebar 21
     vivo do login; operação (expediente, duração padrão, antecedência, política de falta); feature
     flags; matriz de permissões.
 12. **Tenants (revenda)** — KPIs (clínicas ativas, MRR, atendimentos, churn) + tabela de clínicas
-    (plano, usuários, módulos, cobrança, "Entrar como").
+    (plano, usuários, módulos, cobrança, "Entrar como"). Vive só nos hostnames de `PLATFORM_HOSTS`,
+    que não servem clínica nenhuma e recusam login de clínica. Churn é quem saiu no mês sobre quem
+    estava dentro no começo dele — daí `tenants.deactivated_at`. O "Entrar como" cria a sessão do
+    lado da plataforma e a entrega por um bilhete de uso único, válido por um minuto, emitido para
+    um host; gasto o bilhete, o host da clínica gira o token da sessão, de modo que a URL que ficou
+    no histórico não abre nada. A sessão assumida mantém faixa no topo, mascara prontuário e fotos
+    (`sessions.medical_record_unlocked`, que nenhuma tela liga), recusa upload de foto e grava
+    `tenant.impersonate` nos dois lados.
 13. **Portal da paciente** — próximo horário com Confirmar/Reagendar, orientações pré, documentos
     (termos, recibos).
 

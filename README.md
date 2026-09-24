@@ -8,11 +8,11 @@ Prontuário, agenda, ficha de atendimento, financeiro, estoque, relatórios, ter
 lembretes por WhatsApp e portal da paciente — com dados sensíveis de saúde, o que define quase todas
 as decisões de arquitetura abaixo.
 
-> **Etapas 1 a 7 de 8 concluídas.** Login com perfis, tenant por hostname, cadastro de pacientes,
-> configurações, agenda com marcação de horário, estoque por lote, a ficha de atendimento com
-> fechamento financeiro, os termos de consentimento com assinatura e PDF, o financeiro, os
-> relatórios, as automações de WhatsApp e o portal da paciente estão de pé. Falta o painel da
-> revenda (etapa 8). Ver [Estado](#estado).
+> **As 8 etapas planejadas estão concluídas.** Login com perfis, tenant por hostname, cadastro de
+> pacientes, configurações, agenda com marcação de horário, estoque por lote, a ficha de atendimento
+> com fechamento financeiro, os termos de consentimento com assinatura e PDF, o financeiro, os
+> relatórios, as automações de WhatsApp, o portal da paciente e o painel da revenda com "entrar
+> como" estão de pé. O que falta agora é backlog, não etapa. Ver [Estado](#estado).
 
 ---
 
@@ -111,19 +111,24 @@ Senha de todos: `prumo1234`.
 | Financeiro | `financeiro@dratatimayumi.com.br` | http://localhost:3100 |
 | Profissional convidado | `pedro@dratatimayumi.com.br` | http://localhost:3100 |
 | Paciente (portal) | `renata@exemplo.com.br` | http://aurora.localhost:3100 |
+| Super-admin da revenda (exige 2FA) | `suporte@atelie.app` | http://admin.localhost:3100 |
 
 Trocar o endereço troca a clínica — é a resolução por hostname funcionando. `tati.localhost:3100`,
 `aurora.localhost:3100` e `vertice.localhost:3100` servem as três marcas de exemplo, cada uma com
 sua cor de acento. O Chromium resolve qualquer `*.localhost` para 127.0.0.1 sozinho, sem mexer em
 `/etc/hosts`.
 
+`admin.localhost:3100` não é clínica nenhuma: é um host de `PLATFORM_HOSTS`, serve o painel da
+revenda e recusa login de clínica. Um login da revenda também não entra pelo endereço de uma clínica
+— a única porta para dentro de uma instância é o "Entrar como", que deixa rastro.
+
 Para ver que o menu não é a proteção: logado como recepção, digite `/settings` na barra de endereço.
 
 ### Testes
 
 ```bash
-npm test          # 413 unitários + integração de RLS e sessão (precisa do db:up)
-npm run test:e2e  # 94 end-to-end no Playwright (sobe o dev server sozinho)
+npm test          # 422 unitários + integração de RLS e sessão (precisa do db:up)
+npm run test:e2e  # 99 end-to-end no Playwright (sobe o dev server sozinho)
 npm run test:all  # os dois
 npm run typecheck
 npm run lint
@@ -318,11 +323,36 @@ código precisa dele está transcrito em [`docs/regras-de-negocio.md`](docs/regr
 - Um login de paciente aponta para o cadastro por `users.patient_id`, com um trigger que recusa um
   vínculo entre clínicas — a única coisa que o RLS não conseguiria expressar sozinho.
 
-### Ordem das próximas etapas
+**Etapa 8 concluída** — painel da revenda:
 
-| Etapa | Entrega |
+- **Tela de Tenants** no host da plataforma (`PLATFORM_HOSTS`): clínicas ativas, MRR, atendimentos
+  do mês e churn, mais a tabela com plano, cobrança, mensalidade, usuários, módulos e uso.
+- **Churn com denominador honesto**: quem saiu no mês sobre quem estava dentro no começo do mês —
+  por isso `tenants` ganhou `deactivated_at`, com CHECK garantindo que uma clínica inativa tem data
+  de saída. Sem essa coluna só dava para responder "quantas estão fora hoje".
+- **"Entrar como"** atravessa hostnames sem pôr credencial em URL: a sessão é criada no lado da
+  plataforma, e o que viaja é um bilhete em `impersonation_handoffs` — 256 bits, só o HMAC guardado,
+  **um minuto** de vida, **uso único** (UPDATE condicional, então recarregar não entra de novo) e o
+  host para o qual foi emitido. Ao ser gasto em `/enter/<bilhete>`, o host da clínica **gira o token
+  da sessão** e devolve o novo no cookie: o endereço que ficou no histórico já não abre nada.
+- **A sessão assumida é uma sessão diferente**: faixa no topo o tempo todo, prontuário e fotos
+  mascarados (`medical_record_unlocked`, que nenhuma tela liga), upload de foto recusado, e
+  `tenant.impersonate` no `audit_log` das duas pontas — a da plataforma e a da clínica.
+- `impersonation_handoffs` fica fora do RLS de propósito, junto de `tenants` e `tenant_domains`: o
+  bilhete é gasto antes de existir escopo de tenant. A exceção está escrita em `tests/rls.test.ts`,
+  que falha se qualquer outra tabela aparecer sem RLS.
+
+### Backlog
+
+Sem ordem de etapa; o que aparecer primeiro na operação vem primeiro.
+
+| Assunto | O que falta |
 |---|---|
-| 8 | Painel da revenda (tenants, flags, "entrar como") |
+| Estoque | corrigir um lote lançado errado (movimentos de ajuste e devolução); editar o custo de catálogo de um produto |
+| Agenda | remarcar um horário sem cancelar e refazer; lista de espera de verdade (hoje o "2" só cancela) |
+| WhatsApp | credenciais por clínica — hoje o número é do deployment, não do tenant |
+| Portal | recibos entre os documentos da paciente |
+| Marcação | trocar a checagem de conflito por uma constraint `EXCLUDE` (precisa de `btree_gist`) |
 
 ---
 

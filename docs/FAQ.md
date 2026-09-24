@@ -3,12 +3,12 @@
 Perguntas na linguagem de quem opera a clínica. Se algo aqui não corresponde ao que você vê na
 tela, o sistema está errado, não o texto — avise.
 
-> **Onde estamos:** etapas 1 a 7 prontas — entrar no sistema, perfis de acesso, uma instância por
-> clínica, **cadastro de pacientes**, configurações, agenda com **marcação de horário**, **estoque
-> por lote**, a **ficha de atendimento com fechamento financeiro**, as **fotos clínicas** e os
-> **termos de consentimento com assinatura e PDF**, o **financeiro**, os **relatórios**, as
-> **mensagens no WhatsApp**, o **portal da paciente** e a **anamnese versionada**. Falta o painel
-> da revenda (etapa 8).
+> **Onde estamos:** o sistema está completo no que foi planejado — entrar no sistema, perfis de
+> acesso, uma instância por clínica, **cadastro de pacientes**, configurações, agenda com
+> **marcação de horário**, **estoque por lote**, a **ficha de atendimento com fechamento
+> financeiro**, as **fotos clínicas** e os **termos de consentimento com assinatura e PDF**, o
+> **financeiro**, os **relatórios**, as **mensagens no WhatsApp**, o **portal da paciente**, a
+> **anamnese versionada** e o **painel de quem revende o sistema**.
 
 ---
 
@@ -136,9 +136,25 @@ endereço de outra clínica.
 
 ### Alguém do suporte pode entrar na minha instância?
 
-Pode, quando a revenda precisa dar suporte — e aí aparece uma faixa no topo avisando que a sessão
-foi assumida. Nessa situação o prontuário aparece **mascarado**, a não ser que você autorize. Tudo
-fica em registro. (O painel da revenda entra na etapa 8.)
+Pode, quando quem fornece o sistema precisa dar suporte — e você vê isso enquanto acontece: aparece
+uma **faixa no topo de todas as telas** dizendo "Sessão assumida pela plataforma".
+
+Enquanto essa faixa está no ar:
+
+- **prontuário, anamnese e fotos aparecem mascarados** (`•••••••`), e nenhuma tela do suporte
+  desmascara — liberar exige autorização sua, registrada, feita fora do sistema;
+- o suporte **não envia foto** nem escreve anamnese;
+- **cada acesso fica no registro de auditoria da sua clínica**, com a informação de que foi uma
+  sessão assumida e por quem.
+
+Para conferir depois: Configurações → registro de auditoria, procurando por "sessão assumida". Se
+você encontrar um acesso que ninguém combinou com você, avise — é exatamente para isso que o
+registro existe.
+
+### E se eu quiser cortar esse acesso agora?
+
+Clique em **Encerrar** na própria faixa. A sessão do suporte morre na hora, e entrar de novo exige
+um novo acesso, que aparece de novo na faixa e de novo no registro.
 
 ---
 

@@ -25,6 +25,16 @@ export const FLAG_LABELS: Record<Flag, string> = {
 };
 
 /** Normalises the jsonb from the database: unknown keys ignored, defaults filled in. */
+/** One line saying what each module does, in the words of whoever runs the clinic. */
+export const FLAG_NOTES: Record<keyof Flags, string> = {
+  patientPortal: 'A paciente entra para confirmar horário, ver orientações e baixar documentos.',
+  clinicalPhotos: 'Fotos antes e depois na ficha, em bucket privado e com acesso registrado.',
+  automaticPricing: 'Preço sugerido à vista e parcelado calculado a partir dos parâmetros.',
+  automaticStockDeduction: 'Fechar o atendimento baixa o lote usado do estoque.',
+  multiplePractitioners: 'Mais de um profissional na agenda, com comissão por atendimento.',
+  multipleUnits: 'Mais de uma unidade, cada uma com suas salas.',
+};
+
 export function readFlags(raw: unknown): Flags {
   const flags = { ...DEFAULT_FLAGS };
   if (raw && typeof raw === 'object' && !Array.isArray(raw)) {

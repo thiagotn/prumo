@@ -99,6 +99,37 @@ validação da tela de Configurações. A senha inicial é impressa uma vez e n�
 lugar nenhum além do hash; entregue por canal seguro. O 2FA é cadastrado pela própria pessoa no
 primeiro login (QR na tela).
 
+## Dar carga inicial a uma clínica a partir de outra
+
+Uma clínica recém-criada nasce vazia: sem parâmetros de preço não existe orçamento, e sem sala,
+procedimento e produto não é possível fechar um atendimento. Quando outra clínica já tem esses
+números, `copy-clinic-setup.ts` copia em vez de você redigitar — útil para montar uma clínica de
+homologação espelhando a produção.
+
+```bash
+npx tsx --tsconfig tsconfig.scripts.json scripts/copy-clinic-setup.ts \
+  --from <host-de-origem> --to <host-de-destino> [--catalog] [--dry-run]
+```
+
+Sem `--catalog` copia só os parâmetros de preço. Com `--catalog`, também salas, procedimentos e
+produtos. Sempre rode antes com `--dry-run`, que imprime o que faria sem gravar nada.
+
+O que **não** é copiado, de propósito:
+
+- **pacientes, agendamentos, atendimentos e pagamentos** — são registros da clínica, e copiar
+  uma paciente de uma clínica para outra é exatamente o que todo o isolamento existe para impedir;
+- **lotes de estoque** — um lote é uma caixa física numa prateleira, com número de lote e
+  validade. Copiar inventaria estoque que não existe. Na clínica de destino, cadastre os lotes
+  pela tela de Estoque; no caminho você valida esse fluxo também.
+
+Rodar de novo é seguro: salas, procedimentos e produtos são casados por nome (e marca) e
+atualizados; os parâmetros de preço só ganham versão nova se os números diferirem dos que a
+clínica de destino já lê.
+
+Atenção ao que o catálogo carrega: **custo de compra, rendimento e margem** da clínica de
+origem. São os números comerciais dela. Só use `--catalog` entre clínicas do mesmo dono, e
+lembre que a de destino passa a ter essa informação para quem tiver acesso de administrador lá.
+
 ## Redefinir senha / trocar de celular
 
 Da sua máquina, com o túnel aberto (`scripts/tunnel-prod-db.sh`) e o `DATABASE_URL` montado a
@@ -146,6 +177,66 @@ COMMIT;
 
 Uma query sem nenhum dos dois `set_config` devolve **zero linhas**. Isso é o desenho, não um erro:
 o padrão é negar. Vale para toda tabela de negócio.
+
+## Painel da revenda e "entrar como"
+
+O painel vive nos hostnames listados em `PLATFORM_HOSTS` (separados por vírgula). Um host dessa
+lista **não serve clínica nenhuma**: resolve para o painel de tenants e recusa login de usuário de
+clínica. Com a variável vazia o painel deixa de existir — e **em produção ela está vazia hoje**
+(`helm/apps/prumo/configmap.yml` no repo `homelab`), porque o domínio do produto de revenda ainda
+não foi decidido. Enquanto estiver assim, o super-admin não tem por onde entrar, que é o estado
+mais seguro para um deployment de clínica única.
+
+Para ligar o painel, na ordem:
+
+1. escolher o domínio (o nome "Ateliê" é placeholder na especificação) e apontar o CNAME no
+   Cloudflare Tunnel;
+2. acrescentar o host ao `ingress.yml` do repo `homelab`;
+3. preencher `PLATFORM_HOSTS` no `configmap.yml` com esse host e reiniciar o Deployment;
+4. criar o super-admin: um `users` com `tenant_id IS NULL`, `role = 'SUPERADMIN'` e 2FA — o mesmo
+   caminho de "Criar uma clínica nova", sem tenant.
+
+2FA é obrigatório para ele, como para qualquer perfil com acesso a prontuário.
+
+**Plano, cobrança, mensalidade e flags** por clínica saem de `/tenants/<id>`. Desativar uma clínica
+grava `deactivated_at` — é o que faz o churn do mês ser calculável; o CHECK
+`tenants_inactive_has_a_date` impede desativar sem data. Mensalidade em branco significa "ainda não
+combinada", e o painel conta quantas estão assim em vez de fingir que valem zero.
+
+**"Entrar como"** abre a instância da clínica com uma sessão de suporte:
+
+1. a sessão é criada do lado da plataforma, já com 2FA satisfeito e `impersonated_by_user_id`;
+2. o que viaja para o host da clínica é um bilhete em `impersonation_handoffs` — 256 bits, só o
+   HMAC guardado, **um minuto** de vida, **uso único** e emitido para um host específico;
+3. `/enter/<bilhete>` gasta o bilhete, **gira o token da sessão** e devolve o novo no cookie. A URL
+   que ficou no histórico do navegador já não abre nada.
+
+Enquanto a sessão está assumida: faixa no topo de todas as telas, prontuário/anamnese/fotos
+mascarados, upload de foto recusado, e `tenant.impersonate` no `audit_log` da plataforma **e** da
+clínica. A clínica corta o acesso no botão **Encerrar** da própria faixa.
+
+**Desmascarar o prontuário exige autorização da clínica, e não tem tela** — de propósito: é uma
+decisão que deve custar. Com a autorização registrada por escrito:
+
+```sql
+BEGIN;
+  SELECT set_config('app.platform_scope', 'on', true);
+  UPDATE sessions SET medical_record_unlocked = true
+   WHERE id = '<session-id>' AND impersonated_by_user_id IS NOT NULL;
+COMMIT;
+```
+
+Vale só para aquela sessão (uma hora, no máximo). Guarde a autorização junto do `id` usado: o
+`audit_log` registra `medicalRecordUnlocked` em cada leitura de prontuário, e é esse par que
+explica o acesso depois.
+
+Bilhetes vencidos não precisam de faxina para funcionar — são recusados pela data — mas a tabela
+cresce. Se incomodar:
+
+```sql
+-- sem set_config: esta tabela fica fora do RLS de propósito (ver a migração).
+DELETE FROM impersonation_handoffs WHERE expires_at < now() - interval '7 days';
+```
 
 ## Excluir uma clínica
 

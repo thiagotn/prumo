@@ -199,7 +199,11 @@ describe('every business table is protected', () => {
   // the two stock tables — with RLS off. Nothing failed: queries simply returned other
   // tenants' rows. Enumerating the tables here means the next one cannot be forgotten
   // quietly; it has to be listed as deliberately public instead.
-  const PLATFORM_REGISTRY = ['tenants', 'tenant_domains'];
+  // impersonation_handoffs joins the registry for the same reason: the "entrar como"
+  // ticket is spent on the clinic's host before any tenant scope exists — trading it for
+  // a session is what sets one up. Its guard is the token, the single use, the minute of
+  // life and the host written on it (see the migration and src/lib/auth/impersonation.ts).
+  const PLATFORM_REGISTRY = ['tenants', 'tenant_domains', 'impersonation_handoffs'];
   const NOT_BUSINESS_DATA = ['_prisma_migrations'];
 
   it('has RLS enabled and forced on every table except the platform registry', async () => {
@@ -223,13 +227,14 @@ describe('every business table is protected', () => {
 
   it('the platform registry is deliberately outside RLS', async () => {
     // tenants and tenant_domains have to be readable before a tenant is known — that is
-    // how a hostname resolves to a clinic in the first place.
+    // how a hostname resolves to a clinic in the first place, and how a handoff ticket
+    // finds the session it stands for.
     const rows = await withPlatformScope(
       (tx) => tx.$queryRaw<Array<{ table: string; rls: boolean }>>`
         SELECT relname AS "table", relrowsecurity AS rls
           FROM pg_class
          WHERE relnamespace = 'public'::regnamespace
-           AND relname IN ('tenants', 'tenant_domains')
+           AND relname IN ('tenants', 'tenant_domains', 'impersonation_handoffs')
       `,
     );
     expect(rows.every((r) => !r.rls)).toBe(true);
@@ -643,7 +648,9 @@ describe('the anamnesis', () => {
         data: {
           tenantId,
           questions: [{ id: 'alergia', label: 'Tem alergia?', type: 'boolean', alert: true }],
-          version: Math.floor(Math.random() * 1_000_000),
+          // Below 900_000: that range is reserved by the "one questionnaire in force"
+          // test, which wipes it and would trip over an anamnesis left pointing at it.
+          version: Math.floor(Math.random() * 800_000),
           current: false,
         },
       });

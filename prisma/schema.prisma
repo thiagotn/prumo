@@ -70,11 +70,18 @@ model Tenant {
 
   plan          Plan          @default(ESSENTIAL)
   billingStatus BillingStatus @default(TRIAL) @map("billing_status")
+  /// What this clinic pays per month. Typed by the reseller rather than derived from the
+  /// plan: the plan is what the clinic gets, the fee is what was agreed with it, and the
+  /// two drift apart the moment a discount is given.
+  monthlyFee Decimal? @map("monthly_fee") @db.Decimal(12, 2)
 
   /// Per-tenant feature flags (Settings screen). See DEFAULT_FLAGS in src/lib/flags.ts.
   enabledModules Json @default("{}") @map("enabled_modules")
 
   active Boolean @default(true)
+  /// When the clinic left. Kept because churn is a question about a period, and a row
+  /// that only says `active: false` cannot answer "quantas saíram em agosto".
+  deactivatedAt DateTime? @map("deactivated_at")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -190,6 +197,7 @@ model Session {
   user            User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   tenant          Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   impersonatedBy  User?   @relation("SessionImpersonatedBy", fields: [impersonatedByUserId], references: [id], onDelete: SetNull)
+  handoffs        ImpersonationHandoff[]
 
   @@index([userId])
   @@index([tenantId])
@@ -978,4 +986,33 @@ model Anamnesis {
   @@index([tenantId, createdAt])
   @@index([patientId, createdAt])
   @@map("anamneses")
+}
+
+/// A one-off ticket that carries an impersonation session from the reseller's host to the
+/// clinic's.
+///
+/// A cookie set on admin.<reseller> is never sent to app.<clinic> — different sites. So
+/// "entrar como" creates the session on the platform side, hands over a token in the URL,
+/// and the clinic's host exchanges it for the cookie. The token is single use, lives for
+/// a minute, and only its HMAC is stored: what travels in a URL lands in history and in
+/// logs.
+///
+/// Deliberately outside RLS, like `tenants` and `tenant_domains`: it is consumed before
+/// any tenant scope exists, by definition.
+model ImpersonationHandoff {
+  id String @id @default(uuid()) @db.Uuid
+
+  tokenHash String   @unique @map("token_hash")
+  sessionId String   @map("session_id") @db.Uuid
+  /// Where the ticket is good for, so a stolen one cannot be spent elsewhere.
+  host      String
+  expiresAt DateTime @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@map("impersonation_handoffs")
 }

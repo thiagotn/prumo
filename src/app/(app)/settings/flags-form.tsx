@@ -1,21 +1,13 @@
 'use client';
 
 import { useActionState } from 'react';
-import { FLAG_LABELS, type Flags } from '@/lib/flags';
+import { FLAG_LABELS, FLAG_NOTES, type Flags } from '@/lib/flags';
 import { saveFlags, type SettingsState } from './actions';
 import styles from './settings.module.css';
 
 const INITIAL: SettingsState = {};
 
 /** Product copy, pt-BR: what each flag actually changes for the clinic. */
-const FLAG_NOTES: Record<keyof Flags, string> = {
-  patientPortal: 'A paciente entra para confirmar horário, ver orientações e baixar documentos.',
-  clinicalPhotos: 'Fotos antes e depois na ficha, em bucket privado e com acesso registrado.',
-  automaticPricing: 'Preço sugerido à vista e parcelado calculado a partir dos parâmetros.',
-  automaticStockDeduction: 'Fechar o atendimento baixa o lote usado do estoque.',
-  multiplePractitioners: 'Mais de um profissional na agenda, com comissão por atendimento.',
-  multipleUnits: 'Mais de uma unidade, cada uma com suas salas.',
-};
 
 export function FlagsForm({ flags }: { flags: Flags }) {
   const [state, action, pending] = useActionState(saveFlags, INITIAL);
