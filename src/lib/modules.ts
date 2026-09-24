@@ -16,6 +16,7 @@ export const MODULES = [
   'settings',
   'tenants',
   'portal',
+  'help',
 ] as const;
 
 export type Module = (typeof MODULES)[number];
@@ -151,6 +152,13 @@ export const MODULE_DEFS: Record<Module, ModuleDefinition> = {
     label: 'Tenants',
     title: 'Clínicas na plataforma',
     crumb: 'Plataforma',
+    group: 'Sistema',
+  },
+  help: {
+    path: '/help',
+    label: 'Ajuda',
+    title: 'Ajuda',
+    crumb: 'Sistema',
     group: 'Sistema',
   },
   portal: {

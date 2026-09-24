@@ -310,3 +310,24 @@
     border-top-color: var(--color-accent);
   }
 }
+
+/* Ajuda no header do celular: a tab bar é do fluxo de atendimento e a sidebar não existe
+   aqui, então este é o caminho para a ajuda no telefone. Alvo de 44px (CLAUDE.md). */
+.mobileHelp {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-left: auto;
+  border-radius: 50%;
+  border: 1px solid var(--color-divider);
+  color: var(--color-accent);
+  text-decoration: none;
+  font-family: var(--font-heading);
+  font-size: 17px;
+  line-height: 1;
+}
+
+.mobileHelp:active {
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+}

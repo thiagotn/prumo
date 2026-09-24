@@ -17,7 +17,14 @@ test.describe('role-filtered navigation', () => {
 
   test('finance sees only numbers and supplies', async ({ page }) => {
     await signInWithoutTwoFactor(page, USERS.finance.email);
-    expect(await menuLabels(page)).toEqual(['Painel', 'Financeiro', 'Estoque', 'Relatórios']);
+    // Ajuda is the one item every profile that works in the clinic has.
+    expect(await menuLabels(page)).toEqual([
+      'Painel',
+      'Financeiro',
+      'Estoque',
+      'Relatórios',
+      'Ajuda',
+    ]);
   });
 });
 

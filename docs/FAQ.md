@@ -737,6 +737,27 @@ Ele depende do módulo **Portal da paciente** estar ligado em Configurações.
 
 ---
 
+## Esta ajuda
+
+### Onde ela fica dentro do sistema?
+
+No menu lateral, em **Sistema → Ajuda**. Todo perfil que trabalha na clínica alcança: doutora,
+recepção, financeiro e profissional convidado. A paciente não vê — o portal dela é escrito na
+linguagem dela.
+
+### Dá para procurar?
+
+Sim, pela busca no topo da tela. Ela olha a pergunta e a resposta inteira, ignora acentos e
+maiúsculas: "prontuario" encontra "prontuário". O índice à esquerda leva direto a um assunto.
+
+### É a mesma ajuda que o time mantém?
+
+É o mesmo arquivo, servido de dentro do sistema — não há uma segunda cópia para ficar
+desatualizada. Quando uma tela muda, o texto muda no mesmo commit, e uma versão nova do sistema traz
+a ajuda nova junto.
+
+---
+
 ## Ainda com dúvida?
 
 Se a resposta não está aqui, fale com quem administra a clínica. Para dúvida técnica ou coisa que

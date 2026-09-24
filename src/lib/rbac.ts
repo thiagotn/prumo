@@ -35,6 +35,7 @@ export const ACCESS_MATRIX: Record<Role, MatrixRow> = {
     messages: 'full',
     consents: 'full',
     settings: 'full',
+    help: 'full',
   }),
 
   // Reception: schedule and contact. Never anamnesis or clinical photos.
@@ -46,6 +47,7 @@ export const ACCESS_MATRIX: Record<Role, MatrixRow> = {
     inventory: 'partial',
     messages: 'full',
     consents: 'full',
+    help: 'full',
   }),
 
   // Finance: numbers and supplies, no clinical data at all.
@@ -54,6 +56,7 @@ export const ACCESS_MATRIX: Record<Role, MatrixRow> = {
     finance: 'full',
     inventory: 'full',
     reports: 'full',
+    help: 'full',
   }),
 
   // Guest practitioner: only their own patients.
@@ -65,6 +68,7 @@ export const ACCESS_MATRIX: Record<Role, MatrixRow> = {
     medicalRecord: 'own',
     photos: 'partial',
     consents: 'full',
+    help: 'full',
   }),
 
   // The reseller's super-admin: platform, not clinic. Medical records stay masked even
@@ -73,6 +77,7 @@ export const ACCESS_MATRIX: Record<Role, MatrixRow> = {
     dashboard: 'full',
     tenants: 'full',
     settings: 'full',
+    help: 'full',
   }),
 
   // Patient: only her own portal.

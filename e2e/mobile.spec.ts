@@ -32,6 +32,25 @@ test.describe('mobile shell', () => {
     await expect(page.getByRole('heading', { name: 'Painel da clínica' })).toBeVisible();
   });
 
+  test('the help is reachable from the phone header', async ({ page }) => {
+    // The tab bar holds the five destinations of the care flow and there is no sidebar
+    // here, so without this link the help would be out of reach on a phone.
+    // signIn, not signInWithoutTwoFactor: that helper waits for the sidebar, which is
+    // display:none at this width and therefore absent from the accessibility tree.
+    await signIn(page, USERS.reception.email);
+    await expect(page.getByRole('navigation', { name: 'Navegação principal' })).toBeVisible();
+
+    // By test id: the sidebar's own "Ajuda" is still in the DOM here, just hidden.
+    const help = page.getByTestId('mobile-help');
+    await expect(help).toBeVisible();
+    const box = await help.boundingBox();
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+
+    await help.click();
+    await expect(page).toHaveURL(/\/help$/);
+    await expect(page.getByRole('heading', { name: 'Ajuda', level: 1 })).toBeVisible();
+  });
+
   test('the login is usable at phone width', async ({ page }) => {
     await page.goto('/login');
 

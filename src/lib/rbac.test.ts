@@ -19,6 +19,7 @@ const SPEC_TABLE: Array<[string, Role, Record<string, string>]> = [
       reports: 'full',
       consents: 'full',
       settings: 'full',
+      help: 'full',
     },
   ],
   [
@@ -34,6 +35,7 @@ const SPEC_TABLE: Array<[string, Role, Record<string, string>]> = [
       reports: 'none',
       consents: 'full',
       settings: 'none',
+      help: 'full',
     },
   ],
   [
@@ -49,6 +51,7 @@ const SPEC_TABLE: Array<[string, Role, Record<string, string>]> = [
       reports: 'full',
       consents: 'none',
       settings: 'none',
+      help: 'full',
     },
   ],
   [
@@ -64,6 +67,7 @@ const SPEC_TABLE: Array<[string, Role, Record<string, string>]> = [
       reports: 'none',
       consents: 'full',
       settings: 'none',
+      help: 'full',
     },
   ],
 ];

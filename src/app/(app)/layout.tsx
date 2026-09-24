@@ -1,7 +1,8 @@
+import Link from 'next/link';
 import { requireSession } from '@/lib/auth/guards';
 import { monogram } from '@/lib/format';
 import { buildNavigation, mobileItems } from '@/lib/navigation';
-import { ROLE_LABELS } from '@/lib/rbac';
+import { canAccess, ROLE_LABELS } from '@/lib/rbac';
 import { signOut } from '../login/actions';
 import { Header } from './header';
 import { MobileTitle } from './mobile-title';
@@ -64,6 +65,18 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <div className={styles.mobileHeader}>
           <div className={`monogram ${styles.mobileMonogram}`}>{brandMonogram}</div>
           <MobileTitle />
+          {/* The tab bar holds the five destinations of the care flow and the sidebar is
+              not here, so without this the help would be out of reach on a phone. */}
+          {canAccess(session.role, 'help') ? (
+            <Link
+              className={styles.mobileHelp}
+              href="/help"
+              aria-label="Ajuda"
+              data-testid="mobile-help"
+            >
+              ?
+            </Link>
+          ) : null}
           <div
             className={styles.avatar}
             aria-label={`${session.name} — ${ROLE_LABELS[session.role]}`}

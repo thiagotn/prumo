@@ -6,10 +6,10 @@ name: build-image
 on:
   push:
     branches: [main]
+    # docs/ NÃO está aqui de propósito: a tela de Ajuda serve docs/FAQ.md de dentro da
+    # imagem, então uma edição no FAQ precisa de imagem nova para chegar na clínica.
     paths-ignore:
-      - '**.md'
       - 'design/**'
-      - 'docs/**'
   workflow_dispatch:
 
 concurrency:

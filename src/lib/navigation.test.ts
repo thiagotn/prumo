@@ -24,19 +24,29 @@ describe('buildNavigation', () => {
     expect(items).not.toContain('Configurações');
   });
 
-  it('finance sees only Painel, Financeiro, Estoque and Relatórios', () => {
+  it('finance sees only the numbers — plus the help, which everyone has', () => {
     expect(labels(Role.FINANCE, flags())).toEqual([
       'Painel',
       'Financeiro',
       'Estoque',
       'Relatórios',
+      'Ajuda',
     ]);
   });
 
   it('empty groups do not appear', () => {
     const sections = buildNavigation(Role.FINANCE, flags());
-    expect(sections.map((s) => s.group)).toEqual(['Clínica', 'Gestão']);
+    // Sistema shows up for every staff role now, because Ajuda lives there.
+    expect(sections.map((s) => s.group)).toEqual(['Clínica', 'Gestão', 'Sistema']);
     expect(sections.every((s) => s.items.length > 0)).toBe(true);
+  });
+
+  it('every profile that works in the clinic can reach the help', () => {
+    for (const role of [Role.OWNER, Role.RECEPTION, Role.FINANCE, Role.PRACTITIONER]) {
+      expect(labels(role, flags()), role).toContain('Ajuda');
+    }
+    // The patient has her own language in the portal; the FAQ is written for the clinic.
+    expect(labels(Role.PATIENT, flags({ patientPortal: true }))).not.toContain('Ajuda');
   });
 
   it('medical record and photos have no menu entry of their own', () => {
@@ -51,7 +61,12 @@ describe('buildNavigation', () => {
   });
 
   it('with no tenant (platform host) only flag-free modules remain', () => {
-    expect(labels(Role.SUPERADMIN, null)).toEqual(['Painel', 'Configurações', 'Tenants']);
+    expect(labels(Role.SUPERADMIN, null)).toEqual([
+      'Painel',
+      'Configurações',
+      'Tenants',
+      'Ajuda',
+    ]);
   });
 });
 

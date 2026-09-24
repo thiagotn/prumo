@@ -23,7 +23,7 @@ as decisões de arquitetura abaixo.
 | [`docs/especificacao.md`](docs/especificacao.md) | **O escopo**: telas, perfis e permissões, white-label, modelo de dados |
 | [`docs/regras-de-negocio.md`](docs/regras-de-negocio.md) | Fórmulas de preço, parâmetros e custos (da planilha da clínica) |
 | [`docs/design.md`](docs/design.md) | O protótipo de referência e os tokens do design system Classical |
-| [`docs/FAQ.md`](docs/FAQ.md) | **Como usar** o sistema, na linguagem de quem opera a clínica |
+| [`docs/FAQ.md`](docs/FAQ.md) | **Como usar** o sistema, na linguagem de quem opera a clínica — é o mesmo texto servido em **Ajuda**, dentro do app |
 | [`docs/operacao.md`](docs/operacao.md) | Runbook de produção: criar clínica, redefinir senha, ler auditoria |
 | [`CLAUDE.md`](CLAUDE.md) | Convenções do repositório (idioma, testes, execução) para humanos e agentes |
 
@@ -122,8 +122,8 @@ Para ver que o menu não é a proteção: logado como recepção, digite `/setti
 ### Testes
 
 ```bash
-npm test          # 368 unitários + integração de RLS e sessão (precisa do db:up)
-npm run test:e2e  # 84 end-to-end no Playwright (sobe o dev server sozinho)
+npm test          # 390 unitários + integração de RLS e sessão (precisa do db:up)
+npm run test:e2e  # 89 end-to-end no Playwright (sobe o dev server sozinho)
 npm run test:all  # os dois
 npm run typecheck
 npm run lint
@@ -157,6 +157,7 @@ src/
     report-data.ts  o período e as linhas por trás das duas exportações
     audit.ts        gravação no audit_log
     format.ts       moeda, datas e nomes em pt-BR
+    faq.ts          lê o docs/FAQ.md e vira a tela de Ajuda — uma fonte só, sem cópia
     auth/           password (scrypt), totp (RFC 6238), session, guards
   components/       UI compartilhada entre a casca autenticada e as telas públicas
   app/

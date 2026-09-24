@@ -56,8 +56,10 @@ enabled_modules (jsonb), billing_status`.
 | Relatórios | total | — | total | — |
 | Termos | total | total | — | total |
 | Configurações | total | — | — | — |
+| Ajuda (este FAQ) | total | total | total | total |
 
-Mais: **Super-admin revenda** (tenants, config, painel) e **Paciente** (só portal).
+Mais: **Super-admin revenda** (tenants, config, painel, ajuda) e **Paciente** (só portal — a ajuda é
+escrita na linguagem de quem opera a clínica, não da paciente).
 
 - **Ler não é escrever**: criar ou alterar (nova paciente, novo agendamento) exige acesso *total* ou
   *parcial*. *Própria/próprios* é leitura — o profissional convidado abre a sua agenda e as suas

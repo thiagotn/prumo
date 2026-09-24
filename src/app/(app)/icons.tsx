@@ -4,6 +4,7 @@ import {
   CalendarDays,
   ClipboardList,
   FileSignature,
+  CircleHelp,
   Gauge,
   Images,
   LayoutGrid,
@@ -22,6 +23,7 @@ export const MODULE_ICONS: Record<
   Module,
   React.ComponentType<{ size?: number; strokeWidth?: number }>
 > = {
+  help: CircleHelp,
   dashboard: Gauge,
   schedule: CalendarDays,
   patients: Users,

@@ -58,6 +58,11 @@ COPY --from=build /app/public ./public
 # gerado, o CLI traz @prisma/config e engines).
 COPY --from=build /app/prisma ./prisma
 COPY --from=build /app/prisma.config.ts ./prisma.config.ts
+
+# A tela de Ajuda serve o próprio docs/FAQ.md, lido em runtime (src/lib/faq-source.ts).
+# Uma fonte só, sem cópia para sair de sincronia — por isso o arquivo entra na imagem, e
+# por isso o build-image.yml não ignora mais mudanças em docs/.
+COPY --from=build /app/docs/FAQ.md ./docs/FAQ.md
 COPY --from=cli /cli/node_modules ./node_modules
 
 # USER node (uid 1000) — o securityContext do Deployment fixa o mesmo uid.
