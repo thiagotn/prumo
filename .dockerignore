@@ -9,3 +9,8 @@ docs
 .env*
 coverage
 compose.yaml
+
+# A tela de Ajuda serve o docs/FAQ.md de dentro da imagem (src/lib/faq-source.ts), então
+# este arquivo — e só ele — volta para o contexto. Precisa vir DEPOIS de `docs` e `*.md`:
+# no .dockerignore, o último padrão que casa é quem decide.
+!docs/FAQ.md
