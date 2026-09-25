@@ -834,6 +834,7 @@ enum MessageStatus {
   SENT
   FAILED
   CANCELLED // the appointment moved or was cancelled before the message went out
+  EXPIRED // its hour passed while the queue was stopped (see STALE_AFTER_HOURS)
 
   @@map("message_status")
 }

@@ -59,6 +59,13 @@ function variablesFor(appointment: AppointmentForMessages, clinicName: string) {
 type QueueContext = {
   tenantId: string;
   clinicName: string;
+  /**
+   * A flag `messageAutomation` da clínica. Obrigatória de propósito: quem chama tem o
+   * tenant em mãos e o compilador cobra a decisão — uma fila que enche sozinha para uma
+   * clínica que nunca vai enviar é dívida silenciosa, e some da vista até o dia em que
+   * alguém conecta o canal e ela sai toda de uma vez.
+   */
+  automation: boolean;
   templates: TemplateSettings;
   now?: Date;
 };
@@ -79,7 +86,11 @@ async function enqueue(
     reference: Date;
     key: string;
   },
-): Promise<'queued' | 'disabled' | 'no-phone' | 'too-late' | 'duplicate'> {
+): Promise<'queued' | 'off' | 'disabled' | 'no-phone' | 'too-late' | 'duplicate'> {
+  // Módulo desligado é diferente de automação desligada: ali a clínica escolheu não usar
+  // uma das seis; aqui ela não usa comunicação automática nenhuma.
+  if (!context.automation) return 'off';
+
   const template = context.templates[kind];
   if (!template.enabled) return 'disabled';
 
@@ -119,6 +130,7 @@ export async function enqueueForAppointment(
   context: Omit<QueueContext, 'templates'> & { templates?: TemplateSettings },
   appointment: AppointmentForMessages,
 ): Promise<number> {
+  if (!context.automation) return 0;
   if (!appointment.patientId || !appointment.patient?.active) return 0;
   const templates = context.templates ?? (await templatesFor(tx, context.tenantId));
   const full = { ...context, templates };
@@ -145,6 +157,7 @@ export async function enqueueAfterEncounter(
   context: Omit<QueueContext, 'templates'> & { templates?: TemplateSettings },
   appointment: AppointmentForMessages,
 ): Promise<number> {
+  if (!context.automation) return 0;
   if (!appointment.patientId || !appointment.patient?.active) return 0;
   const templates = context.templates ?? (await templatesFor(tx, context.tenantId));
   const full = { ...context, templates };
@@ -171,6 +184,7 @@ export async function enqueueNoShow(
   context: Omit<QueueContext, 'templates'> & { templates?: TemplateSettings },
   appointment: AppointmentForMessages,
 ): Promise<number> {
+  if (!context.automation) return 0;
   if (!appointment.patientId || !appointment.patient?.active) return 0;
   const templates = context.templates ?? (await templatesFor(tx, context.tenantId));
   const result = await enqueue(
@@ -207,6 +221,7 @@ export async function enqueueBirthdays(
   context: Omit<QueueContext, 'templates'> & { templates?: TemplateSettings },
   today: Date,
 ): Promise<number> {
+  if (!context.automation) return 0;
   const templates = context.templates ?? (await templatesFor(tx, context.tenantId));
   if (!templates.BIRTHDAY.enabled) return 0;
 

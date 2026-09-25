@@ -28,6 +28,7 @@ export const NAV_GROUPS: readonly NavGroup[] = ['Clínica', 'Gestão', 'Comunica
 
 export type Flag =
   | 'patientPortal'
+  | 'messageAutomation'
   | 'clinicalPhotos'
   | 'automaticPricing'
   | 'automaticStockDeduction'
@@ -129,12 +130,16 @@ export const MODULE_DEFS: Record<Module, ModuleDefinition> = {
     crumb: 'Gestão',
     group: 'Gestão',
   },
+  // Opcional por clínica: há clínica que fala com a paciente pessoalmente, e há clínica
+  // que não tem como usar a API do WhatsApp Business. Desligada a flag, não existe a tela
+  // nem a fila — e não sobra um aviso de canal desconectado para ninguém explicar.
   messages: {
     path: '/messages',
     label: 'Mensagens',
     title: 'Mensagens e lembretes',
     crumb: 'Comunicação',
     group: 'Comunicação',
+    flag: 'messageAutomation',
   },
   consents: {
     path: '/consents',

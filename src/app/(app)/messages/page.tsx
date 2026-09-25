@@ -60,7 +60,12 @@ export default async function MessagesPage({
     const rows = counts.filter((row) => row.kind === kind);
     const of = (status: MessageStatus) =>
       rows.find((row) => row.status === status)?._count._all ?? 0;
-    return { sent: of('SENT'), pending: of('PENDING'), failed: of('FAILED') };
+    return {
+      sent: of('SENT'),
+      pending: of('PENDING'),
+      failed: of('FAILED'),
+      expired: of('EXPIRED'),
+    };
   };
 
   const channelOn = whatsappConfigured();
@@ -98,6 +103,9 @@ export default async function MessagesPage({
                     <span>{metrics.sent} enviadas</span>
                     <span>{metrics.pending} na fila</span>
                     {metrics.failed > 0 ? <span>{metrics.failed} com falha</span> : null}
+                    {/* Vencidas: a fila ficou parada e a hora passou. Contadas à parte de
+                        propósito — não é falha do provedor, e some se ninguém mostrar. */}
+                    {metrics.expired > 0 ? <span>{metrics.expired} vencidas</span> : null}
                   </span>
                 </div>
                 <p className={styles.automationNote}>{MESSAGE_NOTES[kind]}</p>

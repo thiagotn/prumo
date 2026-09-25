@@ -10,7 +10,9 @@ import 'dotenv/config';
 import { parseArgs } from 'node:util';
 import { audit } from '../src/lib/audit';
 import { prisma, withPlatformScope, withTenant } from '../src/lib/db';
+import { readFlags } from '../src/lib/flags';
 import { enqueueBirthdays } from '../src/lib/message-queue';
+import { staleBefore, STALE_AFTER_HOURS } from '../src/lib/messages';
 import { sendText, whatsappConfigured } from '../src/lib/whatsapp';
 
 const { values } = parseArgs({
@@ -36,20 +38,52 @@ async function main() {
   }
 
   const tenants = await withPlatformScope((tx) =>
-    tx.tenant.findMany({ where: { active: true }, select: { id: true, name: true } }),
+    tx.tenant.findMany({
+      where: { active: true },
+      select: { id: true, name: true, enabledModules: true },
+    }),
   );
 
   const now = new Date();
+  // O que já não faz sentido enviar: a hora passou enquanto a fila estava parada.
+  const floor = staleBefore(now);
+
   for (const tenant of tenants) {
+    // A clínica que não usa comunicação automática não entra na varredura — nem para
+    // enfileirar aniversário, nem para enviar o que porventura ficou de uma época em que
+    // o módulo estava ligado.
+    if (!readFlags(tenant.enabledModules).messageAutomation) continue;
+
     // Birthdays are the one automation with nothing to hang off: nobody books a birthday,
     // so the queue is filled here, once a day, and the dedupe key keeps it to once.
     const birthdays = await withTenant(tenant.id, (tx) =>
-      enqueueBirthdays(tx, { tenantId: tenant.id, clinicName: tenant.name, now }, now),
+      // `automation: true` sem consultar de novo: o tenant com a flag desligada já saiu
+      // no continue acima.
+      enqueueBirthdays(
+        tx,
+        { tenantId: tenant.id, clinicName: tenant.name, automation: true, now },
+        now,
+      ),
     );
+
+    // Vence antes de enviar, para que o lote de baixo já saia limpo. Em dry-run nada é
+    // escrito: a ideia ali é olhar, não mexer.
+    const expired = dryRun
+      ? 0
+      : await withTenant(tenant.id, async (tx) => {
+          const { count } = await tx.messageJob.updateMany({
+            where: { status: 'PENDING', scheduledFor: { lt: floor } },
+            data: {
+              status: 'EXPIRED',
+              error: `Venceu: passou de ${STALE_AFTER_HOURS}h da hora marcada.`,
+            },
+          });
+          return count;
+        });
 
     const due = await withTenant(tenant.id, (tx) =>
       tx.messageJob.findMany({
-        where: { status: 'PENDING', scheduledFor: { lte: now } },
+        where: { status: 'PENDING', scheduledFor: { lte: now, gte: floor } },
         orderBy: { scheduledFor: 'asc' },
         take: limit,
       }),
@@ -89,16 +123,17 @@ async function main() {
       else failed++;
     }
 
-    if (birthdays > 0 || sent > 0 || failed > 0) {
+    if (birthdays > 0 || sent > 0 || failed > 0 || expired > 0) {
       console.log(
-        `${tenant.name}: ${birthdays} aniversário(s) na fila, ${sent} enviada(s), ${failed} falha(s)`,
+        `${tenant.name}: ${birthdays} aniversário(s) na fila, ${sent} enviada(s), ` +
+          `${failed} falha(s), ${expired} vencida(s)`,
       );
       if (!dryRun) {
         await audit({
           tenantId: tenant.id,
           action: 'message.sent',
           resource: 'message.dispatch',
-          details: { queuedBirthdays: birthdays, sent, failed },
+          details: { queuedBirthdays: birthdays, sent, failed, expired },
         });
       }
     }

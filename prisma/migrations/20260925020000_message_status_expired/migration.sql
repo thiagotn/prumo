@@ -1,0 +1,12 @@
+-- Uma mensagem que perdeu a hora não é uma mensagem que falhou.
+--
+-- O dispatcher buscava `status = 'PENDING' AND scheduled_for <= now()` sem piso: uma fila
+-- parada por semanas — canal nunca conectado, CronJob fora do ar, automações ligadas só
+-- agora — sairia inteira no primeiro envio, incluindo lembrete de horário que já passou.
+-- O piso agora existe no código (STALE_AFTER_HOURS), e o que fica para trás precisa de um
+-- estado próprio: FAILED diria que o provedor recusou, CANCELLED diria que a clínica
+-- desmarcou, e nenhum dos dois é verdade.
+--
+-- ALTER TYPE ... ADD VALUE roda dentro de transação no PostgreSQL 12+ desde que o valor
+-- novo não seja usado na mesma transação. Aqui só adicionamos.
+ALTER TYPE "message_status" ADD VALUE 'EXPIRED';

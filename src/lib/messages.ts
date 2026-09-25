@@ -47,6 +47,25 @@ export const SEND_HOUR = 10;
 export const BIRTHDAY_SEND_HOUR = 9;
 
 /**
+ * How late a message may go out and still make sense.
+ *
+ * `dueAt` fixes the hour a message belongs to; the dispatcher runs every ten minutes, so
+ * the normal delay is minutes. A longer gap means the queue was stopped — the channel was
+ * never connected, the CronJob was down, the clinic only turned the automations on now.
+ * Sending the backlog then is worse than sending nothing: the patient gets a reminder for
+ * an appointment that already happened, and "amanhã às 14h" arrives on the wrong day.
+ *
+ * Twelve hours: a message due at 10h expires at 22h of the same day, which survives half
+ * a day of outage and still never lands on the following morning.
+ */
+export const STALE_AFTER_HOURS = 12;
+
+/** The oldest `scheduledFor` still worth sending at `now`. */
+export function staleBefore(now: Date): Date {
+  return new Date(now.getTime() - STALE_AFTER_HOURS * 3_600_000);
+}
+
+/**
  * What the clinic starts with. Deliberately plain: a reminder that reads like a person
  * wrote it gets answered, and one that reads like a system gets ignored.
  */

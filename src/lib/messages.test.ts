@@ -3,6 +3,8 @@ import {
   DEFAULT_BODIES,
   dedupeKey,
   dueAt,
+  staleBefore,
+  STALE_AFTER_HOURS,
   MESSAGE_KINDS,
   parseReply,
   renderMessage,
@@ -144,5 +146,24 @@ describe('parseReply', () => {
     expect(parseReply('confirmo')).toBeNull();
     expect(parseReply('')).toBeNull();
     expect(parseReply('12')).toBeNull();
+  });
+});
+
+describe('staleBefore', () => {
+  it('marca o ponto a partir do qual a mensagem não faz mais sentido', () => {
+    const now = new Date('2026-09-25T13:00:00.000Z');
+    expect(staleBefore(now).toISOString()).toBe('2026-09-25T01:00:00.000Z');
+  });
+
+  it('deixa passar o atraso de uma rodada do CronJob e barra o de um dia', () => {
+    const now = new Date('2026-09-25T13:00:00.000Z');
+    const floor = staleBefore(now).getTime();
+    const dezMinutosAtras = now.getTime() - 10 * 60_000;
+    const ontem = now.getTime() - 24 * 3_600_000;
+
+    expect(dezMinutosAtras).toBeGreaterThan(floor);
+    // O lembrete de um horário que já aconteceu não sai quando a fila volta a andar.
+    expect(ontem).toBeLessThan(floor);
+    expect(STALE_AFTER_HOURS).toBe(12);
   });
 });

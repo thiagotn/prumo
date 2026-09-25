@@ -500,8 +500,16 @@ export async function seedClosedEncounters(tx: Tx, tenantId: string) {
  */
 export async function seedMessageQueue(tx: Tx, tenantId: string) {
   const { enqueueForAppointment } = await import('../src/lib/message-queue');
-  const tenant = await tx.tenant.findUnique({ where: { id: tenantId }, select: { name: true } });
+  const { readFlags } = await import('../src/lib/flags');
+  const tenant = await tx.tenant.findUnique({
+    where: { id: tenantId },
+    select: { name: true, enabledModules: true },
+  });
   if (!tenant) return 0;
+
+  // A flag da própria clínica: quem abrir uma clínica que não usa comunicação automática
+  // no ambiente de desenvolvimento vê a fila vazia que ela teria de verdade.
+  const { messageAutomation } = readFlags(tenant.enabledModules);
 
   const upcoming = await tx.appointment.findMany({
     where: { tenantId, isBlock: false, startsAt: { gte: new Date() } },
@@ -517,7 +525,7 @@ export async function seedMessageQueue(tx: Tx, tenantId: string) {
   for (const appointment of upcoming) {
     queued += await enqueueForAppointment(
       tx,
-      { tenantId, clinicName: tenant.name },
+      { tenantId, clinicName: tenant.name, automation: messageAutomation },
       {
         id: appointment.id,
         startsAt: appointment.startsAt,

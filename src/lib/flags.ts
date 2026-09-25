@@ -7,6 +7,11 @@ export type Flags = Record<Flag, boolean>;
 
 export const DEFAULT_FLAGS: Flags = {
   patientPortal: false,
+  // Desligada por padrão: conectar o WhatsApp Business depende da Meta e pode demorar, ou
+  // não ser possível, ou a clínica simplesmente preferir falar com a paciente ela mesma.
+  // Clínica nova entra sem a tela, e ela aparece quando a comunicação automática for
+  // combinada. Ligar é um clique em Configurações.
+  messageAutomation: false,
   clinicalPhotos: true,
   automaticPricing: true,
   automaticStockDeduction: true,
@@ -17,6 +22,7 @@ export const DEFAULT_FLAGS: Flags = {
 /** Product copy, pt-BR. */
 export const FLAG_LABELS: Record<Flag, string> = {
   patientPortal: 'Portal da paciente',
+  messageAutomation: 'Mensagens automáticas',
   clinicalPhotos: 'Fotos clínicas',
   automaticPricing: 'Precificação automática',
   automaticStockDeduction: 'Baixa automática de estoque',
@@ -28,6 +34,8 @@ export const FLAG_LABELS: Record<Flag, string> = {
 /** One line saying what each module does, in the words of whoever runs the clinic. */
 export const FLAG_NOTES: Record<keyof Flags, string> = {
   patientPortal: 'A paciente entra para confirmar horário, ver orientações e baixar documentos.',
+  messageAutomation:
+    'Lembretes, preparo e pós por WhatsApp, com confirmação pela resposta da paciente.',
   clinicalPhotos: 'Fotos antes e depois na ficha, em bucket privado e com acesso registrado.',
   automaticPricing: 'Preço sugerido à vista e parcelado calculado a partir dos parâmetros.',
   automaticStockDeduction: 'Fechar o atendimento baixa o lote usado do estoque.',

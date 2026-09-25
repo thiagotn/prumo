@@ -45,7 +45,12 @@ const TENANTS: TenantSeed[] = [
     defaultUnit: 'Coworking Tatuapé',
     plan: Plan.CLINIC,
     billingStatus: BillingStatus.ACTIVE,
-    flags: { clinicalPhotos: true, automaticPricing: true, automaticStockDeduction: true },
+    flags: {
+      clinicalPhotos: true,
+      automaticPricing: true,
+      automaticStockDeduction: true,
+      messageAutomation: true,
+    },
     hosts: ['app.dratatimayumi.com.br', 'localhost:3100', 'tati.localhost:3100'],
     users: [
       { name: 'Dra. Tati Mayumi', email: 'owner@dratatimayumi.com.br', role: Role.OWNER },

@@ -169,7 +169,7 @@ export async function createAppointment(
       : null;
     const queued = await enqueueForAppointment(
       tx,
-      { tenantId: tenant.id, clinicName: tenant.name },
+      { tenantId: tenant.id, clinicName: tenant.name, automation: tenant.flags.messageAutomation },
       {
         id: appointment.id,
         startsAt: appointment.startsAt,
@@ -254,7 +254,7 @@ export async function updateAppointmentStatus(formData: FormData): Promise<void>
     if (status === AppointmentStatus.NO_SHOW) {
       await enqueueNoShow(
         tx,
-        { tenantId: tenant.id, clinicName: tenant.name },
+        { tenantId: tenant.id, clinicName: tenant.name, automation: tenant.flags.messageAutomation },
         {
           id: appointment.id,
           startsAt: appointment.startsAt,

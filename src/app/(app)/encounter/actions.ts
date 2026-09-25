@@ -195,7 +195,7 @@ export async function closeEncounter(_previous: CloseState, formData: FormData):
       // What follows a closing: how are you tomorrow, and the return in two weeks.
       await enqueueAfterEncounter(
         tx,
-        { tenantId: tenant.id, clinicName: tenant.name },
+        { tenantId: tenant.id, clinicName: tenant.name, automation: tenant.flags.messageAutomation },
         {
           id: appointment.id,
           startsAt: appointment.startsAt,

@@ -17,7 +17,7 @@ describe('buildNavigation', () => {
   });
 
   it('reception sees neither Relatórios nor Configurações', () => {
-    const items = labels(Role.RECEPTION, flags());
+    const items = labels(Role.RECEPTION, flags({ messageAutomation: true }));
     expect(items).toContain('Agenda');
     expect(items).toContain('Mensagens');
     expect(items).not.toContain('Relatórios');
@@ -32,6 +32,13 @@ describe('buildNavigation', () => {
       'Relatórios',
       'Ajuda',
     ]);
+  });
+
+  it('Mensagens só existe para a clínica que usa comunicação automática', () => {
+    // O padrão é desligado: clínica que fala com a paciente pessoalmente não precisa
+    // conviver com uma tela avisando que o WhatsApp não está conectado.
+    expect(labels(Role.OWNER, flags())).not.toContain('Mensagens');
+    expect(labels(Role.OWNER, flags({ messageAutomation: true }))).toContain('Mensagens');
   });
 
   it('empty groups do not appear', () => {

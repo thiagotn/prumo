@@ -31,9 +31,12 @@ enabled_modules (jsonb), billing_status`.
 
 - A cor de acento substitui `--color-accent` e `--brand` em runtime (CSS var no `<html>`).
   Validar contraste ≥ 3:1 contra `#f3f2f2` ao salvar — implementado em `src/lib/color.ts`.
-- **Feature flags por tenant** (tela Configurações): portal da paciente, fotos clínicas,
-  precificação automática, baixa automática de estoque, múltiplos profissionais/comissão,
-  múltiplas unidades.
+- **Feature flags por tenant** (tela Configurações): portal da paciente, mensagens automáticas,
+  fotos clínicas, precificação automática, baixa automática de estoque, múltiplos
+  profissionais/comissão, múltiplas unidades.
+  **Mensagens automáticas nasce desligada**: conectar o WhatsApp Business depende da Meta e pode
+  demorar, não ser possível, ou a clínica preferir falar com a paciente ela mesma. Desligada, a
+  tela não existe e a fila não enche — nada é enfileirado para não sair nunca.
 - **Resolução por hostname**, em duas formas, e uma clínica pode ter as duas ao mesmo tempo:
   `<clinica>.prumo.in` (domínio do produto, coberto por curinga — clínica nova é um INSERT) e
   `app.<dominio-da-clinica>` (domínio da cliente — pede CNAME, regra no túnel e host no Ingress).

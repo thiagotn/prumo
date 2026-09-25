@@ -309,9 +309,16 @@ código precisa dele está transcrito em [`docs/regras-de-negocio.md`](docs/regr
 - **A fila é a feature**, não o envio: a mensagem é montada e congelada quando o motivo acontece
   (uma marcação, um fechamento, uma falta) e guardada em `message_jobs`. Reescrever o texto depois
   não muda o que já estava na fila.
+- **Módulo opcional por clínica** (`messageAutomation`, desligado por padrão): há clínica que fala
+  com a paciente pessoalmente, e há clínica que não tem como usar a API do WhatsApp Business.
+  Desligado, não existe a tela nem a fila — e o `enqueue` recusa, então nada é guardado para nunca
+  sair.
 - **Sem credenciais, nada quebra**: as automações continuam enfileirando, a tela diz que o canal não
   está conectado, e o que estiver na hora sai quando ele for ligado — a mesma postura do R2 em
   `storage.ts`. O envio é do `scripts/dispatch-messages.ts`, chamado por um CronJob.
+- **O que perdeu a hora não sai atrasado**: o dispatcher tem piso (`STALE_AFTER_HOURS`, 12h). Fila
+  parada por dias — canal nunca conectado, CronJob fora do ar — não vira disparo em massa no dia em
+  que voltar; o que passou da janela fica `EXPIRED`, e aparece como "vencidas" nas métricas.
 - **Respostas**: o webhook verifica a assinatura `X-Hub-Signature-256` antes de ler qualquer coisa,
   "1" confirma o horário, "2" devolve e cancela os lembretes pendentes, e o `provider_message_id`
   impede que uma reentrega da Meta aja duas vezes. Qualquer outro texto é só registrado.
