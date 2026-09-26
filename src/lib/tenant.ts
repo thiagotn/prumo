@@ -7,6 +7,11 @@ import { Prisma } from '@prisma/client';
 import { headers } from 'next/headers';
 import { prisma } from './db';
 import { readFlags, type Flags } from './flags';
+import { isLocalHost, originFor } from './host';
+
+// Reexportadas: elas moram em `host.ts` para não arrastar este módulo (e o Prisma junto)
+// para o bundle do cliente, mas continuam fazendo parte da API de tenant.
+export { isLocalHost, originFor };
 
 export type ResolvedTenant = {
   id: string;
@@ -105,15 +110,6 @@ export function isReservedHost(host: string): boolean {
   );
 }
 
-/** True for a hostname that only exists on this machine. */
-export function isLocalHost(host: string): boolean {
-  return /^(localhost|127\.0\.0\.1|\[::1\])(:|$)|\.localhost(:|$)/.test(host);
-}
-
-/** Local development is the only place the product is not behind TLS. */
-export function originFor(host: string): string {
-  return `${isLocalHost(host) ? 'http' : 'https'}://${host}`;
-}
 
 /**
  * Which of a clinic's hostnames to use when the code has to name one.

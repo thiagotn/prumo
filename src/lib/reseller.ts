@@ -4,7 +4,7 @@
 // fee agreed with each clinic, not a price derived from the plan — the plan is what the
 // clinic gets, the fee is what it pays, and a discount separates the two.
 import { monthKey } from './finance';
-import { originFor } from './tenant';
+import { originFor } from './host';
 
 export type TenantRow = {
   id: string;
