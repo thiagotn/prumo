@@ -76,6 +76,7 @@ export const ACCESS_MATRIX: Record<Role, MatrixRow> = {
   [Role.SUPERADMIN]: row({
     dashboard: 'full',
     tenants: 'full',
+    leads: 'full',
     settings: 'full',
     help: 'full',
   }),

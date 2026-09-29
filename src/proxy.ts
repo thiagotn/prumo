@@ -19,8 +19,13 @@ const SESSION_COOKIE = 'prumo_session';
  *
  * `/enter` is where an impersonation ticket from the reseller's panel is spent. There is
  * no session there yet — that page is what creates one.
+ *
+ * `/` is the interest form on the product's contact address, and the address it posts to.
+ * The entry matches the root alone (`pathname === '/'`, never a prefix), and on a clinic's
+ * hostname the page itself still redirects a visitor with no session to the login — the
+ * same place this would have sent her.
  */
-const PUBLIC_PATHS = ['/login', '/healthz', '/readyz', '/consent', '/enter'];
+const PUBLIC_PATHS = ['/', '/login', '/healthz', '/readyz', '/consent', '/enter'];
 
 /**
  * API routes answer for themselves. Redirecting one to the sign-in page would hand a

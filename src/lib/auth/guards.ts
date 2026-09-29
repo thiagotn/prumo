@@ -184,8 +184,13 @@ export async function requireSensitiveModule(
   return { ...ctx, masked };
 }
 
-/** The reseller panel. SUPERADMIN only, and always with 2FA settled. */
-export async function requireSuperadmin(): Promise<AuthContext> {
+/**
+ * The platform's own screens. SUPERADMIN only, and always with 2FA settled.
+ *
+ * `denied` is the module the refusal notice names, so the person lands on a screen that
+ * says which door was closed rather than a generic one.
+ */
+export async function requireSuperadmin(denied: Module = 'tenants'): Promise<AuthContext> {
   const ctx = await requireSession();
   if (ctx.session.role !== Role.SUPERADMIN) {
     await audit({
@@ -193,11 +198,11 @@ export async function requireSuperadmin(): Promise<AuthContext> {
       userId: ctx.session.userId,
       action: 'access.denied',
       resource: 'platform',
-      details: { role: ctx.session.role },
+      details: { role: ctx.session.role, module: denied },
     });
     // With the reason, like every other refusal: the screen the person lands on explains
     // what happened instead of looking like a mis-click.
-    redirect(`${MODULE_DEFS[initialModule(ctx.session.role)].path}?denied=tenants`);
+    redirect(`${MODULE_DEFS[initialModule(ctx.session.role)].path}?denied=${denied}`);
   }
   return ctx;
 }

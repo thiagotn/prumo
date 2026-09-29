@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import {
   isLocalHost,
   isPlatformHost,
+  isContactHost,
   isReservedHost,
   normalizeHost,
   originFor,
@@ -90,6 +91,25 @@ describe('platform domains and reserved names', () => {
     expect(isReservedHost('app.prumo.in')).toBe(true);
     expect(isReservedHost('app.dratatimayumi.com.br')).toBe(false);
     expect(isReservedHost('admin.clinic.com.br')).toBe(false);
+  });
+
+  it('knows the contact address, and nothing else', () => {
+    process.env.PLATFORM_HOSTS = 'admin.prumo.in, admin.localhost:3100';
+    expect(isContactHost('contato.prumo.in')).toBe(true);
+    expect(isContactHost('contato.localhost:3100')).toBe(true);
+    // The apex is the institutional site, another deployment entirely.
+    expect(isContactHost('prumo.in')).toBe(false);
+    expect(isContactHost('www.prumo.in')).toBe(false);
+    // Neither the panel nor a clinic is it.
+    expect(isContactHost('admin.prumo.in')).toBe(false);
+    expect(isContactHost('tati.prumo.in')).toBe(false);
+    // And `contato` under somebody else's domain is somebody else's business.
+    expect(isContactHost('contato.dratatimayumi.com.br')).toBe(false);
+  });
+
+  it('keeps the contact label from becoming a clinic', () => {
+    process.env.PLATFORM_HOSTS = 'admin.prumo.in';
+    expect(isReservedHost('contato.prumo.in')).toBe(true);
   });
 
   it('with no platform host, only an empty name is reserved', () => {

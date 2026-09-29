@@ -15,6 +15,7 @@ export const MODULES = [
   'consents',
   'settings',
   'tenants',
+  'leads',
   'portal',
   'help',
 ] as const;
@@ -159,6 +160,15 @@ export const MODULE_DEFS: Record<Module, ModuleDefinition> = {
     path: '/tenants',
     label: 'Tenants',
     title: 'Clínicas na plataforma',
+    crumb: 'Plataforma',
+    group: 'Sistema',
+  },
+  // The public form's inbox. Platform, not clinic — and it holds a stranger's contact
+  // details, so opening it is audited like any other personal data.
+  leads: {
+    path: '/leads',
+    label: 'Interessados',
+    title: 'Quem pediu contato',
     crumb: 'Plataforma',
     group: 'Sistema',
   },

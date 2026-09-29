@@ -164,6 +164,8 @@ model User {
   /// Sessions this user (a SUPERADMIN) opened through "impersonate".
   impersonatedSessions Session[]     @relation("SessionImpersonatedBy")
   appointments         Appointment[] @relation("AppointmentPractitioner")
+  /// Contact requests this user (a SUPERADMIN) took care of.
+  handledLeads         InterestLead[]
 
   /// Email is unique WITHIN a tenant — the same person may exist in two clinics.
   @@unique([tenantId, email])
@@ -1019,4 +1021,50 @@ model ImpersonationHandoff {
 
   @@index([expiresAt])
   @@map("impersonation_handoffs")
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  ARCHIVED
+
+  @@map("lead_status")
+}
+
+/// Someone who asked to be contacted, from the public form on the product's own domain.
+///
+/// No `tenant_id`: this is not a clinic's data, it is the platform's. But unlike the rest
+/// of the platform registry (`tenants`, `tenant_domains`, `impersonation_handoffs`), it
+/// holds a stranger's personal data, so it stays under RLS with a shape of its own:
+/// anyone may INSERT (the form has no session and opens no scope), only platform scope
+/// reads or changes, and the intake path may count its own recent rows to rate-limit
+/// itself and nothing else. See the `interest_leads` migration.
+model InterestLead {
+  id String @id @default(uuid()) @db.Uuid
+
+  name    String
+  email   String
+  phone   String?
+  clinic  String?
+  message String?
+
+  /// Kept for abuse handling, the way `Consent.signedIp` is. Retention in docs/operacao.md.
+  ip        String?
+  userAgent String? @map("user_agent")
+  /// Which address the form was filled on — the product may have more than one.
+  host      String
+
+  status          LeadStatus @default(NEW)
+  /// The platform's own note about the conversation. Never shown to anyone outside it.
+  note            String?
+  handledByUserId String?    @map("handled_by_user_id") @db.Uuid
+  handledAt       DateTime?  @map("handled_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  handledBy User? @relation(fields: [handledByUserId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([ip, createdAt])
+  @@map("interest_leads")
 }

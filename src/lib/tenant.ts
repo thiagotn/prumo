@@ -61,6 +61,9 @@ export function platformDomains(): string[] {
     .filter(Boolean);
 }
 
+/** Where the product talks to someone who is not a client yet: `contato.prumo.in`. */
+export const CONTACT_LABEL = 'contato';
+
 /**
  * Labels that never become a clinic on a domain of ours.
  *
@@ -75,6 +78,7 @@ export const RESERVED_LABELS = [
   'app',
   'assets',
   'cdn',
+  CONTACT_LABEL,
   'docs',
   'help',
   'hml',
@@ -91,6 +95,24 @@ export const RESERVED_LABELS = [
   'suporte',
   'www',
 ] as const;
+
+/**
+ * Whether a hostname is the product's contact address — `contato.prumo.in`, not the apex
+ * (that is the institutional site, another deployment) and not `tati.prumo.in`.
+ *
+ * A third kind of host, after the clinic's and the panel's. It needs no environment
+ * variable of its own: `admin.prumo.in` in PLATFORM_HOSTS already says `prumo.in` is ours,
+ * and the wildcard that serves every clinic serves this too.
+ *
+ * Callers still resolve the tenant FIRST: the label is reserved, so no clinic should hold
+ * it, but a host that answers for a clinic is a clinic — always, and whatever the
+ * configuration says.
+ */
+export function isContactHost(host: string): boolean {
+  const normalized = normalizeHost(host);
+  const [label, ...rest] = normalized.split('.');
+  return label === CONTACT_LABEL && platformDomains().includes(rest.join('.'));
+}
 
 /** Whether a hostname is the platform's own, and so can never answer for a clinic. */
 export function isReservedHost(host: string): boolean {

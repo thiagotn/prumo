@@ -15,9 +15,9 @@ export default async function PasswordRecoveryPage() {
   return (
     <main className={styles.screen} id="content">
       <BrandPanel
-        name={tenant?.name ?? 'Ateliê'}
+        name={tenant?.name ?? 'Prumo'}
         subtitle={tenant?.subtitle ?? 'Plataforma de gestão clínica'}
-        monogram={tenant?.monogram ?? 'AT'}
+        monogram={tenant?.monogram ?? 'PR'}
       />
       <section className={styles.panel}>
         <div className="kicker">Recuperação de acesso</div>

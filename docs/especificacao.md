@@ -46,6 +46,11 @@ enabled_modules (jsonb), billing_status`.
 - **Nomes reservados**: sob um domínio do produto, rótulos como `admin`, `api`, `www`, `status` e
   `hml` não viram clínica (`RESERVED_LABELS` em `src/lib/tenant.ts`); dentro do domínio da própria
   clínica não há restrição.
+- **Três tipos de host**, e a ordem de resolução importa: hostname de clínica
+  (`tenant_domains`), hostname do painel da revenda (`PLATFORM_HOSTS`) e o **endereço de contato do
+  produto** (`contato.prumo.in`, derivado de `admin.prumo.in`), onde mora o formulário de interesse.
+  Clínica resolve primeiro, sempre. O apex `prumo.in` é o site institucional, servido por outro
+  deployment (`prumo-site`, nginx) e fora deste código.
 - **Super-admin da revenda** vê a lista de tenants, MRR e uso. "Entrar como" abre a instância com
   faixa de sessão assumida, registrado em log, e **prontuário mascarado** salvo autorização.
 - O produto é **Prumo**, em `prumo.in`; o painel da revenda fica em `admin.prumo.in`
@@ -71,7 +76,7 @@ enabled_modules (jsonb), billing_status`.
 O **questionário** da anamnese é escrito só pela doutora, como o texto dos termos; preencher é de
 quem alcança o prontuário.
 
-Mais: **Super-admin revenda** (tenants, config, painel, ajuda) e **Paciente** (só portal — a ajuda é
+Mais: **Super-admin revenda** (tenants, interessados, config, painel, ajuda) e **Paciente** (só portal — a ajuda é
 escrita na linguagem de quem opera a clínica, não da paciente).
 
 - **Ler não é escrever**: criar ou alterar (nova paciente, novo agendamento) exige acesso *total* ou
@@ -154,6 +159,14 @@ Desktop: canvas 1280 × 800. Mobile: 390 × 812. Layout do app = nav (sidebar 21
     `tenant.impersonate` nos dois lados.
 13. **Portal da paciente** — próximo horário com Confirmar/Reagendar, orientações pré, documentos
     (termos, recibos).
+14. **"Tenho interesse"** — página pública em `contato.prumo.in`, com o que o sistema faz e um
+    formulário (nome, e-mail, telefone, clínica, mensagem). É onde o site institucional do apex
+    manda quem quer falar com a gente. Sem sessão, sem tenant. Anti-abuso sem terceiro: campo-isca,
+    tempo mínimo de preenchimento com carimbo assinado, teto por IP e o rate-limit do Ingress. Nada
+    indexado.
+15. **Interessados (revenda)** — a caixa de entrada do formulário, só para o super-admin: situação
+    (novo/respondido/arquivado), nota interna e quem cuidou. Abrir a tela grava `audit_log`: é dado
+    pessoal de terceiro.
 
 **Mobile**: header com monograma + título + avatar; tab bar inferior (Painel, Agenda, Atender,
 Pacientes, Caixa — filtrada por perfil), alvos ≥ 44px. Módulos gerenciais (financeiro, estoque,
@@ -173,7 +186,8 @@ relatórios…) abrem em modo de leitura resumido.
 
 ## Modelo de dados (mínimo)
 
-`tenants`, `users` (tenant_id, role, 2fa), `units`/`rooms` (valor-hora), `patients`, `anamneses`
+`interest_leads` (sem tenant_id: é da plataforma, e fica sob RLS com forma própria — qualquer um
+insere, só escopo de plataforma lê), `tenants`, `users` (tenant_id, role, 2fa), `units`/`rooms` (valor-hora), `patients`, `anamneses`
 (versionada), `appointments` (patient, room, procedure, product, start, end, status), `procedures`,
 `products` (custo, rendimento, unidade), `stock_lots` (produto, lote, validade, qtd),
 `stock_movements`, `encounters` (appointment, product_lot, volume, técnica, evolução), `photos`

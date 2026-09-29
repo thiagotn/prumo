@@ -29,9 +29,9 @@ export default async function LoginPage() {
   return (
     <main className={styles.screen} id="content">
       <BrandPanel
-        name={tenant?.name ?? 'Ateliê'}
+        name={tenant?.name ?? 'Prumo'}
         subtitle={tenant?.subtitle ?? 'Plataforma de gestão clínica'}
-        monogram={tenant?.monogram ?? 'AT'}
+        monogram={tenant?.monogram ?? 'PR'}
       />
       <section className={styles.panel}>
         <h2 className={styles.title}>Entrar</h2>

@@ -34,8 +34,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const tenant = isPlatformHost(host) ? null : await tenantByHost(host);
   return {
     title: {
-      default: tenant ? tenant.name : 'Ateliê · Plataforma',
-      template: `%s · ${tenant ? tenant.name : 'Ateliê'}`,
+      default: tenant ? tenant.name : 'Prumo · Plataforma',
+      template: `%s · ${tenant ? tenant.name : 'Prumo'}`,
     },
     description: 'Prontuário, agenda e caixa em um só lugar.',
     // Sensitive health data: never in a search engine.

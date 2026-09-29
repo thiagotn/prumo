@@ -112,6 +112,7 @@ Senha de todos: `prumo1234`.
 | Profissional convidado | `pedro@dratatimayumi.com.br` | http://localhost:3100 |
 | Paciente (portal) | `renata@exemplo.com.br` | http://aurora.localhost:3100 |
 | Super-admin da revenda (exige 2FA) | `suporte@atelie.app` | http://admin.localhost:3100 |
+| (sem login — formulário de interesse) | — | http://contato.localhost:3100 |
 
 Trocar o endereço troca a clínica — é a resolução por hostname funcionando. `tati.localhost:3100`,
 `aurora.localhost:3100` e `vertice.localhost:3100` servem as três marcas de exemplo, cada uma com
@@ -127,8 +128,8 @@ Para ver que o menu não é a proteção: logado como recepção, digite `/setti
 ### Testes
 
 ```bash
-npm test          # 431 unitários + integração de RLS e sessão (precisa do db:up)
-npm run test:e2e  # 101 end-to-end no Playwright (sobe o dev server sozinho)
+npm test          # 459 unitários + integração de RLS e sessão (precisa do db:up)
+npm run test:e2e  # 106 end-to-end no Playwright (sobe o dev server sozinho)
 npm run test:all  # os dois
 npm run typecheck
 npm run lint
@@ -344,6 +345,31 @@ código precisa dele está transcrito em [`docs/regras-de-negocio.md`](docs/regr
   dentro do domínio da própria clínica, não é da nossa conta.
 - O painel da revenda fica em `admin.prumo.in`.
 
+**"Tenho interesse"** — a primeira porta comercial:
+
+- Página pública em `contato.prumo.in`: o que o sistema faz, e um formulário (nome, e-mail,
+  telefone, clínica, mensagem). É um **terceiro tipo de host**, derivado de `PLATFORM_HOSTS` sem
+  variável nova e servido pelo mesmo curinga das clínicas — nenhuma linha de infra nova. O apex
+  `prumo.in` continua sendo o site institucional, outro deployment; ele é quem aponta para cá.
+  Clínica resolve primeiro, sempre, e o rótulo `contato` entrou na lista de reservados para que
+  nenhuma possa tomá-lo.
+- **O isolamento está no banco, não na aplicação.** `interest_leads` tem uma forma de RLS que é só
+  dela: qualquer um **insere** (o formulário não tem sessão e não abre escopo), só escopo de
+  plataforma **lê, altera e apaga**, e o caminho de entrada enxerga apenas as linhas do **próprio
+  IP** no último dia — o bastante para se limitar, e nada mais. `tests/leads.test.ts` prova cada uma
+  dessas frases contra um Postgres real.
+- Consequência deliberada: o caminho anônimo **nunca** abre escopo de plataforma, então também não
+  grava `audit_log`. A prova do envio é a própria linha, com IP, user-agent e horário — como
+  `consents.signed_ip` já fazia. `withPlatformScope` continua valendo só para super-admin
+  confirmado, que é o que o comentário dele sempre prometeu.
+- Anti-abuso sem terceiro nenhum: campo-isca, tempo mínimo de preenchimento com carimbo **assinado**
+  (um número sem HMAC é um número que o robô reescreve), teto de 3 por IP por hora e 10 por dia, e o
+  `rate-limit` do Traefik que já existia. Robô detectado recebe o mesmo agradecimento e não grava:
+  quem sabe que falhou tenta de outro jeito.
+- **Interessados**, no painel da revenda: situação, nota interna e quem cuidou. Abrir a tela grava
+  `lead.view` — é dado pessoal de terceiro. Nada indexado; o `noindex` do layout raiz continua
+  valendo para tudo.
+
 **Etapa 8 concluída** — painel da revenda:
 
 - **Tela de Tenants** no host da plataforma (`PLATFORM_HOSTS`): clínicas ativas, MRR, atendimentos
@@ -374,7 +400,9 @@ Sem ordem de etapa; o que aparecer primeiro na operação vem primeiro.
 | WhatsApp | credenciais por clínica — hoje o número é do deployment, não do tenant |
 | Portal | recibos entre os documentos da paciente |
 | Marcação | trocar a checagem de conflito por uma constraint `EXCLUDE` (precisa de `btree_gist`) |
-| `prumo.in` | site do produto no apex (hoje sem registro); criar clínica por tela, em vez de script |
+| `prumo.in` | `www.prumo.in` (sem DNS e sem certificado ainda); criar clínica por tela, em vez de script |
+| Interessados | aviso por e-mail de um pedido novo (o sistema não manda e-mail hoje: precisa de remetente e SPF/DKIM em prumo.in) |
+| Exportação | CSV dos interessados — só depois de `csvCell` (`src/lib/finance.ts`) passar a proteger contra injeção de fórmula, porque ali o texto é de estranho |
 
 ---
 

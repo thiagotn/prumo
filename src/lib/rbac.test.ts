@@ -86,7 +86,10 @@ describe('role boundaries', () => {
   it('no clinic role reaches the reseller panel', () => {
     for (const role of [Role.OWNER, Role.RECEPTION, Role.FINANCE, Role.PRACTITIONER]) {
       expect(canAccess(role, 'tenants')).toBe(false);
+      // Same door, and what is behind it is a stranger's contact details.
+      expect(canAccess(role, 'leads')).toBe(false);
     }
+    expect(canAccess(Role.PATIENT, 'leads')).toBe(false);
   });
 
   it('the patient reaches only the portal', () => {

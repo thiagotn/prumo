@@ -42,6 +42,8 @@ export type AuditAction =
   | 'message.sent'
   | 'message.reply'
   | 'patient.erased'
+  | 'lead.view'
+  | 'lead.update'
   | 'tenant.impersonate'
   | 'tenant.impersonate.end'
   | 'access.denied';

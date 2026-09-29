@@ -27,7 +27,7 @@ export default async function TwoFactorSetupPage() {
   const pending = await pendingTotpSecret();
   if (!pending?.secret) redirect('/login/2fa');
 
-  const issuer = tenant?.name ?? 'Ateliê';
+  const issuer = tenant?.name ?? 'Prumo';
   const uri = otpAuthUri({ base32Secret: pending.secret, email: pending.email, issuer });
   // Rendered on the server: the secret never passes through client-side JavaScript.
   const qrSvg = await QRCode.toString(uri, {
@@ -42,7 +42,7 @@ export default async function TwoFactorSetupPage() {
       <BrandPanel
         name={issuer}
         subtitle={tenant?.subtitle ?? 'Plataforma de gestão clínica'}
-        monogram={tenant?.monogram ?? 'AT'}
+        monogram={tenant?.monogram ?? 'PR'}
       />
       <section className={styles.panel}>
         <div className="kicker">Primeiro acesso</div>

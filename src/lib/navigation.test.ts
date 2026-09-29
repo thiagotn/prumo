@@ -72,6 +72,7 @@ describe('buildNavigation', () => {
       'Painel',
       'Configurações',
       'Tenants',
+      'Interessados',
       'Ajuda',
     ]);
   });

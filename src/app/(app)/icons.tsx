@@ -8,6 +8,7 @@ import {
   Gauge,
   Images,
   LayoutGrid,
+  Mailbox,
   MessageCircle,
   Package,
   PieChart,
@@ -37,5 +38,6 @@ export const MODULE_ICONS: Record<
   consents: FileSignature,
   settings: Settings,
   tenants: LayoutGrid,
+  leads: Mailbox,
   portal: UserRound,
 };

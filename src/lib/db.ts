@@ -69,3 +69,26 @@ export async function withPlatformScope<T>(fn: (tx: Tx) => Promise<T>): Promise<
     return fn(tx);
   });
 }
+
+/**
+ * The only scope a request with NO SESSION may open: taking in a contact request from the
+ * public form.
+ *
+ * It sees nothing. `app.lead_ip` unlocks exactly one thing, by the policy
+ * `interest_leads_own_ip`: the rows written from this same IP in the last day, which is
+ * what the intake needs to count before writing another. Inserting is allowed to anyone
+ * by `interest_leads_public_insert`; reading anybody else's row, or touching any other
+ * table, is not — with no tenant and no platform scope set, RLS denies everything else.
+ *
+ * This exists so the anonymous path never calls `withPlatformScope`, which is the thing
+ * that would actually be dangerous here.
+ */
+export async function withLeadIntake<T>(
+  ip: string | null,
+  fn: (tx: Tx) => Promise<T>,
+): Promise<T> {
+  return prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT set_config('app.lead_ip', ${ip ?? ''}, true)`;
+    return fn(tx);
+  });
+}

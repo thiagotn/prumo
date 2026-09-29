@@ -22,8 +22,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const sections = buildNavigation(session.role, flags);
   const tabs = mobileItems(session.role, flags);
 
-  const brandName = tenant?.name ?? 'Ateliê · Plataforma';
-  const brandMonogram = tenant?.monogram ?? 'AT';
+  const brandName = tenant?.name ?? 'Prumo · Plataforma';
+  const brandMonogram = tenant?.monogram ?? 'PR';
   const unit = tenant?.defaultUnit ?? 'Painel da revenda';
 
   return (

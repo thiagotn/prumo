@@ -225,6 +225,52 @@ BEGIN;
 COMMIT;
 ```
 
+## Quem pediu contato (formulário do site)
+
+O formulário responde em **`contato.prumo.in`** — não é clínica nenhuma nem o painel, é um terceiro
+tipo de host, derivado de `PLATFORM_HOSTS` e servido pelo mesmo curinga das clínicas, então não
+precisou de DNS, regra de túnel nem host no Ingress. O apex `prumo.in` continua sendo o site
+institucional (`prumo-site`, nginx, namespace próprio), que aponta para cá.
+
+Os pedidos de contato chegam em `interest_leads` e são lidos em **Interessados**, no painel da
+revenda. Só o super-admin alcança a tela, e abrir a tela grava `lead.view` no `audit_log`: é dado
+pessoal de terceiro.
+
+A tabela tem uma forma de RLS que é só dela, e vale entender antes de mexer:
+
+| Quem | Pode |
+|---|---|
+| Qualquer um, sem sessão e sem escopo | **inserir** um pedido de contato |
+| O caminho de entrada (`app.lead_ip`) | **contar** os pedidos do próprio IP no último dia |
+| Escopo de plataforma | **ler, alterar e apagar** |
+| Escopo de clínica | **nada** |
+
+Consequência que às vezes surpreende: o caminho anônimo **não** grava `audit_log` — ele não abre
+escopo que alcance a tabela, e isso é de propósito. A prova do envio é a própria linha, que guarda
+IP, user-agent e horário. Envio recusado por excesso sai no log da aplicação
+(`kubectl -n prumo logs deploy/prumo | grep '\[interest\]'`).
+
+**Limites**: 3 pedidos por IP por hora, 10 por dia (`LEAD_LIMITS` em `src/lib/leads.ts`), mais o
+`rate-limit` do Traefik que o Ingress já aplica. Um envio em menos de 3 segundos, ou com o
+campo-isca preenchido, recebe o mesmo agradecimento e não é gravado.
+
+**Retenção.** São dados que a pessoa deu voluntariamente para ser respondida; ficam enquanto o
+contato servir. `ARCHIVED` **não** é exclusão — é etiqueta. Para apagar de verdade, a pedido ou por
+faxina:
+
+```sql
+BEGIN;
+  SELECT set_config('app.platform_scope', 'on', true);
+  -- um pedido específico
+  DELETE FROM interest_leads WHERE email = 'alguem@exemplo.com.br';
+  -- ou o que está arquivado há mais de um ano
+  DELETE FROM interest_leads
+   WHERE status = 'ARCHIVED' AND created_at < now() - interval '1 year';
+COMMIT;
+```
+
+Sem o `set_config` o `DELETE` não apaga nada e **não** dá erro: é a política negando, não um bug.
+
 ## Painel da revenda e "entrar como"
 
 O painel vive nos hostnames listados em `PLATFORM_HOSTS` (separados por vírgula) — em produção,
@@ -234,7 +280,10 @@ tenants e recusa login de usuário de clínica. Com a variável vazia o painel d
 
 `PLATFORM_HOSTS` faz mais do que abrir o painel: é dele que sai a lista de domínios do produto
 (`admin.prumo.in` → `prumo.in`), e portanto quais hostnames o onboarding trata como cobertos pelo
-curinga e quais rótulos são reservados.
+curinga, quais rótulos são reservados e onde o formulário de interesse responde
+(`contato.<dominio>`). **Não** acrescente o apex à
+lista: `prumo.in` ali faria o app derivar `in` como domínio nosso, e todo domínio `.in` passaria a
+parecer da plataforma.
 
 O super-admin é um `users` com `tenant_id IS NULL` e `role = 'SUPERADMIN'`. 2FA é obrigatório para
 ele, como para qualquer perfil com acesso a prontuário.

@@ -1,0 +1,214 @@
+/* The product's public page: the same 1.05fr/.95fr split as the sign-in screen
+   (docs/design.md), so the first thing a visitor sees looks like the system she will use.
+   Every value is a token — no literal colour or font here (CLAUDE.md). */
+
+.screen {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  min-height: 100vh;
+}
+
+/* ── left-hand panel: what the product is ──────────────────────────────────── */
+
+.pitch {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-8);
+  padding: 60px 56px;
+  background: var(--color-neutral-900);
+  color: var(--color-bg);
+}
+
+.brandTop {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.brandMonogram {
+  width: 40px;
+  height: 40px;
+  font-size: 15px;
+}
+
+.brandName {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+.brandSubtitle {
+  font-size: 10px;
+  line-height: 1.2;
+  letter-spacing: 0.1em;
+  margin-top: 3px;
+  color: color-mix(in srgb, var(--color-bg) 50%, transparent);
+}
+
+.headline {
+  font-family: var(--font-heading);
+  font-weight: 300;
+  font-size: 54px;
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+  margin: 20px 0 0;
+  max-width: 12em;
+}
+
+.rule {
+  width: 62px;
+  height: 1px;
+  background: var(--color-accent);
+  margin: 30px 0;
+}
+
+.points {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: 34em;
+}
+
+.points li {
+  font-size: 14px;
+  line-height: 1.7;
+  padding-left: var(--space-4);
+  position: relative;
+  color: color-mix(in srgb, var(--color-bg) 72%, transparent);
+}
+
+.points li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.7em;
+  width: 8px;
+  height: 1px;
+  background: var(--color-accent);
+}
+
+.pitchFooter {
+  font-size: 11px;
+  line-height: 1.6;
+  color: color-mix(in srgb, var(--color-bg) 38%, transparent);
+}
+
+/* ── right-hand panel: the form ────────────────────────────────────────────── */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 60px;
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 34px;
+  line-height: 1.1;
+  margin: 0 0 6px;
+}
+
+.subtitle {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--color-neutral-700);
+  margin: 0 0 30px;
+  max-width: 34em;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 420px;
+  width: 100%;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.note {
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--color-neutral-600);
+  margin: 0;
+  max-width: 420px;
+}
+
+/* The honeypot. Not `type=hidden`, which a robot skips more often than a styled field;
+   out of sight and out of the accessibility tree instead, so no person ever meets it. */
+.trap {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* ── the thank-you, which replaces the form ────────────────────────────────── */
+
+.done {
+  max-width: 420px;
+  padding: var(--space-5);
+  border: 1px solid var(--color-accent-400);
+  border-left: 3px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  background: var(--color-accent-100);
+}
+
+.doneTitle {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 24px;
+  line-height: 1.2;
+  margin: var(--space-2) 0 var(--space-3);
+  color: var(--color-accent-800);
+}
+
+.doneText {
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--color-accent-800);
+  margin: 0;
+}
+
+@media (max-width: 860px) {
+  .screen {
+    grid-template-columns: 1fr;
+  }
+
+  .pitch {
+    gap: var(--space-5);
+    padding: var(--space-6) var(--space-4);
+  }
+
+  .headline {
+    font-size: 34px;
+  }
+
+  .rule {
+    margin: var(--space-4) 0;
+  }
+
+  .panel {
+    padding: var(--space-6) var(--space-4) var(--space-8);
+  }
+
+  .title {
+    font-size: 27px;
+  }
+
+  .row {
+    grid-template-columns: 1fr;
+  }
+}
